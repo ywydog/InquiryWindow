@@ -2,7 +2,7 @@ using System.IO;
 using AvaloniaBitmap = Avalonia.Media.Imaging.Bitmap;
 using SysIcon = System.Drawing.Icon;
 
-namespace ConfirmDialogAction.Services;
+namespace InquiryWindow.Services;
 
 /// <summary>
 /// 封装 exe 图标提取。失败时返回 null，调用方应自行处理 null 情况。

@@ -2,13 +2,13 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ClassIsland.Core.Abstractions.Controls;
-using ConfirmDialogAction.Models;
+using InquiryWindow.Models;
 
-namespace ConfirmDialogAction.Views;
+namespace InquiryWindow.Views;
 
-public partial class ConfirmDialogSettingsControl : ActionSettingsControlBase<ConfirmDialogActionSettings>
+public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<InquiryWindowActionSettings>
 {
-    public ConfirmDialogSettingsControl()
+    public InquiryWindowSettingsControl()
     {
         InitializeComponent();
     }

@@ -1,11 +1,11 @@
-<ci:ActionSettingsControlBase x:Class="ConfirmDialogAction.Views.ConfirmDialogSettingsControl"
-                              x:TypeArguments="settings:ConfirmDialogActionSettings"
+<ci:ActionSettingsControlBase x:Class="InquiryWindow.Views.InquiryWindowSettingsControl"
+                              x:TypeArguments="settings:InquiryWindowActionSettings"
                               xmlns="https://github.com/avaloniaui"
                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                               xmlns:ci="http://classisland.tech/schemas/xaml/core"
-                              xmlns:local="clr-namespace:ConfirmDialogAction.Views"
-                              xmlns:settings="clr-namespace:ConfirmDialogAction.Models">
-    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:ConfirmDialogSettingsControl}}">
+                              xmlns:local="clr-namespace:InquiryWindow.Views"
+                              xmlns:settings="clr-namespace:InquiryWindow.Models">
+    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:InquiryWindowSettingsControl}}">
     <StackPanel Spacing="8">
 
         <StackPanel Spacing="4">

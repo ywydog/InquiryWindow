@@ -3,16 +3,16 @@ using Avalonia.Threading;
 using Avalonia.Media.Imaging;
 using ClassIsland.Core.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using ConfirmDialogAction.Actions;
+using InquiryWindow.Actions;
 
-namespace ConfirmDialogAction.Views;
+namespace InquiryWindow.Views;
 
-public partial class ConfirmDialogWindow : MyWindow
+public partial class InquiryWindowWindow : MyWindow
 {
     private readonly ViewModel _vm = new();
     private bool _allowClose;
 
-    public ConfirmDialogWindow()
+    public InquiryWindowWindow()
     {
         InitializeComponent();
         DataContext = _vm;
@@ -98,37 +98,37 @@ public partial class ConfirmDialogWindow : MyWindow
         set => _vm.CanExecute = value;
     }
 
-    public ConfirmResult Result { get; private set; } = ConfirmResult.Cancel;
+    public InquiryWindowResult Result { get; private set; } = InquiryWindowResult.Cancel;
 
     /// <summary>
     /// 显示确认弹窗并等待用户选择。
     /// 重写父类方法是为了统一通过 <see cref="Result"/> 返回结果，
     /// 并在关闭前用 <see cref="_allowClose"/> 拦截非按钮关闭。
     /// </summary>
-    public new async Task<ConfirmResult> ShowDialog(Window? owner = null)
+    public new async Task<InquiryWindowResult> ShowDialog(Window? owner = null)
     {
         _allowClose = false;
 
         if (owner != null)
         {
-            return await base.ShowDialog<ConfirmResult>(owner);
+            return await base.ShowDialog<InquiryWindowResult>(owner);
         }
 
         Show();
-        var tcs = new TaskCompletionSource<ConfirmResult>();
+        var tcs = new TaskCompletionSource<InquiryWindowResult>();
         Closed += (_, _) => tcs.TrySetResult(Result);
         return await tcs.Task;
     }
 
     private void OnCancelClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Result = ConfirmResult.Cancel;
+        Result = InquiryWindowResult.Cancel;
         CloseProgrammatically();
     }
 
     private void OnExecuteClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Result = ConfirmResult.Execute;
+        Result = InquiryWindowResult.Execute;
         CloseProgrammatically();
     }
 

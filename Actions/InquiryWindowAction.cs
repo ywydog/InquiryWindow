@@ -5,24 +5,24 @@ using ClassIsland.Core.Abstractions.Automation;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Controls;
-using ConfirmDialogAction.Models;
-using ConfirmDialogAction.Services;
-using ConfirmDialogAction.Views;
+using InquiryWindow.Models;
+using InquiryWindow.Services;
+using InquiryWindow.Views;
 using Microsoft.Extensions.Logging;
 
-namespace ConfirmDialogAction.Actions;
+namespace InquiryWindow.Actions;
 
 [ActionInfo("action.inquiryWindow", "询问窗", "\uE4C4")]
-public class ConfirmDialogAction(
+public class InquiryWindowAction(
     ILessonsService lessonsService,
     IExactTimeService exactTimeService,
-    ILogger<ConfirmDialogAction> logger)
-    : ActionBase<ConfirmDialogActionSettings>
+    ILogger<InquiryWindowAction> logger)
+    : ActionBase<InquiryWindowActionSettings>
 {
     protected override async Task OnInvoke()
     {
         await base.OnInvoke();
-        logger.LogDebug("ConfirmDialogAction 触发，路径：{Path}", Settings.TargetPath);
+        logger.LogDebug("InquiryWindow 触发，路径：{Path}", Settings.TargetPath);
 
         // 1. 校验 TargetPath
         var hasPath = !string.IsNullOrWhiteSpace(Settings.TargetPath);
@@ -40,7 +40,7 @@ public class ConfirmDialogAction(
         }
 
         // 4. 构造并显示弹窗
-        var window = new ConfirmDialogWindow
+        var window = new InquiryWindowWindow
         {
             WindowTitle      = Settings.WindowTitle,
             DialogTitleSmall = titleResolved,
@@ -55,10 +55,10 @@ public class ConfirmDialogAction(
 
         var owner = AppBase.Current.GetRootWindow();
         var result = await window.ShowDialog(owner);
-        logger.LogDebug("用户选择：{Result}", result == ConfirmResult.Execute ? "执行" : "取消");
+        logger.LogDebug("用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");
 
         // 5. 根据结果处理
-        if (result == ConfirmResult.Execute && hasPath)
+        if (result == InquiryWindowResult.Execute && hasPath)
         {
             await LaunchTargetAsync(Settings.TargetPath);
         }

@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <RootNamespace>ConfirmDialogAction</RootNamespace>
-    <AssemblyName>ConfirmDialogAction</AssemblyName>
+    <RootNamespace>InquiryWindow</RootNamespace>
+    <AssemblyName>InquiryWindow</AssemblyName>
     <UseWPF>false</UseWPF>
   </PropertyGroup>
 
