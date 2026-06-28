@@ -12,7 +12,7 @@ ClassIsland 自动化 Action 插件。触发后弹出询问窗口（置顶、不
 
 ## 安装
 
-把编译产物 `ConfirmDialogAction.cipx`（或整个 `ConfirmDialogAction/` 目录）放到 ClassIsland 的 `Plugins/` 目录，重启 ClassIsland。
+把编译产物 `InquiryWindow.cipx`（或整个 `InquiryWindow/` 目录）放到 ClassIsland 的 `Plugins/` 目录，重启 ClassIsland。
 
 ## 使用
 

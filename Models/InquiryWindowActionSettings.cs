@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace ConfirmDialogAction.Models;
+namespace InquiryWindow.Models;
 
-public partial class ConfirmDialogActionSettings : ObservableObject
+public partial class InquiryWindowActionSettings : ObservableObject
 {
     /// <summary>
     /// OS 窗口标题栏文字（任务栏/任务切换器可见）。不支持变量替换。

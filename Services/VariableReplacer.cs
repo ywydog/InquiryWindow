@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using ClassIsland.Core.Abstractions.Services;
 
-namespace ConfirmDialogAction.Services;
+namespace InquiryWindow.Services;
 
 /// <summary>
 /// 占位符替换。支持 {time} {date} {subject} {nextSubject} {classroom}。
