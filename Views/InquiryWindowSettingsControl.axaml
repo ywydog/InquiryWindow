@@ -32,13 +32,17 @@
         <StackPanel Spacing="4">
             <TextBlock Text="目标路径 (.exe / 文件 / 文件夹)" FontSize="12"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            <Grid ColumnDefinitions="*,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBox Grid.Column="0"
                          Text="{Binding Settings.TargetPath, Mode=TwoWay}" />
                 <Button Grid.Column="1"
-                        Content="浏览..."
+                        Content="浏览文件..."
                         Margin="8,0,0,0"
-                        Click="OnBrowseClick" />
+                        Click="OnBrowseFileClick" />
+                <Button Grid.Column="2"
+                        Content="浏览文件夹..."
+                        Margin="8,0,0,0"
+                        Click="OnBrowseFolderClick" />
             </Grid>
         </StackPanel>
 
