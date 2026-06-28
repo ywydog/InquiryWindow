@@ -4,7 +4,7 @@ using ClassIsland.Core.Abstractions.Services;
 namespace InquiryWindow.Services;
 
 /// <summary>
-/// 占位符替换。支持 {time} {date} {subject} {nextSubject} {classroom}。
+/// 占位符替换。支持 {time} {date} {subject} {nextSubject}。
 /// 找不到对应值时渲染为空字符串，不抛异常，不保留原 {xxx} 文本。
 /// </summary>
 public static class VariableReplacer
@@ -24,7 +24,6 @@ public static class VariableReplacer
                 "date"        => now.ToString("yyyy-MM-dd"),
                 "subject"     => lessons.CurrentSubject?.Name ?? "",
                 "nextSubject" => lessons.NextClassSubject?.Name ?? "",
-                "classroom"   => lessons.CurrentSubject?.Classroom ?? "",
                 _ => ""
             };
         });
