@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConfirmDialogAction.Actions;
 
-[ActionInfo("action.confirmDialog", "确认弹窗", "\uE4C4")]
+[ActionInfo("action.inquiryWindow", "询问窗", "\uE4C4")]
 public class ConfirmDialogAction(
     ILessonsService lessonsService,
     IExactTimeService exactTimeService,
