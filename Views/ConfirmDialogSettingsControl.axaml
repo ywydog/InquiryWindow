@@ -1,0 +1,62 @@
+<ci:ActionSettingsControlBase x:Class="ConfirmDialogAction.Views.ConfirmDialogSettingsControl"
+                              x:TypeArguments="settings:ConfirmDialogActionSettings"
+                              xmlns="https://github.com/avaloniaui"
+                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                              xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                              xmlns:local="clr-namespace:ConfirmDialogAction.Views"
+                              xmlns:settings="clr-namespace:ConfirmDialogAction.Models">
+    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:ConfirmDialogSettingsControl}}">
+    <StackPanel Spacing="8">
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="窗口标题 (OS 标题栏)" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBox Text="{Binding Settings.WindowTitle, Mode=TwoWay}" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="弹窗标题 (窗口内顶部)" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBox Text="{Binding Settings.DialogTitle, Mode=TwoWay}" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="弹窗正文" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBox Text="{Binding Settings.DialogBody, Mode=TwoWay}"
+                     Height="80"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="目标路径 (.exe / 文件 / 文件夹)" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0"
+                         Text="{Binding Settings.TargetPath, Mode=TwoWay}" />
+                <Button Grid.Column="1"
+                        Content="浏览..."
+                        Margin="8,0,0,0"
+                        Click="OnBrowseClick" />
+            </Grid>
+        </StackPanel>
+
+        <!-- 显示选项 -->
+        <StackPanel Spacing="6" Margin="0,8,0,0">
+            <CheckBox Content="在弹窗中显示目标路径"
+                      IsChecked="{Binding Settings.ShowPath, Mode=TwoWay}" />
+            <CheckBox Content="在弹窗中显示目标图标（仅 .exe）"
+                      IsChecked="{Binding Settings.ShowIcon, Mode=TwoWay}" />
+        </StackPanel>
+
+        <Border Padding="10" CornerRadius="6"
+                Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}">
+            <TextBlock TextWrapping="Wrap" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="支持变量：{time} {date} {subject} {nextSubject} {classroom} — 找不到值时显示为空。" />
+        </Border>
+
+    </StackPanel>
+    </Grid>
+</ci:ActionSettingsControlBase>

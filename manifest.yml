@@ -1,0 +1,12 @@
+id: action.confirmDialog
+name: 确认弹窗行动
+description: 触发后弹出确认窗口，点击「执行」打开配置的文件/软件/文件夹。
+entranceAssembly: "ConfirmDialogAction.dll"
+url: https://github.com/local/ConfirmDialogAction
+version: 1.0.0.0
+apiVersion: 2.0.0.0
+author: local
+readme: README.md
+icon: icon.png
+supportedOSPlatforms:
+- Windows

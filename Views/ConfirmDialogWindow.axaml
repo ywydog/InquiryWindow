@@ -1,0 +1,69 @@
+<ci:MyWindow x:Class="ConfirmDialogAction.Views.ConfirmDialogWindow"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ci="http://classisland.tech/schemas/xaml/core"
+             xmlns:local="clr-namespace:ConfirmDialogAction.Views"
+             Width="500" Height="240"
+             MinHeight="200"
+             WindowStartupLocation="CenterScreen"
+             CanResize="False"
+             Topmost="True"
+             ShowAsDialog="True">
+
+    <Border Padding="16" CornerRadius="8"
+            Background="{DynamicResource LayerFillColorAltBrush}">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+
+            <!-- 弹窗标题小字（窗口内顶部） -->
+            <TextBlock Grid.Row="0"
+                       Text="{Binding DialogTitleSmall}"
+                       FontSize="14"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+            <!-- 主标题 + 图标（图标的可见性由 ShowIcon 控制） -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+                <Image Source="{Binding Icon}"
+                       Width="32" Height="32"
+                       IsVisible="{Binding IsIconVisible}" />
+                <TextBlock Text="{Binding DialogTitle}"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- 正文 -->
+            <TextBlock Grid.Row="2"
+                       Text="{Binding DialogBody}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Top" />
+
+            <!-- 路径预览（独立一行，可见性由 ShowPath 控制） -->
+            <TextBlock Grid.Row="3"
+                       Text="{Binding PathText}"
+                       FontFamily="Consolas, Menlo, monospace"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding IsPathVisible}" />
+
+            <!-- 按钮（右对齐：取消在左，执行在右） -->
+            <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto">
+                <Button Grid.Column="1"
+                        Content="取消"
+                        MinWidth="84"
+                        Height="33"
+                        Margin="0,0,8,0"
+                        Click="OnCancelClick" />
+                <Button Grid.Column="2"
+                        Content="执行"
+                        Classes="accent"
+                        IsDefault="True"
+                        MinWidth="84"
+                        Height="33"
+                        IsEnabled="{Binding CanExecute}"
+                        Click="OnExecuteClick" />
+            </Grid>
+
+        </Grid>
+    </Border>
+</ci:MyWindow>
