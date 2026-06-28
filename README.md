@@ -1,4 +1,4 @@
-# 询问窗行动 (InquiryWindowAction)
+# 询问窗 (InquiryWindow)
 
 ClassIsland 自动化 Action 插件。触发后弹出询问窗口（置顶、不可关闭、阻塞），让教师点击「执行」打开预配置的文件/软件/文件夹，点击「取消」跳过。
 

@@ -1,8 +1,8 @@
 id: action.inquiryWindow
-name: 询问窗行动
+name: 询问窗
 description: 触发后弹出询问窗口，点击「执行」打开配置的文件/软件/文件夹。
 entranceAssembly: "ConfirmDialogAction.dll"
-url: https://github.com/ywydog/InquiryWindowAction
+url: https://github.com/ywydog/InquiryWindow
 version: 1.0.0.0
 apiVersion: 2.0.0.0
 author: local
