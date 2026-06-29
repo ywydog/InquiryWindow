@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.Media.Imaging;
@@ -76,7 +77,7 @@ public partial class InquiryWindowWindow : MyWindow
         set => _vm.IsPathVisible = value;
     }
 
-    public Bitmap? Icon
+    public new Bitmap? Icon
     {
         get => _vm.Icon;
         set

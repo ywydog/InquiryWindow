@@ -28,7 +28,6 @@ ClassIsland 自动化 Action 插件。触发后弹出询问窗口（置顶、不
 - `{date}` 当前日期（yyyy-MM-dd）
 - `{subject}` 当前课程
 - `{nextSubject}` 下一节课
-- `{classroom}` 当前教室
 
 找不到对应值时，渲染为空字符串。
 

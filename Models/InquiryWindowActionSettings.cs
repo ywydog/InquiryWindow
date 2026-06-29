@@ -8,7 +8,7 @@ public partial class InquiryWindowActionSettings : ObservableObject
     /// OS 窗口标题栏文字（任务栏/任务切换器可见）。不支持变量替换。
     /// </summary>
     [ObservableProperty]
-    private string _windowTitle = "ClassIsland - 确认操作";
+    private string _windowTitle = "ClassIsland - 询问窗";
 
     /// <summary>
     /// 窗口内顶部小标题。支持变量替换。

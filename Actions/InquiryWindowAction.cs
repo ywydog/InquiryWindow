@@ -22,7 +22,7 @@ public class InquiryWindowAction(
     protected override async Task OnInvoke()
     {
         await base.OnInvoke();
-        logger.LogDebug("InquiryWindow 触发，路径：{Path}", Settings.TargetPath);
+        logger.LogDebug("InquiryWindowAction 触发，路径：{Path}", Settings.TargetPath);
 
         // 1. 校验 TargetPath
         var hasPath = !string.IsNullOrWhiteSpace(Settings.TargetPath);
