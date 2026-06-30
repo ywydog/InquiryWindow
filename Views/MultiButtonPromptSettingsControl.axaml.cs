@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
-using ClassIsland.Shared.Models.Automation;
+using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
 using InquiryWindow.Services;
@@ -54,10 +54,7 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             flyout.Items.Add(item);
         }
 
-        if (sender is Control c)
-        {
-            flyout.ShowAt(c);
-        }
+        flyout.ShowAt((Control)sender);
     }
 
     private void OnPresetItemClick(object? sender, RoutedEventArgs e)
@@ -65,23 +62,12 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         if (sender is not MenuFlyoutItem { CommandParameter: ButtonPreset preset, Tag: MultiButtonPromptButton target })
             return;
 
-        // 深拷贝 Action 链（避免共享引用）
-        foreach (var item in preset.Actions.ActionItems)
+        // 深拷贝整条 Action 链（避免和预设共享引用，导致改一处影响全部）
+        var clone = ConfigureFileHelper.CopyObject(preset.Actions);
+        foreach (var item in clone.ActionItems)
         {
-            target.Actions.ActionItems.Add(CloneItem(item));
+            target.Actions.ActionItems.Add(item);
         }
-    }
-
-    private static ActionItem CloneItem(ActionItem item)
-    {
-        // 简单深拷贝：Id 和 Settings 一起搬过去。
-        // ClassIsland 的 ActionService 每次 invoke 时会按 id 重新实例化 ActionBase，
-        // Settings 在 invoke 时也会重新反序列化，所以共享 Settings 引用是安全的。
-        return new ActionItem
-        {
-            Id = item.Id,
-            Settings = item.Settings
-        };
     }
 
     private static async Task ShowEmptyDialogAsync()
@@ -89,7 +75,7 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         var dialog = new ContentDialog
         {
             Title = "没有可用的预设",
-            Content = "请到插件设置里先添加按钮预设。",
+            Content = "请到插件设置（InquiryWindow 设置 → 按钮预设库）里先添加按钮预设。",
             PrimaryButtonText = "确定",
             DefaultButton = ContentDialogButton.Primary
         };

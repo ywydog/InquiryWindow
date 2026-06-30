@@ -14,33 +14,23 @@ public class InquiryWindowSettingsViewModel : ObservableObject
     public ObservableCollection<ButtonPreset> Presets => PresetsStore.Instance.Presets;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RemovePresetCommand))]
     private ButtonPreset? _selectedPreset;
 
     public InquiryWindowSettingsViewModel()
     {
+        // 保证预设库从磁盘加载（如果 Plugin.Initialize 之前没跑过）。
         PresetsStore.Instance.Load();
     }
 
+    /// <summary>
+    /// 创建一个新预设并返回。
+    /// </summary>
     [RelayCommand]
-    private void AddPreset()
+    public void AddPreset()
     {
         var preset = PresetsStore.Instance.AddPreset(
             "新预设 " + (Presets.Count + 1),
             "\uE10F");
         SelectedPreset = preset;
     }
-
-    [RelayCommand(CanExecute = nameof(CanRemovePreset))]
-    private void RemovePreset(ButtonPreset? preset)
-    {
-        if (preset == null) return;
-        if (SelectedPreset == preset)
-        {
-            SelectedPreset = null;
-        }
-        PresetsStore.Instance.RemovePreset(preset);
-    }
-
-    private bool CanRemovePreset(ButtonPreset? preset) => preset != null;
 }

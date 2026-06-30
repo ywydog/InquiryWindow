@@ -88,7 +88,7 @@ public class PresetsStore
     /// </summary>
     public void Save()
     {
-        if (!_loaded) return;
+        if (!_loaded || string.IsNullOrEmpty(_path)) return;
         try
         {
             ConfigureFileHelper.SaveConfig(_path, Data);
@@ -101,6 +101,7 @@ public class PresetsStore
 
     public ButtonPreset AddPreset(string name = "新预设", string icon = "\uE10F")
     {
+        Load();
         var preset = new ButtonPreset { Name = name, Icon = icon };
         Data.Presets.Add(preset);
         return preset;
@@ -108,6 +109,7 @@ public class PresetsStore
 
     public bool RemovePreset(ButtonPreset preset)
     {
+        Load();
         return Data.Presets.Remove(preset);
     }
 
@@ -126,6 +128,11 @@ public class PresetsStore
             {
                 p.PropertyChanged -= OnPresetPropertyChanged;
             }
+        }
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            // Reset 不会给出 NewItems/OldItems，已有的订阅不会自动解绑。
+            // 我们的使用场景下不会触发 Reset（Data.Presets 在 Load 之后只增不减），这里兜个空。
         }
         Save();
     }

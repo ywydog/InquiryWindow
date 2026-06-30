@@ -10,9 +10,9 @@ namespace InquiryWindow.ViewModels;
 
 /// <summary>
 /// 多按钮询问弹窗的 ViewModel。
-/// 按下任一按钮 → 关闭弹窗并按顺序执行该按钮的 Action 链。
+/// 按下任一按钮 → 关闭弹窗并按顺序执行该按钮的 Action 链（过程不再向用户询问）。
 /// </summary>
-public class MultiButtonPromptViewModel : ObservableRecipient
+public class MultiButtonPromptViewModel : ObservableObject
 {
     public ObservableCollection<MultiButtonPromptButton> Buttons { get; }
 

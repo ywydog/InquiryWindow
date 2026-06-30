@@ -2,8 +2,10 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Controls.Automation;
+using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
+using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 
 namespace InquiryWindow.SettingsPage;
@@ -41,7 +43,7 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
-            ViewModel.RemovePresetCommand.Execute(preset);
+            PresetsStore.Instance.RemovePreset(preset);
         }
     }
 
@@ -67,7 +69,11 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
             Width = 120,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left
         };
-        var actionControl = new ActionControl { ActionSet = preset.Actions };
+
+        // 关键：克隆一份 ActionSet 给 ActionControl 编辑，
+        // 这样「取消」时用户的改动会随 workingActions 一起被丢弃，preset.Actions 不被污染。
+        var workingActions = ConfigureFileHelper.CopyObject(preset.Actions);
+        var actionControl = new ActionControl { ActionSet = workingActions };
 
         var content = new StackPanel { Spacing = 10 };
         content.Children.Add(nameBox);
@@ -89,11 +95,18 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
         };
 
         var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
+        if (result != ContentDialogResult.Primary)
         {
-            preset.Name = string.IsNullOrWhiteSpace(nameBox.Text) ? "未命名预设" : nameBox.Text;
-            preset.Icon = string.IsNullOrWhiteSpace(iconBox.Text) ? "\uE10F" : iconBox.Text;
+            return;
         }
+
+        preset.Name = string.IsNullOrWhiteSpace(nameBox.Text) ? "未命名预设" : nameBox.Text;
+        preset.Icon = string.IsNullOrWhiteSpace(iconBox.Text) ? "\uE10F" : iconBox.Text;
+        preset.Actions = workingActions;
+
+        // Name/Icon 已通过 INPC 自动触发 Save()，但 Actions 不会（替换引用，INPC 也不一定触发 SetProperty 路径以外的更新），
+        // 这里再显式落盘一次兜底。
+        PresetsStore.Instance.Save();
     }
 
     private void InitializeComponent()
