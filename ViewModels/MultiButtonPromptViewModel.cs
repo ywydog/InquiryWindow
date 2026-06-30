@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,12 +21,15 @@ public partial class MultiButtonPromptViewModel : ObservableObject
 
     public string SubPrompt { get; }
 
-    public MultiButtonPromptViewModel(MultiButtonPromptSettings settings)
+    private readonly IActionService _actionService;
+
+    public MultiButtonPromptViewModel(MultiButtonPromptSettings settings, IActionService actionService)
     {
         Buttons = settings.Buttons;
         Title = settings.Title;
         Prompt = settings.Prompt;
         SubPrompt = settings.SubPrompt;
+        _actionService = actionService;
     }
 
     /// <summary>
@@ -40,13 +42,12 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     {
         if (button == null) return;
 
-        var actionService = IAppHost.TryGetService<IActionService>();
-        if (actionService != null && button.Actions.ActionItems.Count > 0)
+        if (button.Actions.ActionItems.Count > 0)
         {
             // 单个 Action 失败不应阻断弹窗关闭，其它 Action 也应继续。
             try
             {
-                await actionService.InvokeActionSetAsync(button.Actions);
+                await _actionService.InvokeActionSetAsync(button.Actions);
             }
             catch (Exception ex)
             {

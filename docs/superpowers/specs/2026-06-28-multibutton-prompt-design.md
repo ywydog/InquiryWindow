@@ -226,7 +226,7 @@ public class MultiButtonPromptViewModel : ObservableRecipient
 }
 ```
 
-- `PressButton` 通过 DI 拿 `IActionService` 执行按钮的 Action 链
+- `PressButton` 使用 Action 注入进来的 `IActionService` 执行按钮的 Action 链
 - 链为空时只关闭弹窗
 
 ### 3.5 弹窗 `MultiButtonPromptWindow.axaml`
@@ -323,7 +323,7 @@ services.AddAction<MultiButtonPromptAction, MultiButtonPromptSettingsControl>();
 2. Action 用 `ShowDialog` 弹出 `MultiButtonPromptWindow`
 3. 弹窗显示标题 + 主/副提示 + N 个按钮
 4. 用户点击按钮 i → `ViewModel.PressButton(button)`
-5. ViewModel 通过 `IAppHost.GetService<IActionService>()` 拿 `IActionService`
+5. ViewModel 用构造时注入的 `IActionService`（由 `MultiButtonPromptAction` 通过 DI 拿到并传入）
 6. 调用 `InvokeActionSetAsync(button.Actions)`
 7. 链中每个 Action 顺序执行；任意一个抛异常只记日志，不影响后续
 8. 链执行完毕（或链为空）→ `RequestClose` 事件 → 弹窗关闭
@@ -385,7 +385,7 @@ services.AddAction<MultiButtonPromptAction, MultiButtonPromptSettingsControl>();
 
 | 风险 | 缓解 |
 |---|---|
-| `IActionService` 在插件上下文不可用 | 走 `IAppHost.GetService<>()`，拿不到时 `LogError` 并提前返回 |
+| `IActionService` 在插件上下文不可用 | 改用构造函数注入：Action 主构造取 `IActionService`，传给 ViewModel |
 | 旧用户配置里 `InquiryWindow.Open` 被改坏 | 新 Action 用新 id，v1 文件不改动 |
 | 按钮内嵌 `ActionControl` 的样式和 v1 设置面板不搭 | 用 `Expander` 包起来给一个明显的视觉边界 |
 | 弹窗内按钮 0 个时无意义 | `OnInvoke` 检查 `Buttons.Count == 0` 直接 return |

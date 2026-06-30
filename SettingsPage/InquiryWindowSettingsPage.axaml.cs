@@ -60,12 +60,10 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
     {
         var nameBox = new TextBox
         {
-            Header = "名称",
             Text = preset.Name
         };
         var iconBox = new TextBox
         {
-            Header = "图标字符（Fluent SystemIcons）",
             Text = preset.Icon,
             Width = 120,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left
@@ -77,8 +75,8 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
         var actionControl = new ActionControl { ActionSet = workingActions };
 
         var content = new StackPanel { Spacing = 10 };
-        content.Children.Add(nameBox);
-        content.Children.Add(iconBox);
+        content.Children.Add(MakeLabeled("名称", nameBox));
+        content.Children.Add(MakeLabeled("图标字符（Fluent SystemIcons）", iconBox));
         content.Children.Add(new TextBlock
         {
             Text = "Action 链：",
@@ -113,5 +111,18 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
     private void InitializeComponent()
     {
         Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+    }
+
+    private static StackPanel MakeLabeled(string label, Control content)
+    {
+        // Avalonia 11.0 的 TextBox 没有 Header 属性，所以用 TextBlock 标签 + 控件的组合代替。
+        var sp = new StackPanel { Spacing = 4 };
+        sp.Children.Add(new TextBlock
+        {
+            Text = label,
+            FontWeight = Avalonia.Media.FontWeight.SemiBold
+        });
+        sp.Children.Add(content);
+        return sp;
     }
 }
