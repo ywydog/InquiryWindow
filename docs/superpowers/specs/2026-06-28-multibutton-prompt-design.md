@@ -40,6 +40,7 @@
 - **不**支持按钮响应链以外的扩展点（例如按钮被点击时回调、按钮 hover 提示等）
 - **不**实现嵌套弹窗处理（链里如果触发另一个"多按钮询问"，走 ClassIsland 自身的栈）
 - **不**给插件加新 `ViewPage` 设置页（按钮配置只属于这个 Action 自身的 `ActionSettingsControl`）
+- ❌ ~~**不**给插件加新 `ViewPage` 设置页~~ → **修正**：插件**需要**一个 `ViewPage`，用于管理「按钮预设库」（详见 §9）
 - **不**改动工作流文件 `dot-net-build.yml`（构建流程已经能跑，再加一个新 Action 不需要改）
 
 ---
@@ -104,7 +105,12 @@
 | `Plugin.cs` | 改动 | `services.AddAction<MultiButtonPromptAction, MultiButtonPromptSettingsControl>()` |
 | `manifest.yml` | 改动 | 不改入口 dll，id 仍由 `[ActionInfo]` 标注 |
 | `InquiryWindow.csproj` | 改动 | 包含新文件（csproj 已用通配包含新文件则可能不用改） |
-| `README.md` | 改动 | 文档说明新 Action |
+| `SettingsPage/InquiryWindowSettingsPage.axaml` | 新增 | 插件级 ViewPage（按钮预设库 UI） |
+| `SettingsPage/InquiryWindowSettingsPage.axaml.cs` | 新增 | ViewPage 代码后置 |
+| `SettingsPage/InquiryWindowSettingsViewModel.cs` | 新增 | ViewPage ViewModel |
+| `Models/ButtonPreset.cs` | 新增 | 按钮预设数据模型 |
+| `Services/PresetsStore.cs` | 新增 | 预设 JSON 持久化（用 `ConfigureFileHelper`） |
+| `README.md` | 改动 | 文档说明新 Action 与 ViewPage |
 
 > 注：v1 的所有文件保持原状。
 
@@ -396,6 +402,78 @@ services.AddAction<MultiButtonPromptAction, MultiButtonPromptSettingsControl>();
 - ❌ 弹窗倒计时/自动选择（v1 也没有）
 - ❌ 按钮点击后留弹窗不关（用户没要求）
 - ❌ 按钮按"主/次/危险"区分样式
-- ❌ 多按钮询问触发后保存/复用按钮预设
-- ❌ 插件级 `ViewPage` 管理"默认按钮模板"（用户已确认不需要）
+- ❌ 多按钮询问触发后保存/复用按钮预设（**已被 ViewPage 覆盖**，见 §9）
+- ❌ 插件级 `ViewPage` 管理"默认按钮模板"（**已被 ViewPage 覆盖**，见 §9）
 - ❌ 国际化（依赖 ClassIsland 自身 i18n）
+
+---
+
+## 9. 插件级 ViewPage：按钮预设库
+
+### 9.1 动机
+
+同一个工作流作者常常需要重复配置相似的按钮（比如 "再响铃" 按钮里固定塞「播放音频 + 写日志」两个 Action）。如果只能在每个 Action 设置面板里手搓一次，配置成本高且容易不一致。
+
+需要一个**插件级**的中心来管理按钮预设，让任意 `MultiButtonPrompt` 都能从库里"插入预设"，而不是只能从零配置。
+
+### 9.2 ViewPage 入口
+
+- 在 ClassIsland 设置页"插件"分类下出现一项 "InquiryWindow 设置"
+- 由 `services.AddSettingsPage<InquiryWindowSettingsPage>()` 注册
+- `[SettingsPageInfo("inquiryWindow.settings.main", "InquiryWindow 设置", "\uE82D", "\uE713")]`
+
+### 9.3 数据模型 `ButtonPreset`
+
+```csharp
+namespace InquiryWindow.Models;
+
+public class ButtonPreset
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Name { get; set; } = "未命名预设";
+    public string Icon { get; set; } = "\uE10F";
+    public ActionSet Actions { get; set; } = new();
+}
+```
+
+- 每个预设对应一个「按钮」：Name / Icon / ActionSet
+- `Id` 用于增删改查的去重
+
+### 9.4 持久化 `PresetsStore`
+
+- 复用 ClassIsland 的 `ConfigureFileHelper`，落盘到 `<PluginConfig>/presets.json`
+- 启动时 `LoadConfig<PresetsData>`，编辑后自动 `SaveConfig` 写回
+- `PresetsData { ObservableCollection<ButtonPreset> Presets }`
+
+### 9.5 ViewPage UI
+
+```
+InquiryWindow 设置
+├─ 顶部说明（"按钮预设库" / "在此集中管理按钮，可被多按钮询问引用"）
+├─ 列表（DataGrid 或 ItemsControl）
+│   每行：图标 + 名称 + Action 链概览（"3 个 Action"）
+│   操作：编辑 / 删除（编辑弹出抽屉或 Dialog 复用 ActionControl）
+└─ 底部按钮：+ 新建预设
+```
+
+- "编辑"打开一个含 `ActionControl` 的抽屉（直接复用 ClassIsland 自带 Action 链编辑器，跟 Action 的设置面板体验一致）
+- 删前弹 `ContentDialog` 二次确认
+
+### 9.6 与 Action 设置面板的联动
+
+`MultiButtonPromptSettingsControl` 在每个按钮 Expander 上方加一个 "📥 从预设插入" 按钮：
+
+- 点击 → 弹一个下拉/Popup 列出 `PresetsStore.Instance.Presets`
+- 选中预设 → 用 `DeepClone` 拷一份 `ButtonPreset.Actions` 进当前按钮的 `Actions.ActionItems`，**追加**到末尾
+- 选不到预设（库为空）→ 按钮显示为 "暂无可用预设，去插件设置里添加"
+
+> 注：跨预设/Action 实例共享 `ActionSet` 时必须深拷贝，避免改一处影响全部。
+
+### 9.7 风险
+
+| 风险 | 缓解 |
+|---|---|
+| 预设库 JSON 损坏 | `ConfigureFileHelper` 自带 `.bak` 回退 + 错误日志 |
+| 用户在 ViewPage 改预设后，已用的按钮不刷新 | 正常——预设只用于"插入"，已插入的按钮是各自独立的 `ActionSet` 副本 |
+| 预设和 Action 双向同步的诱惑 | 拒绝：YAGNI，每个按钮独立持有 Action 链 |
+| ViewPage 多实例（用户开多个窗口） | ClassIsland 设置页本身就只开一个，无此问题 |
