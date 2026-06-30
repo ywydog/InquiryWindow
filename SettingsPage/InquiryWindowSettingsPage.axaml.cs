@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
+using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Controls.Automation;
 using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;

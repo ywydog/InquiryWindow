@@ -9,7 +9,7 @@ namespace InquiryWindow.ViewModels;
 /// <summary>
 /// 插件 ViewPage 的 ViewModel：管理按钮预设库。
 /// </summary>
-public class InquiryWindowSettingsViewModel : ObservableObject
+public partial class InquiryWindowSettingsViewModel : ObservableObject
 {
     public ObservableCollection<ButtonPreset> Presets => PresetsStore.Instance.Presets;
 
