@@ -10,9 +10,11 @@
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      mc:Ignorable="d">
 
-    <ci:SettingsPageBase.DataContext>
-        <vm:InquiryWindowSettingsViewModel />
-    </ci:SettingsPageBase.DataContext>
+    <!--
+        DataContext 由 code-behind ctor 注入同一实例的 InquiryWindowSettingsViewModel。
+        不要在 XAML 里再写一次 <ci:SettingsPageBase.DataContext>，否则会被 InitializeComponent
+        覆盖成第二个 VM 实例，code-behind 读 SelectedPreset 永远是 null。
+    -->
 
     <ScrollViewer>
         <StackPanel Classes="settings-container" Spacing="10">
@@ -38,7 +40,7 @@
 
             <controls:SettingsExpander IconSource="{ci:FluentIconSource &#xE82D;}"
                                        Header="预设列表"
-                                       Description="点击 + 新建 按钮添加预设">
+                                       Description="点击「+ 新建预设」添加；选中后可编辑或删除">
                 <controls:SettingsExpander.Footer>
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <Button Content="+ 新建预设"
@@ -51,34 +53,30 @@
                                 Click="OnRemovePresetClick" />
                     </StackPanel>
                 </controls:SettingsExpander.Footer>
+                <Border MinHeight="240">
+                    <ListBox ItemsSource="{Binding Presets}"
+                             SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                             Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:ButtonPreset">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="4" ColumnSpacing="10">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Icon}"
+                                               FontFamily="{DynamicResource FluentIcons}"
+                                               FontSize="18"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Actions.ActionItems.Count, StringFormat={}{0} 个 Action}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
             </controls:SettingsExpander>
-
-            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    MinHeight="240">
-                <ListBox ItemsSource="{Binding Presets}"
-                         SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
-                         Background="Transparent">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:ButtonPreset">
-                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="4" ColumnSpacing="10">
-                                <TextBlock Grid.Column="0"
-                                           Text="{Binding Icon}"
-                                           FontFamily="{DynamicResource FluentIcons}"
-                                           FontSize="18"
-                                           VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding Actions.ActionItems.Count, StringFormat={}{0} 个 Action}"
-                                               FontSize="11"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                </StackPanel>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Border>
 
         </StackPanel>
     </ScrollViewer>

@@ -4,6 +4,7 @@ using ClassIsland.Core.Attributes;
 using InquiryWindow.Models;
 using InquiryWindow.ViewModels;
 using InquiryWindow.Views;
+using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow.Actions;
 
@@ -11,7 +12,10 @@ namespace InquiryWindow.Actions;
 /// 多按钮询问：弹出一个 N 按钮窗口，按下任一按钮后按顺序执行该按钮的 Action 链。
 /// </summary>
 [ActionInfo("InquiryWindow.MultiButtonPrompt", "多按钮询问", "\uE82D")]
-public class MultiButtonPromptAction(IActionService actionService)
+public class MultiButtonPromptAction(
+    IActionService actionService,
+    ILogger<MultiButtonPromptViewModel> viewModelLogger,
+    ILogger<MultiButtonPromptAction> logger)
     : ActionBase<MultiButtonPromptSettings>
 {
     protected override async Task OnInvoke()
@@ -20,12 +24,14 @@ public class MultiButtonPromptAction(IActionService actionService)
 
         if (Settings.Buttons.Count == 0)
         {
+            logger.LogWarning("多按钮询问触发但 Buttons 为空，工作流表现为无操作。检查 Action 配置。");
             return;
         }
 
         var window = new MultiButtonPromptWindow
         {
-            DataContext = new MultiButtonPromptViewModel(Settings, actionService)
+            WindowTitle = Settings.Title,
+            DataContext = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger)
         };
 
         await window.ShowDialogCompat();

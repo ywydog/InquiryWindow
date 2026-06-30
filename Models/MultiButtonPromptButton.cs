@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ClassIsland.Shared.Models.Automation;
 
@@ -15,7 +16,31 @@ public partial class MultiButtonPromptButton : ObservableObject
     [ObservableProperty]
     private string _icon = "\uE10F";
 
-    /// <summary>按下按钮后依次执行的 Action 链。</summary>
     [ObservableProperty]
     private ActionSet _actions = new();
+
+    public MultiButtonPromptButton()
+    {
+        // 同样把 ActionItems 的增删改冒泡成自身的 "Actions" 变更，
+        // 让 ActionSettingsControlBase 能正确检测到设置脏。
+        _actions.ActionItems.CollectionChanged += OnActionItemsChanged;
+    }
+
+    partial void OnActionsChanged(ActionSet? oldValue, ActionSet newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.ActionItems.CollectionChanged -= OnActionItemsChanged;
+        }
+        if (newValue is not null)
+        {
+            newValue.ActionItems.CollectionChanged += OnActionItemsChanged;
+        }
+        OnPropertyChanged(nameof(Actions));
+    }
+
+    private void OnActionItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(Actions));
+    }
 }

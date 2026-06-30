@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ClassIsland.Shared.Models.Automation;
 
@@ -18,9 +19,37 @@ public partial class ButtonPreset : ObservableObject
     [ObservableProperty]
     private string _icon = "\uE10F";
 
-    /// <summary>预设里包含的 Action 链。</summary>
     [ObservableProperty]
     private ActionSet _actions = new();
+
+    public ButtonPreset()
+    {
+        // 初始订阅：让 ActionItems 的增删改能冒泡成自身的 "Actions" 变更，
+        // 触发 PresetsStore 的自动保存。
+        _actions.ActionItems.CollectionChanged += OnActionItemsChanged;
+    }
+
+    /// <summary>
+    /// 当 Actions 被整体替换（重新赋值）时，重新订阅新 ActionSet 的 ActionItems 变化。
+    /// </summary>
+    partial void OnActionsChanged(ActionSet? oldValue, ActionSet newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.ActionItems.CollectionChanged -= OnActionItemsChanged;
+        }
+        if (newValue is not null)
+        {
+            newValue.ActionItems.CollectionChanged += OnActionItemsChanged;
+        }
+        // 替换 ActionSet 时把变更冒泡出去，让 PresetsStore 立即落盘一次。
+        OnPropertyChanged(nameof(Actions));
+    }
+
+    private void OnActionItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(Actions));
+    }
 }
 
 /// <summary>

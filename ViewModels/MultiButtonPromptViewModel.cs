@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using ClassIsland.Core.Abstractions.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InquiryWindow.Models;
+using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow.ViewModels;
 
@@ -22,14 +22,19 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     public string SubPrompt { get; }
 
     private readonly IActionService _actionService;
+    private readonly ILogger<MultiButtonPromptViewModel> _logger;
 
-    public MultiButtonPromptViewModel(MultiButtonPromptSettings settings, IActionService actionService)
+    public MultiButtonPromptViewModel(
+        MultiButtonPromptSettings settings,
+        IActionService actionService,
+        ILogger<MultiButtonPromptViewModel> logger)
     {
         Buttons = settings.Buttons;
         Title = settings.Title;
         Prompt = settings.Prompt;
         SubPrompt = settings.SubPrompt;
         _actionService = actionService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -51,7 +56,7 @@ public partial class MultiButtonPromptViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[InquiryWindow] 链执行失败：{ex}");
+                _logger.LogError(ex, "链执行失败：按钮={Name}", button.Name);
             }
         }
 

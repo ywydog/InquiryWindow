@@ -29,7 +29,6 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         if (sender is not Control { Tag: MultiButtonPromptButton target }) return;
 
         var store = PresetsStore.Instance;
-        // 确保预设库已加载
         store.Load();
 
         if (store.Presets.Count == 0)
@@ -38,6 +37,8 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             return;
         }
 
+        // 把每个 item 的引用先存起来，等 flyout 关闭时统一解绑 Click，
+        // 避免频繁开 flyout 时事件订阅累计。
         var items = store.Presets
             .Select(p => new MenuFlyoutItem
             {
@@ -54,7 +55,15 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             flyout.Items.Add(item);
         }
 
-        flyout.ShowAt((Control)sender);
+        flyout.Closing += (_, _) =>
+        {
+            foreach (var item in items)
+            {
+                item.Click -= OnPresetItemClick;
+            }
+        };
+
+        flyout.ShowAt(sender);
     }
 
     private void OnPresetItemClick(object? sender, RoutedEventArgs e)
@@ -64,6 +73,11 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
 
         // 深拷贝整条 Action 链（避免和预设共享引用，导致改一处影响全部）
         var clone = ConfigureFileHelper.CopyObject(preset.Actions);
+        if (clone is null)
+        {
+            // 极少见：配置损坏 / CopyObject 不支持该类型
+            return;
+        }
         foreach (var item in clone.ActionItems)
         {
             target.Actions.ActionItems.Add(item);

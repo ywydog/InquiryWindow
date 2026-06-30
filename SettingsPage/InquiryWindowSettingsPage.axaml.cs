@@ -103,9 +103,9 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
         preset.Icon = string.IsNullOrWhiteSpace(iconBox.Text) ? "\uE10F" : iconBox.Text;
         preset.Actions = workingActions;
 
-        // Name/Icon 已通过 INPC 自动触发 Save()，但 Actions 不会（替换引用，INPC 也不一定触发 SetProperty 路径以外的更新），
-        // 这里再显式落盘一次兜底。
-        PresetsStore.Instance.Save();
+        // Name/Icon/Actions 的赋值都会通过 INPC 触发 PresetsStore 的 debounce save，
+        // 但 debounce 400ms 后才落盘。显式同步 SaveNow 兜底，避免用户编辑完立刻关 app 丢数据。
+        PresetsStore.Instance.SaveNow();
     }
 
     private void InitializeComponent()

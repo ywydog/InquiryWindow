@@ -8,8 +8,7 @@
              WindowStartupLocation="CenterScreen"
              CanResize="False"
              Topmost="True"
-             ShowAsDialog="True"
-             Title="{Binding Title}">
+             ShowAsDialog="True">
 
     <Border Padding="20" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
