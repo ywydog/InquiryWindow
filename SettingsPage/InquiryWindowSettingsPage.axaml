@@ -1,0 +1,86 @@
+<ci:SettingsPageBase x:Class="InquiryWindow.SettingsPage.InquiryWindowSettingsPage"
+                     xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                     xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
+                     xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                     xmlns:vm="clr-namespace:InquiryWindow.ViewModels"
+                     xmlns:models="clr-namespace:InquiryWindow.Models"
+                     d:DesignHeight="450" d:DesignWidth="800"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     mc:Ignorable="d">
+
+    <ci:SettingsPageBase.DataContext>
+        <vm:InquiryWindowSettingsViewModel />
+    </ci:SettingsPageBase.DataContext>
+
+    <ScrollViewer>
+        <StackPanel Classes="settings-container" Spacing="10">
+
+            <Label FontSize="20"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+                InquiryWindow
+            </Label>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <ci:FluentIcon FontSize="56"
+                               Glyph="&#xE82D;"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               VerticalAlignment="Center" />
+                <Label VerticalAlignment="Center" FontSize="28">按钮预设库</Label>
+            </StackPanel>
+
+            <TextBlock Text="在此集中管理按钮预设。预设可被多按钮询问的按钮通过「从预设插入」引用，插入后该按钮拥有独立的 Action 链副本。"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       FontSize="13" />
+
+            <controls:SettingsExpander IconSource="{ci:FluentIconSource &#xE82D;}"
+                                       Header="预设列表"
+                                       Description="点击 + 新建 按钮添加预设">
+                <controls:SettingsExpander.Footer>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Content="+ 新建预设"
+                                Click="OnAddPresetClick" />
+                        <Button Content="编辑选中..."
+                                IsEnabled="{Binding SelectedPreset, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Click="OnEditPresetClick" />
+                        <Button Content="删除选中"
+                                IsEnabled="{Binding SelectedPreset, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Click="OnRemovePresetClick" />
+                    </StackPanel>
+                </controls:SettingsExpander.Footer>
+            </controls:SettingsExpander>
+
+            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    MinHeight="240">
+                <ListBox ItemsSource="{Binding Presets}"
+                         SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                         Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ButtonPreset">
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="4" ColumnSpacing="10">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Icon}"
+                                           FontFamily="{DynamicResource FluentIcons}"
+                                           FontSize="18"
+                                           VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Actions.ActionItems.Count, StringFormat={}{0} 个 Action}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</ci:SettingsPageBase>

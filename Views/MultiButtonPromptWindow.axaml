@@ -1,0 +1,62 @@
+<ci:MyWindow x:Class="InquiryWindow.Views.MultiButtonPromptWindow"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ci="http://classisland.tech/schemas/xaml/core"
+             xmlns:local="clr-namespace:InquiryWindow.Views"
+             xmlns:vm="clr-namespace:InquiryWindow.ViewModels"
+             xmlns:models="clr-namespace:InquiryWindow.Models"
+             Width="500" Height="220"
+             MinHeight="180" MinWidth="320"
+             WindowStartupLocation="CenterScreen"
+             CanResize="False"
+             Topmost="True"
+             ShowAsDialog="True"
+             Title="{Binding Title}">
+
+    <Border Padding="20" CornerRadius="8"
+            Background="{DynamicResource LayerFillColorAltBrush}">
+        <StackPanel Spacing="14">
+
+            <!-- 主提示 -->
+            <TextBlock Text="{Binding Prompt}"
+                       FontSize="20"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap" />
+
+            <!-- 副提示 -->
+            <TextBlock Text="{Binding SubPrompt}"
+                       FontSize="13"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <!-- 按钮列表（运行时由 ViewModel 动态填入） -->
+            <ItemsControl ItemsSource="{Binding Buttons}" Margin="0,8,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="10"
+                                    HorizontalAlignment="Right" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:MultiButtonPromptButton">
+                        <Button MinWidth="96" Height="34"
+                                Classes="accent"
+                                Command="{Binding $parent[Window].DataContext.PressButtonCommand}"
+                                CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="{Binding Icon}"
+                                           FontFamily="{DynamicResource FluentIcons}"
+                                           FontSize="14"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Name}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+        </StackPanel>
+    </Border>
+</ci:MyWindow>

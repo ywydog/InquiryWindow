@@ -1,0 +1,81 @@
+<ci:ActionSettingsControlBase x:Class="InquiryWindow.Views.MultiButtonPromptSettingsControl"
+                              x:TypeArguments="settings:MultiButtonPromptSettings"
+                              xmlns="https://github.com/avaloniaui"
+                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                              xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                              xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
+                              xmlns:settings="clr-namespace:InquiryWindow.Models"
+                              xmlns:local="clr-namespace:InquiryWindow.Views"
+                              xmlns:models="clr-namespace:InquiryWindow.Models">
+    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:MultiButtonPromptSettingsControl}}">
+    <ScrollViewer>
+        <StackPanel Margin="12" Spacing="12">
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="窗口标题 (OS 标题栏)" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBox Text="{Binding Settings.Title, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="主提示文本" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBox Text="{Binding Settings.Prompt, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="副提示文本（可空）" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <TextBox Text="{Binding Settings.SubPrompt, Mode=TwoWay}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Height="60" />
+            </StackPanel>
+
+            <TextBlock Text="按钮" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+
+            <ItemsControl ItemsSource="{Binding Settings.Buttons}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:MultiButtonPromptButton">
+                        <Expander Margin="0,4" HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{Binding Icon}"
+                                               FontFamily="{DynamicResource FluentIcons}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Expander.Header>
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <TextBox Grid.Column="0"
+                                             Watermark="按钮名称"
+                                             Text="{Binding Name, Mode=TwoWay}" />
+                                    <TextBox Grid.Column="1"
+                                             Watermark="图标字符"
+                                             Text="{Binding Icon, Mode=TwoWay}"
+                                             Margin="8,0,0,0"
+                                             Width="80" />
+                                    <Button Grid.Column="2"
+                                            Content="从预设插入"
+                                            Margin="8,0,0,0"
+                                            Click="OnInsertPresetClick"
+                                            Tag="{Binding}" />
+                                </Grid>
+                                <core:ActionControl ActionSet="{Binding Actions}" />
+                            </StackPanel>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Content="+ 添加按钮"
+                    Click="OnAddButtonClick"
+                    HorizontalAlignment="Left" />
+
+        </StackPanel>
+    </ScrollViewer>
+    </Grid>
+</ci:ActionSettingsControlBase>
