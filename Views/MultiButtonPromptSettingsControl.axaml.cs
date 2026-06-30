@@ -26,7 +26,8 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
 
     private async void OnInsertPresetClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Control { Tag: MultiButtonPromptButton target }) return;
+        if (sender is not Control control) return;
+        if (control.Tag is not MultiButtonPromptButton target) return;
 
         var store = PresetsStore.Instance;
         store.Load();
@@ -63,7 +64,7 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             }
         };
 
-        flyout.ShowAt(sender);
+        flyout.ShowAt(control);
     }
 
     private void OnPresetItemClick(object? sender, RoutedEventArgs e)

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.Versioning;
 using AvaloniaBitmap = Avalonia.Media.Imaging.Bitmap;
 using SysIcon = System.Drawing.Icon;
 
@@ -14,6 +15,7 @@ public static class IconExtractorService
     /// </summary>
     /// <param name="path">目标路径</param>
     /// <returns>成功返回 Bitmap，失败返回 null</returns>
+    [SupportedOSPlatform("windows")]
     public static AvaloniaBitmap? TryExtract(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
