@@ -324,7 +324,17 @@ services.AddAction<MultiButtonPromptAction, MultiButtonPromptSettingsControl>();
 9. `OnInvoke` 的 `await window.ShowDialog()` 完成
 10. 工作流继续走下一项
 
-### 4.3 异常处理
+### 4.3 链的执行方式（关键约束）
+
+**一个按钮触发后，链里所有 Action 顺序自动执行，整个过程不再向用户询问、不再弹任何提示窗。**
+
+- 链由 `IActionService.InvokeActionSetAsync(ActionSet)` 一次性执行，该 API 本身即按顺序串行执行链中所有 Action
+- 链里**禁止**再插入会向用户询问的 Action（如本插件的"询问窗"/"多按钮询问"），如果用户这样配，ClassIsland 会按其自身栈处理嵌套弹窗
+- 链执行期间不阻塞 UI 主线程（在 ClassIsland 内部由 `IActionService` 调度）
+- 任一 Action 抛异常 → 写到 `ActionItem.Exception` 字段、记录日志，**继续**执行后续 Action
+- 整个链跑完（或链为空）后弹窗才关闭
+
+### 4.4 异常处理
 
 - **`IActionService` 拿不到**：弹窗打不开，记 `LogError` 后 `OnInvoke` 返回
 - **弹窗里按钮触发链抛异常**：`IActionService.InvokeActionSetAsync` **不会**自动吞异常，由 `ViewModel.PressButton` 的 `try/catch` 保护，失败仅记 Debug 日志，不影响弹窗关闭
