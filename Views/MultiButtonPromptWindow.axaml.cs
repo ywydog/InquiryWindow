@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using ClassIsland.Core;
 using ClassIsland.Core.Controls;
 using InquiryWindow.ViewModels;
@@ -8,11 +10,34 @@ namespace InquiryWindow.Views;
 public partial class MultiButtonPromptWindow : MyWindow
 {
     private MultiButtonPromptViewModel? _subscribedVm;
+    private bool _allowClose;
 
     public MultiButtonPromptWindow()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+
+        // 拦截关闭：必须通过按钮才能关闭（与 v1 InquiryWindowWindow 一致）
+        Closing += (_, e) =>
+        {
+            if (!_allowClose)
+            {
+                e.Cancel = true;
+            }
+        };
+
+        // 拦截最小化：自动还原（与 v1 InquiryWindowWindow 一致）
+        this.GetObservable(WindowStateProperty).Subscribe(s =>
+        {
+            if (s == WindowState.Minimized)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    WindowState = WindowState.Normal;
+                    Activate();
+                }, DispatcherPriority.MaxValue);
+            }
+        });
     }
 
     /// <summary>
@@ -42,6 +67,7 @@ public partial class MultiButtonPromptWindow : MyWindow
 
     private void CloseWindow()
     {
+        _allowClose = true;
         Close();
     }
 
