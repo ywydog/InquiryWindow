@@ -8,6 +8,7 @@ using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
 using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
+using InquiryWindow.Views;
 
 namespace InquiryWindow.SettingsPage;
 
@@ -68,6 +69,31 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
             Width = 120,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left
         };
+        // "选择图标" 按钮：放在 iconBox 旁边，不动文本框本身（保留手填能力）
+        var iconRow = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,Auto"),
+            ColumnSpacing = 6
+        };
+        iconRow.Children.Add(iconBox);
+        var pickIconButton = new Button
+        {
+            Content = "…",
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+        Grid.SetColumn(pickIconButton, 1);
+        iconRow.Children.Add(pickIconButton);
+
+        pickIconButton.Click += async (_, _) =>
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+            var picked = await IconPickerDialog.PickAsync(topLevel, title: "选择预设图标", highlightGlyph: iconBox.Text);
+            if (!string.IsNullOrEmpty(picked))
+            {
+                iconBox.Text = picked;
+            }
+        };
 
         // 关键：克隆一份 ActionSet 给 ActionControl 编辑，
         // 这样「取消」时用户的改动会随 workingActions 一起被丢弃，preset.Actions 不被污染。
@@ -76,7 +102,7 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
 
         var content = new StackPanel { Spacing = 10 };
         content.Children.Add(MakeLabeled("名称", nameBox));
-        content.Children.Add(MakeLabeled("图标字符（Fluent SystemIcons）", iconBox));
+        content.Children.Add(MakeLabeled("图标字符（Fluent SystemIcons）", iconRow));
         content.Children.Add(new TextBlock
         {
             Text = "Action 链：",

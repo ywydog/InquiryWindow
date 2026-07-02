@@ -24,6 +24,20 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         });
     }
 
+    private async void OnPickIconClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control { Tag: MultiButtonPromptButton target } control) return;
+
+        var topLevel = TopLevel.GetTopLevel(control);
+        if (topLevel == null) return;
+
+        var picked = await IconPickerDialog.PickAsync(topLevel, title: "选择按钮图标", highlightGlyph: target.Icon);
+        if (!string.IsNullOrEmpty(picked))
+        {
+            target.Icon = picked;
+        }
+    }
+
     private async void OnInsertPresetClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control control) return;
