@@ -34,19 +34,43 @@
 
             <TextBlock Text="按钮" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
 
-            <ItemsControl ItemsSource="{Binding Settings.Buttons}">
+            <ItemsControl ItemsSource="{Binding Settings.Buttons}"
+                          DragDrop.AllowDrop="True"
+                          DragDrop.DragOver="OnButtonListDragOver"
+                          DragDrop.Drop="OnButtonListDrop">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:MultiButtonPromptButton">
                         <Expander Margin="0,4" HorizontalAlignment="Stretch"
-                                  HorizontalContentAlignment="Stretch">
+                                  HorizontalContentAlignment="Stretch"
+                                  DragDrop.AllowDrop="True"
+                                  DragDrop.DragOver="OnButtonItemDragOver"
+                                  DragDrop.Drop="OnButtonItemDrop">
                             <Expander.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="{Binding Icon}"
-                                               FontFamily="{DynamicResource FluentIcons}"
-                                               FontSize="14"
-                                               VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                </StackPanel>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                    <!-- 拖拽手柄：仅作为 PointerPressed 起点，视觉上提示可拖 -->
+                                    <Border Grid.Column="0"
+                                            Tag="{Binding}"
+                                            Padding="6,2"
+                                            CornerRadius="4"
+                                            Background="{DynamicResource SubtleFillColorTertiaryBrush}"
+                                            Cursor="Hand"
+                                            PointerPressed="OnButtonDragHandlePressed"
+                                            PointerMoved="OnButtonDragHandleMoved"
+                                            PointerReleased="OnButtonDragHandleReleased"
+                                            ToolTip.Tip="按住拖动以排序">
+                                        <TextBlock Text="⋮⋮"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding Icon}"
+                                                   FontFamily="{DynamicResource FluentIcons}"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
                             </Expander.Header>
                             <StackPanel Spacing="8">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
