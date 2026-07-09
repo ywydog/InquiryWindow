@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
@@ -55,42 +56,14 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             return;
         }
 
-        // 把每个 item 的引用先存起来，等 flyout 关闭时统一解绑 Click，
-        // 避免频繁开 flyout 时事件订阅累计。
-        var items = store.Presets
-            .Select(p => new MenuFlyoutItem
-            {
-                Text = p.Name,
-                CommandParameter = p,
-                Tag = target
-            })
-            .ToList();
-
-        var flyout = new MenuFlyout();
-        foreach (var item in items)
-        {
-            item.Click += OnPresetItemClick;
-            flyout.Items.Add(item);
-        }
-
-        flyout.Closing += (_, _) =>
-        {
-            foreach (var item in items)
-            {
-                item.Click -= OnPresetItemClick;
-            }
-        };
-
-        flyout.ShowAt(control);
-    }
-
-    private void OnPresetItemClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuFlyoutItem { CommandParameter: ButtonPreset preset, Tag: MultiButtonPromptButton target })
-            return;
+        // 用 ContentDialog + ListBox 代替 MenuFlyout：FluentAvalonia 的
+        // MenuFlyoutItemBase.OnPointerEntered 在代码创建 + 鼠标 hover 时
+        // 会因模板上下文未就绪而抛 NullReferenceException（ClassIsland.App 日志可见）。
+        var selected = await ShowPresetPickerDialogAsync(store.Presets);
+        if (selected is null) return;
 
         // 深拷贝整条 Action 链（避免和预设共享引用，导致改一处影响全部）
-        var clone = ConfigureFileHelper.CopyObject(preset.Actions);
+        var clone = ConfigureFileHelper.CopyObject(selected.Actions);
         if (clone is null)
         {
             // 极少见：配置损坏 / CopyObject 不支持该类型
@@ -216,6 +189,73 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             DefaultButton = ContentDialogButton.Primary
         };
         await dialog.ShowAsync();
+    }
+
+    /// <summary>
+    /// 用 ContentDialog + ListBox 显示预设选择器。
+    /// 之所以不直接复用 MenuFlyout：FluentAvalonia.MenuFlyoutItemBase.OnPointerEntered
+    /// 在代码创建 + 鼠标 hover 时会因模板上下文未就绪而抛 NullReferenceException
+    /// （ClassIsland.App 日志可见），ContentDialog 走的是完整可视树，无此问题。
+    /// </summary>
+    private static async Task<ButtonPreset?> ShowPresetPickerDialogAsync(
+        System.Collections.Generic.IReadOnlyList<ButtonPreset> presets)
+    {
+        var listBox = new ListBox
+        {
+            ItemsSource = presets,
+            MaxHeight = 360,
+            MinWidth = 320,
+            // 用 DataTemplate 让每一行展示图标 + 名称
+            ItemTemplate = new FuncDataTemplate<ButtonPreset>((p, _) =>
+            {
+                if (p is null) return new TextBlock();
+                var row = new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    Spacing = 10
+                };
+                row.Children.Add(new FluentIcon
+                {
+                    Glyph = p.Icon,
+                    FontSize = 16,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                });
+                row.Children.Add(new TextBlock
+                {
+                    Text = p.Name,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                });
+                return row;
+            })
+        };
+
+        var dialog = new ContentDialog
+        {
+            Title = "选择要插入的预设",
+            Content = listBox,
+            PrimaryButtonText = "插入",
+            SecondaryButtonText = "取消",
+            IsPrimaryButtonEnabled = false,
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        // 只有选中一行后才能点"插入"
+        listBox.SelectionChanged += (_, _) =>
+        {
+            dialog.IsPrimaryButtonEnabled = listBox.SelectedItem is ButtonPreset;
+        };
+        // 双击 = 直接插入并关闭
+        listBox.DoubleTapped += (_, _) =>
+        {
+            if (listBox.SelectedItem is ButtonPreset)
+            {
+                dialog.Hide(ContentDialogResult.Primary);
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary) return null;
+        return listBox.SelectedItem as ButtonPreset;
     }
 
     private void InitializeComponent()
