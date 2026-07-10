@@ -5,7 +5,7 @@ entranceAssembly: "InquiryWindow.dll"
 url: https://github.com/ywydog/InquiryWindow
 version: 1.0.0.0
 apiVersion: 2.0.0.0
-author: local
+author: ywydog
 readme: README.md
 icon: icon.png
 repoOwner: ywydog
