@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using Avalonia.Media.Imaging;
 using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Automation;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Logging;
 namespace InquiryWindow.Actions;
 
 [ActionInfo("action.inquiryWindow", "询问窗", "\uE4C4")]
+[SupportedOSPlatform("windows")]   // 调 IconExtractorService（仅 Windows）
 public class InquiryWindowAction(
     ILessonsService lessonsService,
     IExactTimeService exactTimeService,

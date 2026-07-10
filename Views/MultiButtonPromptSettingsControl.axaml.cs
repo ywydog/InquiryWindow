@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using ClassIsland.Core.Abstractions.Controls;
+using ClassIsland.Core.Controls;
 using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
