@@ -8,5 +8,8 @@ apiVersion: 2.0.0.0
 author: local
 readme: README.md
 icon: icon.png
+repoOwner: ywydog
+repoName: InquiryWindow
+assetsRoot: main
 supportedOSPlatforms:
 - Windows
