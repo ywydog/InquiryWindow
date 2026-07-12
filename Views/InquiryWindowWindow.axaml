@@ -3,12 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ci="http://classisland.tech/schemas/xaml/core"
              xmlns:local="clr-namespace:InquiryWindow.Views"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
+             xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core"
              Width="500" Height="240"
              MinHeight="200"
              WindowStartupLocation="CenterScreen"
              CanResize="False"
              Topmost="True"
              ShowAsDialog="True">
+
+    <ci:MyWindow.Styles>
+        <!-- ClassIsland 自带的 Markdown 主题，让弹窗和系统设置/更新日志风格一致 -->
+        <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
+    </ci:MyWindow.Styles>
 
     <Border Padding="16" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
@@ -31,11 +38,13 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- 正文 -->
-            <TextBlock Grid.Row="2"
-                       Text="{Binding DialogBody}"
-                       TextWrapping="Wrap"
-                       VerticalAlignment="Top" />
+            <!-- 正文（Markdown 渲染：仅上下滚动，横向强制关闭） -->
+            <mdxaml:MarkdownScrollViewer Grid.Row="2"
+                                          Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                          Markdown="{Binding DialogBody}"
+                                          MinHeight="40"
+                                          MaxHeight="320"
+                                          VerticalAlignment="Top" />
 
             <!-- 路径预览（独立一行，可见性由 ShowPath 控制） -->
             <TextBlock Grid.Row="3"

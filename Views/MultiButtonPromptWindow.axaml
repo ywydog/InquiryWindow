@@ -3,32 +3,41 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ci="http://classisland.tech/schemas/xaml/core"
              xmlns:models="clr-namespace:InquiryWindow.Models"
-             Width="500" Height="220"
-             MinHeight="180" MinWidth="320"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
+             xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core"
+             Width="500" Height="280"
+             MinHeight="220" MinWidth="360"
              WindowStartupLocation="CenterScreen"
-             CanResize="False"
+             CanResize="True"
              Topmost="True"
              ShowAsDialog="True">
 
+    <ci:MyWindow.Styles>
+        <!-- ClassIsland 自带的 Markdown 主题，让弹窗和系统设置/更新日志风格一致 -->
+        <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
+    </ci:MyWindow.Styles>
+
     <Border Padding="20" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
-        <StackPanel Spacing="14">
+        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
 
-            <!-- 主提示 -->
-            <TextBlock Text="{Binding Prompt}"
-                       FontSize="20"
-                       FontWeight="SemiBold"
-                       TextWrapping="Wrap" />
+            <!-- 主提示（Markdown 渲染：仅上下滚动，横向强制关闭） -->
+            <mdxaml:MarkdownScrollViewer Grid.Row="0"
+                                          Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                          Markdown="{Binding Prompt}"
+                                          MinHeight="40"
+                                          MaxHeight="160" />
 
-            <!-- 副提示 -->
-            <TextBlock Text="{Binding SubPrompt}"
-                       FontSize="13"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       TextWrapping="Wrap"
-                       IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <!-- 副提示（Markdown 渲染，可见性由是否非空控制） -->
+            <mdxaml:MarkdownScrollViewer Grid.Row="1"
+                                          Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                          Markdown="{Binding SubPrompt}"
+                                          IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                          MinHeight="32"
+                                          MaxHeight="100" />
 
             <!-- 按钮列表（运行时由 ViewModel 动态填入） -->
-            <ItemsControl ItemsSource="{Binding Buttons}" Margin="0,8,0,0">
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding Buttons}" Margin="0,8,0,0">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="10"
@@ -54,6 +63,6 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-        </StackPanel>
+        </Grid>
     </Border>
 </ci:MyWindow>
