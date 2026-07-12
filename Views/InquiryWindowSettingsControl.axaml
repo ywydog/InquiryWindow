@@ -4,14 +4,7 @@
                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                               xmlns:ci="http://classisland.tech/schemas/xaml/core"
                               xmlns:local="clr-namespace:InquiryWindow.Views"
-                              xmlns:settings="clr-namespace:InquiryWindow.Models"
-                              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
-                              xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core">
-
-    <ci:ActionSettingsControlBase.Styles>
-        <!-- 让预览和实际弹窗用同一套 Markdown 主题 -->
-        <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
-    </ci:ActionSettingsControlBase.Styles>
+                              xmlns:settings="clr-namespace:InquiryWindow.Models">
 
     <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:InquiryWindowSettingsControl}}">
     <StackPanel Spacing="8">
@@ -29,25 +22,20 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="弹窗正文（支持 Markdown）" FontSize="12"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="弹窗正文（支持 Markdown）" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Button Grid.Column="1"
+                        Content="预览..."
+                        Click="OnPreviewBodyClick"
+                        Padding="10,2"
+                        FontSize="11" />
+            </Grid>
             <TextBox Text="{Binding Settings.DialogBody, Mode=TwoWay}"
                      Height="80"
                      AcceptsReturn="True"
                      TextWrapping="Wrap" />
-            <!-- 预览：实时反映正文 Markdown 渲染结果 -->
-            <Border Margin="0,4,0,0" Padding="8" CornerRadius="6"
-                    BorderThickness="1"
-                    BorderBrush="{DynamicResource ControlElevationBorderBrush}">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="预览" FontSize="11"
-                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                    <mdxaml:MarkdownScrollViewer
-                        Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                        Markdown="{Binding Settings.DialogBody}"
-                        MaxHeight="160" />
-                </StackPanel>
-            </Border>
         </StackPanel>
 
         <StackPanel Spacing="4">

@@ -6,14 +6,7 @@
                               xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
                               xmlns:settings="clr-namespace:InquiryWindow.Models"
                               xmlns:local="clr-namespace:InquiryWindow.Views"
-                              xmlns:models="clr-namespace:InquiryWindow.Models"
-                              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
-                              xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core">
-
-    <ci:ActionSettingsControlBase.Styles>
-        <!-- 让预览和实际弹窗用同一套 Markdown 主题 -->
-        <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
-    </ci:ActionSettingsControlBase.Styles>
+                              xmlns:models="clr-namespace:InquiryWindow.Models">
 
     <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:MultiButtonPromptSettingsControl}}">
     <ScrollViewer>
@@ -26,45 +19,34 @@
             </StackPanel>
 
             <StackPanel Spacing="4">
-                <TextBlock Text="主提示文本（支持 Markdown）" FontSize="12"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="主提示文本（支持 Markdown）" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <Button Grid.Column="1"
+                            Content="预览..."
+                            Click="OnPreviewPromptClick"
+                            Padding="10,2"
+                            FontSize="11" />
+                </Grid>
                 <TextBox Text="{Binding Settings.Prompt, Mode=TwoWay}" />
-                <!-- 预览：实时反映主提示 Markdown 渲染结果 -->
-                <Border Margin="0,4,0,0" Padding="8" CornerRadius="6"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlElevationBorderBrush}">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="预览" FontSize="11"
-                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                        <mdxaml:MarkdownScrollViewer
-                            Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                            Markdown="{Binding Settings.Prompt}"
-                            MaxHeight="120" />
-                    </StackPanel>
-                </Border>
             </StackPanel>
 
             <StackPanel Spacing="4">
-                <TextBlock Text="副提示文本（可空，支持 Markdown）" FontSize="12"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="副提示文本（可空，支持 Markdown）" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <Button Grid.Column="1"
+                            Content="预览..."
+                            Click="OnPreviewSubPromptClick"
+                            Padding="10,2"
+                            FontSize="11" />
+                </Grid>
                 <TextBox Text="{Binding Settings.SubPrompt, Mode=TwoWay}"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          Height="60" />
-                <!-- 预览：副提示非空时显示 -->
-                <Border Margin="0,4,0,0" Padding="8" CornerRadius="6"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                        IsVisible="{Binding Settings.SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="预览" FontSize="11"
-                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                        <mdxaml:MarkdownScrollViewer
-                            Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                            Markdown="{Binding Settings.SubPrompt}"
-                            MaxHeight="100" />
-                    </StackPanel>
-                </Border>
             </StackPanel>
 
             <TextBlock Text="按钮" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />

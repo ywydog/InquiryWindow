@@ -76,6 +76,26 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         }
     }
 
+    private async void OnPreviewPromptClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+        await MarkdownPreviewDialog.ShowAsync(
+            topLevel,
+            title: "主提示预览",
+            markdown: Settings.Prompt ?? "");
+    }
+
+    private async void OnPreviewSubPromptClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+        await MarkdownPreviewDialog.ShowAsync(
+            topLevel,
+            title: "副提示预览",
+            markdown: Settings.SubPrompt ?? "");
+    }
+
     // ---- 按钮排序拖拽（参考 SystemTools 的实现） ----
 
     private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptButton.Id";

@@ -56,6 +56,17 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
         });
     }
 
+    private async void OnPreviewBodyClick(object? sender, RoutedEventArgs e)
+    {
+        // 弹一个独立弹窗预览 Markdown 渲染效果（用户点按钮才看，不是实时）。
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+        await MarkdownPreviewDialog.ShowAsync(
+            topLevel,
+            title: "弹窗正文预览",
+            markdown: Settings.DialogBody ?? "");
+    }
+
     private async Task PickAsync(Func<TopLevel, Task> picker)
     {
         var topLevel = TopLevel.GetTopLevel(this);
