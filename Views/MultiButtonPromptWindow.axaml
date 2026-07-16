@@ -19,7 +19,7 @@
 
     <Border Padding="20" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
-        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
 
             <!-- 主提示（Markdown 渲染：仅上下滚动，横向强制关闭） -->
             <mdxaml:MarkdownScrollViewer Grid.Row="0"
@@ -36,8 +36,32 @@
                                           MinHeight="32"
                                           MaxHeight="100" />
 
+            <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示 -->
+            <Border Grid.Row="2"
+                    Padding="12"
+                    CornerRadius="6"
+                    IsVisible="{Binding IsAutoExecuteActive}"
+                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding CountdownText}"
+                               FontSize="14"
+                               FontWeight="DemiBold" />
+                    <ProgressBar Height="5"
+                                 Minimum="0"
+                                 Maximum="{Binding AutoExecuteMaxSeconds}"
+                                 Value="{Binding AutoExecuteRemainingSeconds}">
+                        <ProgressBar.Styles>
+                            <Style Selector="ProgressBar">
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Style>
+                        </ProgressBar.Styles>
+                    </ProgressBar>
+                </StackPanel>
+            </Border>
+
             <!-- 按钮列表（运行时由 ViewModel 动态填入） -->
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding Buttons}" Margin="0,8,0,0">
+            <ItemsControl Grid.Row="3" ItemsSource="{Binding Buttons}" Margin="0,4,0,0">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="10"

@@ -55,6 +55,12 @@ public class InquiryWindowAction(
             CanExecute       = hasPath
         };
 
+        // 4.5 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
+        if (Settings.IsAutoExecuteEnabled && hasPath)
+        {
+            window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+        }
+
         var owner = AppBase.Current.GetRootWindow();
         var result = await window.ShowDialog(owner);
         logger.LogDebug("用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");

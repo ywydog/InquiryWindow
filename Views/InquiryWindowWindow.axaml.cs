@@ -12,6 +12,8 @@ public partial class InquiryWindowWindow : MyWindow
 {
     private readonly ViewModel _vm = new();
     private bool _allowClose;
+    private DispatcherTimer? _autoExecuteTimer;
+    private int _autoExecuteRemaining;
 
     public InquiryWindowWindow()
     {
@@ -123,12 +125,14 @@ public partial class InquiryWindowWindow : MyWindow
 
     private void OnCancelClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        CancelAutoExecuteCountdown();
         Result = InquiryWindowResult.Cancel;
         CloseProgrammatically();
     }
 
     private void OnExecuteClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        CancelAutoExecuteCountdown();
         Result = InquiryWindowResult.Execute;
         CloseProgrammatically();
     }
@@ -137,6 +141,71 @@ public partial class InquiryWindowWindow : MyWindow
     {
         _allowClose = true;
         base.Close(Result);
+    }
+
+    /// <summary>
+    /// 启动自动执行倒计时。倒计时归零时按"执行"关闭弹窗。
+    /// 必须在 ShowDialog 之前调用。调用后用户点取消/执行会自动停止计时。
+    /// </summary>
+    /// <param name="seconds">倒计时秒数（&lt;=0 时不会启动）。</param>
+    public void StartAutoExecuteCountdown(int seconds)
+    {
+        if (seconds <= 0) return;
+        CancelAutoExecuteCountdown();
+        _autoExecuteRemaining = seconds;
+        _vm.AutoExecuteMaxSeconds = seconds;
+        _vm.AutoExecuteRemainingSeconds = seconds;
+        _vm.IsAutoExecuteActive = true;
+        _vm.CountdownText = FormatCountdownText(seconds, buttonName: null);
+        _autoExecuteTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _autoExecuteTimer.Tick += OnAutoExecuteTick;
+        _autoExecuteTimer.Start();
+    }
+
+    /// <summary>
+    /// 停止自动执行倒计时（用户已主动选择或窗口被销毁时调用）。
+    /// </summary>
+    public void CancelAutoExecuteCountdown()
+    {
+        if (_autoExecuteTimer != null)
+        {
+            _autoExecuteTimer.Stop();
+            _autoExecuteTimer.Tick -= OnAutoExecuteTick;
+            _autoExecuteTimer = null;
+        }
+        _autoExecuteRemaining = 0;
+        _vm.IsAutoExecuteActive = false;
+        _vm.AutoExecuteRemainingSeconds = 0;
+        _vm.CountdownText = string.Empty;
+    }
+
+    private void OnAutoExecuteTick(object? sender, EventArgs e)
+    {
+        _autoExecuteRemaining--;
+        if (_autoExecuteRemaining > 0)
+        {
+            _vm.AutoExecuteRemainingSeconds = _autoExecuteRemaining;
+            _vm.CountdownText = FormatCountdownText(_autoExecuteRemaining, buttonName: null);
+            return;
+        }
+        // 倒计时归零：等同于按"执行"
+        CancelAutoExecuteCountdown();
+        Result = InquiryWindowResult.Execute;
+        CloseProgrammatically();
+    }
+
+    /// <summary>
+    /// 把剩余秒数格式化为 "将X分Y秒后执行{按钮}......"。
+    /// <paramref name="buttonName"/> 为 null 时省略按钮名。
+    /// </summary>
+    private static string FormatCountdownText(int seconds, string? buttonName)
+    {
+        var minutes = seconds / 60;
+        var secs = seconds % 60;
+        var time = $"{minutes}分{secs}秒";
+        return string.IsNullOrEmpty(buttonName)
+            ? $"将{time}后执行......"
+            : $"将{time}后执行「{buttonName}」......";
     }
 
     private void InitializeComponent()
@@ -154,5 +223,9 @@ public partial class InquiryWindowWindow : MyWindow
         [ObservableProperty] private Bitmap? _icon;
         [ObservableProperty] private bool _isIconVisible;
         [ObservableProperty] private bool _canExecute = true;
+        [ObservableProperty] private bool _isAutoExecuteActive;
+        [ObservableProperty] private string _countdownText = string.Empty;
+        [ObservableProperty] private double _autoExecuteMaxSeconds;
+        [ObservableProperty] private double _autoExecuteRemainingSeconds;
     }
 }

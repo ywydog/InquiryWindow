@@ -19,7 +19,7 @@
 
     <Border Padding="16" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
-        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="8">
 
             <!-- 弹窗标题小字（窗口内顶部） -->
             <TextBlock Grid.Row="0"
@@ -55,8 +55,32 @@
                        TextWrapping="Wrap"
                        IsVisible="{Binding IsPathVisible}" />
 
+            <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示 -->
+            <Border Grid.Row="4"
+                    Padding="12"
+                    CornerRadius="6"
+                    IsVisible="{Binding IsAutoExecuteActive}"
+                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding CountdownText}"
+                               FontSize="14"
+                               FontWeight="DemiBold" />
+                    <ProgressBar Height="5"
+                                 Minimum="0"
+                                 Maximum="{Binding AutoExecuteMaxSeconds}"
+                                 Value="{Binding AutoExecuteRemainingSeconds}">
+                        <ProgressBar.Styles>
+                            <Style Selector="ProgressBar">
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Style>
+                        </ProgressBar.Styles>
+                    </ProgressBar>
+                </StackPanel>
+            </Border>
+
             <!-- 按钮（右对齐：取消在左，执行在右） -->
-            <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto">
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto">
                 <Button Grid.Column="1"
                         Content="取消"
                         MinWidth="84"
