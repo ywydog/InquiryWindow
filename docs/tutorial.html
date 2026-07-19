@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>询问窗插件 · 5 分钟入门</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #171b26;
+    --bg-2:      #1e2127;
+    --bg-3:      #262a37;
+    --border:    #262a37;
+    --border-2:  #313644;
+    --text:      #c9d1d9;
+    --text-dim:  #8b96a8;
+    --text-faint:#5a6275;
+    --green:     #82D99F;
+    --green-bg:  rgba(130, 217, 159, 0.10);
+    --green-line:rgba(130, 217, 159, 0.25);
+    --purple:    #B38CFF;
+    --pink:      #F2858C;
+    --yellow:    #DED47E;
+    --orange:    #F29D79;
+    --blue:      #80BBFF;
+    --sans: "Geist", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --zh:   "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: "Geist Mono", "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--zh);
+    font-size: 15px; line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--bg-3); color: var(--green); }
+  a { color: var(--blue); text-decoration: none; border-bottom: 1px dotted var(--border-2); }
+  a:hover { color: var(--green); border-bottom-color: var(--green-line); }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--bg-3); padding: 1px 6px; border-radius: 3px; color: var(--green); }
+  kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--bg-3); border: 1px solid var(--border-2); color: var(--text); }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 72px 28px 96px;
+  }
+
+  /* —— 头 —— */
+  .head {
+    margin-bottom: 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .head .tag {
+    display: inline-block;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green);
+    padding: 2px 8px;
+    border: 1px solid var(--green-line);
+    border-radius: 3px;
+    margin-bottom: 18px;
+  }
+  .head h1 {
+    font-family: var(--zh); font-weight: 700;
+    font-size: 36px; line-height: 1.2;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  .head .deck {
+    font-size: 16px; color: var(--text-dim); margin: 0 0 18px;
+  }
+  .head .meta {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    font-family: var(--mono); font-size: 12px; color: var(--text-faint);
+  }
+  .head .meta b { color: var(--text); font-weight: 500; }
+  .head .meta .g { color: var(--green); }
+  .head .meta .y { color: var(--yellow); }
+  .head .meta .p { color: var(--purple); }
+  .head .meta .o { color: var(--orange); }
+
+  /* —— 章节 —— */
+  section { margin-top: 56px; }
+  h2 {
+    font-family: var(--mono);
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text);
+    margin: 64px 0 20px;
+    padding: 10px 14px 10px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+  }
+  h2 .num {
+    color: var(--green);
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-block;
+    min-width: 44px;
+    padding: 3px 0;
+    background: var(--green-bg);
+    border: 1px solid var(--green-line);
+    border-radius: 3px;
+    text-align: center;
+    font-feature-settings: "tnum";
+    letter-spacing: 0.06em;
+  }
+  h2 .txt { color: var(--text); }
+  h2 .txt-zh { color: var(--text-dim); text-transform: none; letter-spacing: 0.04em; margin-left: 4px; font-family: var(--zh); }
+  h3 {
+    font-family: var(--zh); font-weight: 600; font-size: 18px;
+    color: var(--text); margin: 32px 0 10px;
+  }
+  p { margin: 10px 0; }
+  b, strong { color: var(--text); font-weight: 600; }
+  em { color: var(--green); font-style: normal; font-weight: 500; }
+
+  blockquote {
+    margin: 16px 0;
+    padding: 10px 16px;
+    border-left: 3px solid var(--green);
+    background: var(--bg-2);
+    color: var(--text);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* —— 场景网格 —— */
+  .scenes {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border-2);
+    border: 1px solid var(--border-2);
+    margin: 16px 0 28px;
+    border-radius: 4px; overflow: hidden;
+  }
+  @media (max-width: 720px) { .scenes { grid-template-columns: 1fr; } }
+  .scene { background: var(--bg-2); padding: 18px 18px 16px; }
+  .scene .tag {
+    display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+    padding: 1px 6px; border-radius: 3px; border: 1px solid var(--border-2);
+    color: var(--text-dim); margin-bottom: 10px;
+  }
+  .scene.a .tag { color: var(--green); border-color: var(--green-line); background: var(--green-bg); }
+  .scene.b .tag { color: var(--purple); border-color: rgba(179,140,255,0.25); background: rgba(179,140,255,0.08); }
+  .scene.c .tag { color: var(--orange); border-color: rgba(242,157,121,0.25); background: rgba(242,157,121,0.08); }
+  .scene h3 { margin: 0 0 8px; font-size: 15px; }
+  .scene .quote {
+    font-size: 13.5px; color: var(--text-dim); margin: 0; line-height: 1.55;
+  }
+  .scene .quote b { color: var(--text); }
+
+  /* —— 模式表 —— */
+  .modes {
+    border: 1px solid var(--border-2);
+    margin: 14px 0 28px; font-size: 14px;
+    border-radius: 4px; overflow: hidden;
+  }
+  .modes .hr {
+    display: grid; grid-template-columns: 80px 1.2fr 2fr 1.4fr;
+    background: var(--bg-3); color: var(--text-dim);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .modes .hr > div { padding: 8px 12px; }
+  .modes .hr > div + div { border-left: 1px solid var(--border-2); }
+  .modes .row {
+    display: grid; grid-template-columns: 80px 1.2fr 2fr 1.4fr;
+    border-top: 1px solid var(--border);
+  }
+  .modes .row > div { padding: 12px; }
+  .modes .row > div + div { border-left: 1px solid var(--border); }
+  .modes .row:hover { background: var(--bg-2); }
+  .modes .name { font-weight: 600; color: var(--text); }
+  .modes .name small {
+    display: block; font-family: var(--mono); font-weight: 400;
+    font-size: 10px; color: var(--text-faint); letter-spacing: 0.04em;
+  }
+  .modes .desc, .modes .fit { color: var(--text-dim); font-size: 13px; line-height: 1.55; }
+  .modes .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 3px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em;
+    background: var(--bg-3); color: var(--green);
+  }
+  .modes .pill.p { color: var(--purple); }
+  .modes .pill.o { color: var(--orange); }
+  @media (max-width: 720px) {
+    .modes .hr, .modes .row { grid-template-columns: 1fr; }
+    .modes .hr { display: none; }
+    .modes .row > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  }
+
+  /* —— 参数面板 —— */
+  .panel {
+    border: 1px solid var(--border-2);
+    margin: 16px 0 20px;
+    background: var(--bg-2);
+    border-radius: 4px; overflow: hidden;
+  }
+  .panel .hd {
+    background: var(--bg-3);
+    padding: 6px 14px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border-2);
+  }
+  .panel .hd .dot { color: var(--green); margin-right: 6px; }
+  .panel table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .panel td {
+    padding: 10px 14px; border-top: 1px solid var(--border);
+    vertical-align: baseline; color: var(--text);
+  }
+  .panel tr:first-child td { border-top: 0; }
+  .panel td.k { font-weight: 500; width: 32%; }
+  .panel td.v { font-family: var(--mono); font-size: 13px; color: var(--green); text-align: right; width: 26%; }
+  .panel td.n { color: var(--text-faint); font-size: 12.5px; padding-left: 0; }
+  @media (max-width: 540px) {
+    .panel td { display: block; width: 100% !important; text-align: left !important; padding: 6px 14px; }
+    .panel td.n { padding-top: 0; padding-bottom: 10px; }
+  }
+
+  /* —— 步骤 —— */
+  ol.steps {
+    counter-reset: stp; list-style: none; padding: 0; margin: 14px 0 24px;
+    border: 1px solid var(--border-2); border-radius: 4px; overflow: hidden;
+  }
+  ol.steps li {
+    counter-increment: stp;
+    display: grid; grid-template-columns: 56px 1fr;
+    border-top: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  ol.steps li:first-child { border-top: 0; }
+  ol.steps li::before {
+    content: counter(stp, decimal-leading-zero);
+    background: var(--bg-3);
+    color: var(--green);
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    border-right: 1px solid var(--border-2);
+  }
+  ol.steps li .body { padding: 12px 16px; }
+
+  /* —— 注释框 —— */
+  .note {
+    border: 1px solid var(--border-2);
+    background: var(--bg-2);
+    border-left: 3px solid var(--green);
+    margin: 18px 0;
+    border-radius: 3px; overflow: hidden;
+  }
+  .note .lbl {
+    background: var(--bg-3);
+    padding: 4px 14px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--green);
+    border-bottom: 1px solid var(--border-2);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .note .lbl .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+  .note .body { padding: 12px 16px; color: var(--text-dim); }
+  .note .body p { margin: 0; }
+  .note.warn { border-left-color: var(--pink); }
+  .note.warn .lbl { color: var(--pink); }
+  .note.warn .lbl .dot { background: var(--pink); }
+  .note.tip { border-left-color: var(--purple); }
+  .note.tip .lbl { color: var(--purple); }
+  .note.tip .lbl .dot { background: var(--purple); }
+
+  /* —— FAQ —— */
+  .faq {
+    border: 1px solid var(--border-2);
+    border-radius: 4px; overflow: hidden;
+    margin: 14px 0 28px;
+  }
+  details.faq-item { border-top: 1px solid var(--border); }
+  details.faq-item:first-child { border-top: 0; }
+  details.faq-item[open] { background: var(--bg-2); }
+  .faq-q {
+    cursor: pointer; padding: 12px 16px; font-weight: 500;
+    color: var(--text); list-style: none;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-q::before {
+    content: "Q"; font-family: var(--mono); font-size: 11px; font-weight: 700;
+    color: var(--green); background: var(--green-bg);
+    border: 1px solid var(--green-line);
+    padding: 0 6px; border-radius: 3px;
+  }
+  .faq-q .ch { margin-left: auto; color: var(--text-faint); font-family: var(--mono); transition: transform 0.15s; }
+  details[open] .faq-q .ch { transform: rotate(90deg); color: var(--green); }
+  .faq-a { padding: 0 16px 14px 38px; color: var(--text-dim); font-size: 14px; }
+  .faq-a p { margin: 6px 0; }
+  .faq-a code { font-size: 0.86em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 头 -->
+  <header class="head">
+    <span class="tag">plugin tutorial</span>
+    <h1>询问窗插件 · 5 分钟入门</h1>
+    <p class="deck">让 ClassIsland 自动化"按你意思来"——两个 Action / 自动执行 / Markdown / 按钮预设。五张示例 / 一张表 / 八个问答。</p>
+    <div class="meta">
+      <span><b>plugin</b> <span class="g">classisland.plugin.inquirywindow</span></span>
+      <span><b>version</b> 1.0.0</span>
+      <span><b>actions</b> <span class="g">询问窗</span> / <span class="p">多按钮询问</span></span>
+      <span><b>platform</b> <span class="o">Windows</span></span>
+      <span><b>read</b> 5 <span class="y">min</span></span>
+    </div>
+  </header>
+
+  <!-- §0 目录 -->
+  <section>
+    <h2><span class="num">§0</span>目录 / contents</h2>
+    <ol class="steps">
+      <li><div class="body">这是什么？</div></li>
+      <li><div class="body">我能用它做什么？</div></li>
+      <li><div class="body">怎么装？</div></li>
+      <li><div class="body">两个 Action + 自动执行怎么选？</div></li>
+      <li><div class="body">举个完整的栗子</div></li>
+      <li><div class="body">常见问题</div></li>
+    </ol>
+  </section>
+
+  <!-- §1 -->
+  <section>
+    <h2><span class="num">§1</span>这是什么</h2>
+    <p>装上这个插件后，你可以在 ClassIsland 的自动化里加两类新 <b>行动</b>。它们做的事情非常直白：</p>
+    <p style="text-align:center; font-size: 17px; padding: 18px 0; margin: 24px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      弹一个窗口，<em>让用户拍板</em>，再决定后面跑什么。
+    </p>
+    <p>两个 Action 长这样：</p>
+    <blockquote>
+      <b>「询问窗」</b> —— 弹窗含固定「执行 / 取消」两按钮，「执行」打开预配置的文件/程序/文件夹。<br>
+      <b>「多按钮询问」</b> —— 弹窗可配 N 个按钮，按哪个就走哪个按钮自己的 Action 链。
+    </blockquote>
+    <p>关键特性：弹窗是 <b>置顶</b> 的，<b>完全禁止通过 X 关闭</b>（最小化会被自动还原），必须通过按钮才能走。所以你写好的自动化不会因为学生随手关窗而漏跑。</p>
+  </section>
+
+  <!-- §2 -->
+  <section>
+    <h2><span class="num">§2</span><span class="txt-zh">我能用它做什么</span></h2>
+    <p>下面是三个最常见的场景。具体字段含义见 <b>§4</b>。</p>
+    <div class="scenes">
+      <div class="scene a">
+        <div class="tag">询问窗</div>
+        <h3>下课自动打开作业系统</h3>
+        <p class="quote">"下课事件触发 → 弹窗『是否打开今天的作业系统？』→ 点执行 → 自动打开 <b>作业系统 URL</b>。"</p>
+      </div>
+      <div class="scene b">
+        <div class="tag">多按钮询问</div>
+        <h3>课前选今天的学习模式</h3>
+        <p class="quote">"上课事件触发 → 弹窗『听写 / 默写 / 自习』三选一 → 按哪个就走哪个 <b>Action 链</b>。"</p>
+      </div>
+      <div class="scene c">
+        <div class="tag">多按钮 + 自动执行</div>
+        <h3>晚自习结束做点什么</h3>
+        <p class="quote">"21:30 弹窗『整理书包 / 写日记 / 跳过』→ 30 秒不点就 <b>自动按「整理书包」</b>。"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- §3 -->
+  <section>
+    <h2><span class="num">§3</span><span class="txt-zh">怎么装</span></h2>
+    <ol class="steps">
+      <li><div class="body">打开 <a href="https://github.com/ywydog/InquiryWindow/releases" target="_blank">GitHub Releases</a>，下载最新的 <code>InquiryWindow.cipx</code> 文件。</div></li>
+      <li><div class="body">打开 ClassIsland 主界面 → <b>设置</b> → <b>插件</b> → <b>安装本地插件</b>。</div></li>
+      <li><div class="body">选择刚才下载的 <code>.cipx</code> 文件，<b>重启 ClassIsland</b>（完全退出再打开）。</div></li>
+      <li><div class="body">打开任一自动化的 <b>行动集</b> 编辑器，右键 → <b>添加行动</b>，搜"询问"应能看到两个。</div></li>
+    </ol>
+    <div class="note warn">
+      <div class="lbl"><span class="dot"></span>注意 · platform</div>
+      <div class="body"><p>当前版本只支持 <b>Windows</b>。自动提取 <code>.exe</code> 图标依赖 <code>System.Drawing.Common</code>，Linux/macOS 上行为未测试。</p></div>
+    </div>
+  </section>
+
+  <!-- §4 -->
+  <section>
+    <h2><span class="num">§4</span>两个 Action + 自动执行怎么选</h2>
+    <p>两种 Action 共享"自动执行"功能。先看总表：</p>
+    <div class="modes">
+      <div class="hr"><div></div><div>name</div><div>trigger</div><div>fit for</div></div>
+      <div class="row">
+        <div><span class="pill">A</span></div>
+        <div class="name">询问窗<small>Inquiry Window</small></div>
+        <div class="desc">弹窗含固定「执行 / 取消」。按"执行"则打开预配置的 <code>.exe</code> / 文件 / 文件夹 / URL。</div>
+        <div class="fit">"要打开某个东西吗？点执行就开。"</div>
+      </div>
+      <div class="row">
+        <div><span class="pill p">B</span></div>
+        <div class="name">多按钮询问<small>Multi-button Prompt</small></div>
+        <div class="desc">弹窗含 1~N 个按钮（每按钮自带 Action 链）。按哪个就走哪个链，期间不再询问。</div>
+        <div class="fit">"今天要干啥？三选一。"</div>
+      </div>
+      <div class="row">
+        <div><span class="pill o">C</span></div>
+        <div class="name">自动执行<small>Auto Execute</small></div>
+        <div class="desc">弹窗显示 N 秒倒计时 + 进度条。归零自动按指定目标（按钮 / 无事发生）。</div>
+        <div class="fit">"等一会没人点就按默认走。"</div>
+      </div>
+    </div>
+
+    <h3>模式 A · 询问窗 —— 详细字段</h3>
+    <div class="panel">
+      <div class="hd"><span><span class="dot">●</span> identity</span><span>4 properties</span></div>
+      <table>
+        <tr><td class="k">窗口标题</td><td class="v">String</td><td class="n">OS 标题栏文字</td></tr>
+        <tr><td class="k">弹窗标题</td><td class="v">String</td><td class="n">窗口内顶部标题（支持 <code>{subject}</code> 等变量）</td></tr>
+        <tr><td class="k">弹窗正文</td><td class="v">Markdown</td><td class="n">支持 Markdown 渲染。设置页有"预览..."按钮</td></tr>
+        <tr><td class="k">目标路径</td><td class="v">Path / URL</td><td class="n">.exe / 任意文件 / 文件夹 / http(s) URL</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="hd"><span><span class="dot">●</span> display</span><span>2 properties</span></div>
+      <table>
+        <tr><td class="k">在弹窗中显示目标路径</td><td class="v">bool</td><td class="n">在正文下方用等宽字体预览</td></tr>
+        <tr><td class="k">在弹窗中显示目标图标（仅 .exe）</td><td class="v">bool</td><td class="n">自动从 .exe 提取关联图标</td></tr>
+      </table>
+    </div>
+
+    <h3>模式 B · 多按钮询问 —— 详细字段</h3>
+    <div class="panel">
+      <div class="hd"><span><span class="dot">●</span> text</span><span>3 properties</span></div>
+      <table>
+        <tr><td class="k">窗口标题</td><td class="v">String</td><td class="n">OS 标题栏</td></tr>
+        <tr><td class="k">主提示</td><td class="v">Markdown</td><td class="n">主标题，Markdown 渲染</td></tr>
+        <tr><td class="k">副提示</td><td class="v">Markdown</td><td class="n">可空；非空时显示在主提示下方</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="hd"><span><span class="dot">●</span> buttons</span><span>N entries</span></div>
+      <table>
+        <tr><td class="k">名称</td><td class="v">String</td><td class="n">按钮文本</td></tr>
+        <tr><td class="k">图标字符</td><td class="v">Fluent Glyph</td><td class="n">Fluent 图标库的字符码，比如 <code>\uE73E</code>（√）</td></tr>
+        <tr><td class="k">Action 链</td><td class="v">ActionSet</td><td class="n">用 ClassIsland 自带的 <code>ActionControl</code> 编辑；按下按钮后顺序执行</td></tr>
+      </table>
+    </div>
+
+    <h3>模式 C · 自动执行 —— 详细字段（两个 Action 共享）</h3>
+    <p>勾上设置页下方的 <b>「在弹窗显示后自动触发」</b> 复选框后展开。默认关闭。</p>
+    <div class="panel">
+      <div class="hd"><span><span class="dot">●</span> auto-execute</span><span>2~3 properties</span></div>
+      <table>
+        <tr><td class="k">等待秒数</td><td class="v">int</td><td class="n">弹窗出现后等多久（1~3600 秒）</td></tr>
+        <tr><td class="k">自动触发目标（仅多按钮）</td><td class="v">Dropdown</td><td class="n">下拉框列出所有按钮 + 末尾的"无事发生"占位</td></tr>
+        <tr><td class="k">倒计时文本</td><td class="v">read-only</td><td class="n">格式：<code>将X分Y秒后执行「按钮名」......</code></td></tr>
+      </table>
+    </div>
+    <div class="note tip">
+      <div class="lbl"><span class="dot"></span>小贴士 · 无事发生</div>
+      <div class="body"><p>下拉框最后一项 <b>「无事发生」</b> 是合法占位：到时间后<em>不执行任何 Action</em>，仅自动关闭弹窗。适合"等 N 秒用户不点就跳过"的场景。</p></div>
+    </div>
+  </section>
+
+  <!-- §5 -->
+  <section>
+    <h2><span class="num">§5</span>举个完整的栗子</h2>
+    <p>假设你想做一个"下课自动打开作业系统，30 秒不点就自动执行"的自动化：</p>
+    <div class="note">
+      <div class="lbl"><span class="dot"></span>目标 · goal</div>
+      <div class="body"><p>下课事件触发 → 弹窗 <b>『是否打开今天的作业系统？』</b> → 用户点"执行"立即打开；<b>30 秒</b>不点就自动执行。</p></div>
+    </div>
+    <h3>步骤</h3>
+    <ol class="steps">
+      <li><div class="body">新建自动化，触发器选 <b>下课事件</b>。</div></li>
+      <li><div class="body">添加行动 <b>「询问窗」</b>，填：标题=下课啦、正文=是否打开今天的作业系统？、目标路径=<code>https://your-homework-system</code>。</div></li>
+      <li><div class="body">勾上 <b>「在弹窗显示后自动执行」</b>，秒数设 <b>30</b>。</div></li>
+      <li><div class="body">保存，启用自动化。</div></li>
+    </ol>
+    <h3>效果</h3>
+    <p>✅ 下课时弹窗，含"将0分30秒后执行......"倒计时和进度条。<br>
+       ✅ 用户点"执行"立即打开目标，倒计时被取消。<br>
+       ✅ 用户点"取消"或最小化（被自动还原），30 秒后窗口<em>自动关闭并执行</em>。</p>
+    <div class="note warn">
+      <div class="lbl"><span class="dot"></span>注意 · caveat</div>
+      <div class="body">
+        <p>① 自动执行的目标按<b>下拉索引</b>记录。如果你重排了按钮顺序，目标会指向错误位置 —— 改完顺序请重新选一次。</p>
+        <p>② 「目标路径」为空时倒计时不会启动（没东西可执行）。</p>
+        <p>③ 询问窗是 <b>Windows-only</b>，Action 抛异常会弹错误对话框，但不影响后续 Action 链。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- §6 -->
+  <section>
+    <h2><span class="num">§6</span><span class="txt-zh">常见问题</span></h2>
+    <div class="faq">
+      <details class="faq-item">
+        <summary class="faq-q">装上后怎么没看到行动？<span class="ch">›</span></summary>
+        <div class="faq-a"><p>先确认 ClassIsland 已完全重启（不是最小化、是真的退出再打开）。然后去任一自动化的行动编辑器里 <b>右键 → 添加行动</b>，搜"询问"应能看到两个。</p></div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">支持哪些变量？<span class="ch">›</span></summary>
+        <div class="faq-a">
+          <p>询问窗的标题/正文里可写：</p>
+          <p><code>{time}</code> · 当前时间（HH:mm）<br>
+             <code>{date}</code> · 当前日期<br>
+             <code>{subject}</code> · 当前课程<br>
+             <code>{nextSubject}</code> · 下一节课程</p>
+          <p>变量找不到值时显示为空，不会报错。</p>
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">倒计时归零了但 Action 还没跑完窗口就关了？<span class="ch">›</span></summary>
+        <div class="faq-a"><p>正常。多按钮询问：倒计时归零 → 触发目标按钮 → <em>窗口立即关闭</em>，Action 链在后台跑。Action 链执行过程不再弹任何询问窗。如果链里某步失败，错误会写日志但不影响后续步骤。</p></div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">怎么改按钮图标？<span class="ch">›</span></summary>
+        <div class="faq-a">
+          <p>设置页按钮 Expander 里有 <b>「图标字符」</b> 输入框，填 Fluent 图标库的字符码（十六进制）。比如 <code>\uE73E</code> 是 √，<code>\uE711</code> 是 ✕。</p>
+          <p>不确定码值时点旁边的 <b>「…」</b> 按钮可以从图标库挑。</p>
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">「无事发生」什么时候用？<span class="ch">›</span></summary>
+        <div class="faq-a"><p>想"等 N 秒用户不点就 <em>跳过整个弹窗</em>"的场景。比如：上课前弹窗问"是否进入听写模式"，30 秒不点就按"无事发生"——直接关窗、不执行任何 Action、流程继续往下走。</p></div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">按钮被删了自动执行会乱吗？<span class="ch">›</span></summary>
+        <div class="faq-a">
+          <p>不会。删除目标按钮时下拉框会自动回退到第一个真实按钮；如果所有按钮都被删完且自动执行已启用，弹窗仍会<em>出现</em>，倒计时结束后按"无事发生"自动关闭（这一步会写日志告警）。</p>
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">倒计时文本不显示？<span class="ch">›</span></summary>
+        <div class="faq-a">
+          <p>先检查两件事：</p>
+          <p>① 设置页 <b>「在弹窗显示后自动触发」</b> 复选框是否勾上；</p>
+          <p>② 询问窗需要 <b>目标路径非空</b> 才会启动倒计时（多按钮询问则无此限制）。</p>
+        </div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-q">怎么反馈问题？<span class="ch">›</span></summary>
+        <div class="faq-a"><p>去 GitHub 仓库的 <a href="https://github.com/ywydog/InquiryWindow/issues" target="_blank">Issues</a> 页面提，记得附上 ClassIsland 版本、插件版本和日志（看 <code>%AppData%\ClassIsland\Logs\</code> 下的最新日志）。</p></div>
+      </details>
+    </div>
+  </section>
+
+  <footer>
+    <a href="https://github.com/ywydog/InquiryWindow">github.com/ywydog/InquiryWindow</a> · 询问窗插件
+  </footer>
+
+</div>
+</body>
+</html>
