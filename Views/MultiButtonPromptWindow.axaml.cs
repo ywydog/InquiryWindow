@@ -38,6 +38,26 @@ public partial class MultiButtonPromptWindow : MyWindow
                 }, DispatcherPriority.MaxValue);
             }
         });
+
+        // 亚克力背景：与 v1 弹窗共用同一份逻辑。
+        Loaded += (_, _) => ApplyAcrylicBackground();
+    }
+
+    /// <summary>
+    /// 根据 <see cref="Services.PluginSettingsStore"/> 的当前值，给本窗口应用或取消亚克力背景。
+    /// 与 <see cref="InquiryWindowWindow.ApplyAcrylicBackground"/> 实现保持一致。
+    /// </summary>
+    private void ApplyAcrylicBackground()
+    {
+        var settings = Services.PluginSettingsStore.Instance.Settings;
+        var isAcrylic = settings.IsAcrylicEnabled;
+
+        AcrylicHelper.Apply(this, isAcrylic);
+
+        if (RootBorder is not null)
+        {
+            RootBorder.Background = AcrylicHelper.GetCardBrush(isAcrylic);
+        }
     }
 
     /// <summary>

@@ -30,5 +30,10 @@ public class Plugin : PluginBase
         // 初始化按钮预设库（落盘到 PluginConfigFolder/presets.json）
         PresetsStore.PluginConfigFolder = PluginConfigFolder;
         PresetsStore.Instance.Load();
+
+        // 初始化插件级设置（亚克力背景开关等，落盘到 PluginConfigFolder/plugin-settings.json）。
+        // 必须在 PresetsStore 之后初始化，便于设置页加载时同时拿到两者。
+        PluginSettingsStore.PluginConfigFolder = PluginConfigFolder;
+        PluginSettingsStore.Instance.Load();
     }
 }

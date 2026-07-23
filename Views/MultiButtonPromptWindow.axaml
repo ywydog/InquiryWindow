@@ -17,8 +17,12 @@
         <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
     </ci:MyWindow.Styles>
 
-    <Border Padding="20" CornerRadius="8"
-            Background="{DynamicResource LayerFillColorAltBrush}">
+    <!--
+        根 Border。
+        Background 留空，由 code-behind 根据"亚克力背景"开关动态填充，
+        逻辑与 InquiryWindowWindow 完全一致。
+    -->
+    <Border x:Name="RootBorder" Padding="20" CornerRadius="8">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
 
             <!-- 主提示（Markdown 渲染：仅上下滚动，横向强制关闭） -->

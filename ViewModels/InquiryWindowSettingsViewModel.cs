@@ -7,7 +7,7 @@ using InquiryWindow.Services;
 namespace InquiryWindow.ViewModels;
 
 /// <summary>
-/// 插件 ViewPage 的 ViewModel：管理按钮预设库。
+/// 插件 ViewPage 的 ViewModel：管理按钮预设库 + 插件级全局设置。
 /// </summary>
 public partial class InquiryWindowSettingsViewModel : ObservableObject
 {
@@ -15,6 +15,12 @@ public partial class InquiryWindowSettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private ButtonPreset? _selectedPreset;
+
+    /// <summary>
+    /// 插件级全局设置（亚克力背景开关等）。直接复用 <see cref="PluginSettingsStore"/> 单例，
+    /// 这样 Action 弹窗读到的是同一份对象，开关变更能立即生效。
+    /// </summary>
+    public PluginSettings PluginSettings => PluginSettingsStore.Instance.Settings;
 
     /// <summary>
     /// 单调递增的预设序号，避免删除中间预设后命名撞车。
@@ -26,6 +32,8 @@ public partial class InquiryWindowSettingsViewModel : ObservableObject
         // 保证预设库从磁盘加载（如果 Plugin.Initialize 之前没跑过）。
         // Load 内部会用空 PluginConfigFolder 时延后，等 Plugin 注入后再加载。
         PresetsStore.Instance.Load();
+        // 同样兜底加载一次插件级设置（亚克力背景开关等）
+        PluginSettingsStore.Instance.Load();
         // 初始化序号：基于现有预设名中最大的数字 + 1。
         _nextPresetNumber = ComputeNextNumber();
     }

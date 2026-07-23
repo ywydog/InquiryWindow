@@ -17,8 +17,14 @@
         <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
     </ci:MyWindow.Styles>
 
-    <Border Padding="16" CornerRadius="8"
-            Background="{DynamicResource LayerFillColorAltBrush}">
+    <!--
+        根 Border。
+        Background 留空，由 code-behind 根据"亚克力背景"开关动态填充：
+          开启时：半透明刷（SystemControlBackgroundChromeMediumLowBrush），让窗口亚克力基底透出来
+          关闭时：默认的 LayerFillColorAltBrush（不透明卡片）
+        这样在不动 XAML 的前提下能切换视觉风格。
+    -->
+    <Border x:Name="RootBorder" Padding="16" CornerRadius="8">
         <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="8">
 
             <!-- 弹窗标题小字（窗口内顶部） -->

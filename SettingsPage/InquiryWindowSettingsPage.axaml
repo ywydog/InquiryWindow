@@ -78,6 +78,36 @@
                 </Border>
             </controls:SettingsExpander>
 
+            <!--
+                ===== 插件级外观设置 =====
+                亚克力背景开关：开启后，Action 弹窗（询问窗 / 多按钮询问）会使用
+                AcrylicBlur 透明背景 + 半透明卡片背景，看起来像 ConvenientText 那种磨砂玻璃效果。
+                关闭时回退到原来的不透明卡片。
+                注意：此选项对插件 ViewPage 自身不生效（ViewPage 由 ClassIsland 托管，
+                走的是 ClassIsland 自己的主题）。
+            -->
+            <controls:SettingsExpander IconSource="{ci:FluentIconSource &#xE7C3;}"
+                                       Header="弹窗外观"
+                                       Description="调整 Action 弹窗的视觉风格">
+                <StackPanel Spacing="12" Margin="0,4,0,0">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="亚克力背景"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Text="为 Action 弹窗启用 Windows 亚克力模糊效果（仅 Win10/11 且启用系统透明效果时可见）"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      OnContent="开"
+                                      OffContent="关"
+                                      IsChecked="{Binding PluginSettings.IsAcrylicEnabled, Mode=TwoWay}" />
+                    </Grid>
+                </StackPanel>
+            </controls:SettingsExpander>
+
         </StackPanel>
     </ScrollViewer>
 </ci:SettingsPageBase>

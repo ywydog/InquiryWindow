@@ -41,6 +41,29 @@ public partial class InquiryWindowWindow : MyWindow
                 }, DispatcherPriority.MaxValue);
             }
         });
+
+        // 亚克力背景：窗口加载时根据"亚克力背景"开关决定是否启用
+        // 注意必须在 Loaded 之后再设置 Window.Background/TransparencyLevelHint，
+        // 否则在某些平台上会被后续逻辑覆盖。
+        Loaded += (_, _) => ApplyAcrylicBackground();
+    }
+
+    /// <summary>
+    /// 根据 <see cref="Services.PluginSettingsStore"/> 的当前值，给本窗口应用或取消亚克力背景。
+    /// </summary>
+    private void ApplyAcrylicBackground()
+    {
+        var settings = Services.PluginSettingsStore.Instance.Settings;
+        var isAcrylic = settings.IsAcrylicEnabled;
+
+        // 1) 切换窗口级别的亚克力基底（透明 + AcrylicBlur 提示）
+        AcrylicHelper.Apply(this, isAcrylic);
+
+        // 2) 切换根 Border 的背景：亚克力用半透明刷，否则回退到不透明卡片
+        if (RootBorder is not null)
+        {
+            RootBorder.Background = AcrylicHelper.GetCardBrush(isAcrylic);
+        }
     }
 
     public string WindowTitle
