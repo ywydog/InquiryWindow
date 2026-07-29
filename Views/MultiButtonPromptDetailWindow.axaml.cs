@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using ClassIsland.Core;
 using ClassIsland.Core.Controls;
+using ClassIsland.Shared;
 using InquiryWindow.Models;
 using InquiryWindow.Views;
 

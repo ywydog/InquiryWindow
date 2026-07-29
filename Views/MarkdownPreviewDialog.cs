@@ -35,7 +35,7 @@ public static class MarkdownPreviewDialog
         };
 
         // 始终套上 ClassIsland 的 RichText 主题，与运行时弹窗保持一致。
-        viewer.Styles.Add(new StyleInclude
+        viewer.Styles.Add(new StyleInclude((Uri?)null)
         {
             Source = new Uri("avares://ClassIsland.Core/Themes/RichTextStyles.axaml")
         });
