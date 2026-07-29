@@ -1,11 +1,12 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using ClassIsland.Core;
 using ClassIsland.Core.Controls;
-using CommunityToolkit.Mvvm.ComponentModel;
 using InquiryWindow.Models;
 using InquiryWindow.Views;
 
@@ -22,7 +23,7 @@ namespace InquiryWindow.Views;
 /// 触发方式参考 <c>YesNoDialogRuleSettingsControl.ShowSettingsButton_OnClick</c>：
 /// 由设置面板里的"打开详细设置"按钮通过 <see cref="OpenAsync"/> 弹出本窗口。
 /// </summary>
-public partial class MultiButtonPromptDetailWindow : MyWindow
+public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyChanged
 {
     /// <summary>
     /// 当前正在编辑的设置对象（与 <see cref="MultiButtonPromptSettingsControl"/> 共享同一实例，
@@ -30,8 +31,30 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
     /// </summary>
     public MultiButtonPromptSettings Settings { get; }
 
-    [ObservableProperty]
     private MultiButtonPromptButton? _activeButton;
+
+    /// <summary>
+    /// 当前选中的按钮（供右侧详情面板绑定）。
+    /// 由于本类继承自 <see cref="MyWindow"/>（非 <c>ObservableObject</c>），
+    /// 不能用 <c>[ObservableProperty]</c>，这里手动实现 <see cref="INotifyPropertyChanged"/>。
+    /// </summary>
+    public MultiButtonPromptButton? ActiveButton
+    {
+        get => _activeButton;
+        set
+        {
+            if (ReferenceEquals(_activeButton, value)) return;
+            _activeButton = value;
+            OnPropertyChanged(nameof(ActiveButton));
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     // ===== 拖拽状态（参照 SystemTools / SettingsControl 的实现） =====
     private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptDetailWindow.Button";

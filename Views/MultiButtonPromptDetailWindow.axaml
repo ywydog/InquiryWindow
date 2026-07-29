@@ -32,7 +32,7 @@
         </Style>
 
         <!-- 工具栏按钮风格 -->
-        <Style Selector="Button.toolbar-btn" xmlns="https://github.com/avaloniaui">
+        <Style Selector="Button.toolbar-btn">
             <Setter Property="Padding" Value="12,5" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="CornerRadius" Value="4" />
@@ -43,19 +43,19 @@
         </Style>
 
         <!-- 按钮行：列表项容器 -->
-        <Style Selector="Border.button-row" xmlns="https://github.com/avaloniaui">
+        <Style Selector="Border.button-row">
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="8,6" />
         </Style>
 
         <!-- 拖拽手柄：⋮⋮ 区域 -->
-        <Style Selector="Border.drag-grip" xmlns="https://github.com/avaloniaui">
+        <Style Selector="Border.drag-grip">
             <Setter Property="Padding" Value="6,2" />
             <Setter Property="CornerRadius" Value="3" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
-        <Style Selector="Border.drag-grip:pointerover" xmlns="https://github.com/avaloniaui">
+        <Style Selector="Border.drag-grip:pointerover">
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
         </Style>
     </ci:MyWindow.Styles>
