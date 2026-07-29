@@ -280,12 +280,8 @@
                                        VerticalAlignment="Center" />
                         </Grid>
                     </Border>
-                    <Border DockPanel.Dock="Top" Padding="10,8">
-                        <TextBox x:Name="SearchBox" Watermark="搜索按钮名..."
-                                 TextChanged="OnSearchTextChanged" />
-                    </Border>
-                    <Border DockPanel.Dock="Bottom" Padding="10,8"
-                            BorderThickness="0,1,0,0"
+                    <Border DockPanel.Dock="Top" Padding="10,8"
+                            BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <Button Classes="toolbar-btn"
@@ -296,6 +292,10 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
+                    </Border>
+                    <Border DockPanel.Dock="Top" Padding="10,8">
+                        <TextBox x:Name="SearchBox" Watermark="搜索按钮名..."
+                                 TextChanged="OnSearchTextChanged" />
                     </Border>
                     <ListBox x:Name="ButtonList"
                              Background="Transparent"
@@ -359,7 +359,7 @@
                         <TextBlock Text="从中间选择一个按钮" FontSize="13"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="或在中间底部「+ 新建按钮」" FontSize="11"
+                        <TextBlock Text="或在中间顶部「+ 新建按钮」" FontSize="11"
                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                    HorizontalAlignment="Center" />
                     </StackPanel>
