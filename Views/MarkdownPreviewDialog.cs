@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml.Styling;
 using ClassIsland.Core.Helpers;
 using FluentAvalonia.UI.Controls;
 using Markdown.Avalonia;

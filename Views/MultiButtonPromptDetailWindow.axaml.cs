@@ -29,7 +29,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     /// 当前正在编辑的设置对象（与 <see cref="MultiButtonPromptSettingsControl"/> 共享同一实例，
     /// 因此窗口内的修改会自动反映回原设置的"打开"按钮所在的抽屉中）。
     /// </summary>
-    public MultiButtonPromptSettings Settings { get; }
+    public MultiButtonPromptSettings Settings { get; private set; } = null!;
 
     private MultiButtonPromptButton? _activeButton;
 
@@ -49,7 +49,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         }
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
 
     private void OnPropertyChanged(string propertyName)
     {
@@ -314,8 +314,8 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         // 复用运行时的预览逻辑：直接复用 MultiButtonPromptWindow + ViewModel 即可
         var vm = new ViewModels.MultiButtonPromptViewModel(
             Settings,
-            AppBase.Current.GetServiceRequired<ClassIsland.Core.Abstractions.Services.IActionService>(),
-            AppBase.Current.GetServiceRequired<Microsoft.Extensions.Logging.ILogger<ViewModels.MultiButtonPromptViewModel>>());
+            IAppHost.GetService<ClassIsland.Core.Abstractions.Services.IActionService>(),
+            IAppHost.GetService<Microsoft.Extensions.Logging.ILogger<ViewModels.MultiButtonPromptViewModel>>());
 
         var win = new MultiButtonPromptWindow { DataContext = vm };
         // 预览时按原 MultiButtonPromptWindow 的方式启动倒计时
