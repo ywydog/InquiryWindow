@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InquiryWindow.Models;
@@ -7,50 +6,31 @@ using InquiryWindow.Services;
 namespace InquiryWindow.ViewModels;
 
 /// <summary>
-/// 插件 ViewPage 的 ViewModel：管理按钮预设库。
+/// InquiryWindow 主设置页的 ViewModel：只管插件级全局设置（亚克力背景等）。
+/// 按钮预设库已拆到 <see cref="ButtonPresetSettingsViewModel"/> 与独立页面。
 /// </summary>
 public partial class InquiryWindowSettingsViewModel : ObservableObject
 {
-    public ObservableCollection<ButtonPreset> Presets => PresetsStore.Instance.Presets;
-
-    [ObservableProperty]
-    private ButtonPreset? _selectedPreset;
-
     /// <summary>
-    /// 单调递增的预设序号，避免删除中间预设后命名撞车。
+    /// 跨 Action 共享的插件级设置（亚克力背景开关 + 透明度）。
+    /// 暴露为属性便于 XAML 直接绑定到 PluginSettings 的字段。
     /// </summary>
-    private int _nextPresetNumber = 1;
+    public PluginSettings PluginSettings => PluginSettingsStore.Instance.Data;
 
     public InquiryWindowSettingsViewModel()
     {
-        // 保证预设库从磁盘加载（如果 Plugin.Initialize 之前没跑过）。
-        // Load 内部会用空 PluginConfigFolder 时延后，等 Plugin 注入后再加载。
-        PresetsStore.Instance.Load();
-        // 初始化序号：基于现有预设名中最大的数字 + 1。
-        _nextPresetNumber = ComputeNextNumber();
+        // 兜底加载插件全局设置。
+        PluginSettingsStore.Instance.Load();
     }
 
+    /// <summary>
+    /// 设置页保存入口：把当前 <see cref="PluginSettings"/> 落盘。
+    /// XAML 里用绑定直接改字段（<see cref="PluginSettings.UseAcrylicBackground"/>、
+    /// <see cref="PluginSettings.AcrylicTintOpacity"/>），点击应用或失焦时调用本方法。
+    /// </summary>
     [RelayCommand]
-    public void AddPreset()
+    public void SavePluginSettings()
     {
-        var name = "新预设 " + _nextPresetNumber;
-        _nextPresetNumber++;
-        var preset = PresetsStore.Instance.AddPreset(name, "\uE10F");
-        SelectedPreset = preset;
-    }
-
-    private int ComputeNextNumber()
-    {
-        // 扫描现有预设名中「新预设 N」里的最大 N，作为下次新建的起点。
-        var max = 0;
-        foreach (var p in Presets)
-        {
-            if (p.Name.StartsWith("新预设 ") &&
-                int.TryParse(p.Name.AsSpan("新预设 ".Length), out var n))
-            {
-                if (n > max) max = n;
-            }
-        }
-        return max + 1;
+        PluginSettingsStore.Instance.SaveNow();
     }
 }

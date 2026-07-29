@@ -39,4 +39,16 @@ public partial class InquiryWindowActionSettings : ObservableObject
     /// </summary>
     [ObservableProperty]
     private bool _showIcon;
+
+    /// <summary>
+    /// 是否启用自动执行（到时间后自动按下"执行"按钮）。默认 false。
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutoExecuteEnabled;
+
+    /// <summary>
+    /// 自动执行等待秒数。需与 <see cref="IsAutoExecuteEnabled"/> 配合使用。
+    /// </summary>
+    [ObservableProperty]
+    private double _autoExecuteSeconds = 5;
 }

@@ -1,0 +1,6 @@
+bin/
+obj/
+cipx/
+*.user
+*.suo
+.vs/

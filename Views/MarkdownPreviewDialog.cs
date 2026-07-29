@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using ClassIsland.Core.Helpers;
@@ -14,7 +15,8 @@ namespace InquiryWindow.Views;
 public static class MarkdownPreviewDialog
 {
     /// <summary>
-    /// 弹出 Markdown 预览。
+    /// 弹出 Markdown 预览。始终使用 ClassIsland 自带的 <c>RichTextStyles</c> 主题，
+    /// 与系统设置/更新日志中的 Markdown 排版完全一致。
     /// </summary>
     /// <param name="owner">弹窗宿主 TopLevel（一般传当前设置页所在的 Window）。</param>
     /// <param name="title">弹窗标题（默认"Markdown 预览"）。</param>
@@ -31,6 +33,12 @@ public static class MarkdownPreviewDialog
             MaxHeight = 480
         };
 
+        // 始终套上 ClassIsland 的 RichText 主题，与运行时弹窗保持一致。
+        viewer.Styles.Add(new StyleInclude
+        {
+            Source = new Uri("avares://ClassIsland.Core/Themes/RichTextStyles.axaml")
+        });
+
         var container = new Border
         {
             Padding = new Avalonia.Thickness(12),
@@ -40,12 +48,12 @@ public static class MarkdownPreviewDialog
             Child = viewer
         };
 
-        var dialog = new ContentDialog
+        var dialog = new FAContentDialog
         {
             Title = string.IsNullOrWhiteSpace(title) ? "Markdown 预览" : title,
             Content = container,
             PrimaryButtonText = "关闭",
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = FAContentDialogButton.Primary
         };
 
         await dialog.ShowAsync(owner);

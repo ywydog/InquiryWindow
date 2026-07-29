@@ -1,0 +1,109 @@
+<ci:ActionSettingsControlBase x:Class="InquiryWindow.Views.MultiResultSettingsControl"
+                              x:TypeArguments="models:MultiResultSettings"
+                              xmlns="https://github.com/avaloniaui"
+                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                              xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                              xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
+                              xmlns:models="clr-namespace:InquiryWindow.Models"
+                              xmlns:local="clr-namespace:InquiryWindow.Views">
+
+    <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:MultiResultSettingsControl}}">
+    <ScrollViewer>
+        <StackPanel Margin="12" Spacing="12">
+
+            <!--
+                顶部说明 + 右上角「顺序/随机/随机不重复」切换：
+                ComboBox 用法：枚举值 -> ItemsSource（来自 x:Static Array 暴露），
+                两段式中文文本来自 OrderModeConverter。
+            -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="触发时从以下候选组中按顺序模式选一个执行"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="选择顺序："
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ComboBox MinWidth="100"
+                              VerticalAlignment="Center"
+                              ItemsSource="{x:Static local:MultiResultSettingsControl.OrderModes}"
+                              SelectedItem="{Binding Settings.OrderMode, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:MultiResultOrderMode">
+                                <TextBlock Text="{Binding Converter={x:Static local:MultiResultSettingsControl.OrderModeConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="结果组" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
+
+            <ItemsControl ItemsSource="{Binding Settings.Groups}"
+                          DragDrop.AllowDrop="True"
+                          DragDrop.DragOver="OnGroupListDragOver"
+                          DragDrop.Drop="OnGroupListDrop">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:MultiResultGroup">
+                        <Border Margin="0,4"
+                                Padding="0"
+                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                DragDrop.AllowDrop="True"
+                                DragDrop.DragOver="OnGroupItemDragOver"
+                                DragDrop.Drop="OnGroupItemDrop">
+                            <StackPanel Spacing="6" Margin="10">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                                    <!-- 拖拽手柄：按住拖动以重排顺序，仅拖到「顺序」模式才有意义 -->
+                                    <Border Grid.Column="0"
+                                            Tag="{Binding}"
+                                            Padding="6,2"
+                                            CornerRadius="4"
+                                            Background="{DynamicResource SubtleFillColorTertiaryBrush}"
+                                            Cursor="Hand"
+                                            PointerPressed="OnGroupDragHandlePressed"
+                                            PointerMoved="OnGroupDragHandleMoved"
+                                            PointerReleased="OnGroupDragHandleReleased"
+                                            ToolTip.Tip="按住拖动以排序">
+                                        <TextBlock Text="⋮⋮"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center" />
+                                    </Border>
+                                    <TextBox Grid.Column="1"
+                                             Watermark="组名称"
+                                             Text="{Binding Name, Mode=TwoWay}" />
+                                    <Button Grid.Column="2"
+                                            Content="从预设插入"
+                                            Click="OnInsertPresetClick"
+                                            Tag="{Binding}" />
+                                    <Button Grid.Column="3"
+                                            Content="删除"
+                                            Click="OnRemoveGroupClick"
+                                            Tag="{Binding}" />
+                                </Grid>
+                                <core:ActionControl ActionSet="{Binding Actions}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Content="+ 添加结果组"
+                    Click="OnAddGroupClick"
+                    HorizontalAlignment="Left" />
+
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0"
+                       Text="「顺序」按 Groups 中的顺序循环取下一个（每次记住上次的位置）；「随机」每次独立采样，可重复；「随机不重复」每轮洗牌后逐个执行，全执行完再洗一轮。任一时刻只会执行选中那一个组的 Action 链，不会全部执行。" />
+
+        </StackPanel>
+    </ScrollViewer>
+    </Grid>
+</ci:ActionSettingsControlBase>

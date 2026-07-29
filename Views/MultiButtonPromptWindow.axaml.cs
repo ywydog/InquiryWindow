@@ -77,9 +77,9 @@ public partial class MultiButtonPromptWindow : MyWindow
     public async Task ShowDialogCompat()
     {
         var owner = AppBase.Current.GetRootWindow();
-        if (owner != null)
+        if (owner is Window windowOwner)
         {
-            await ShowDialog<object?>(owner);
+            await ShowDialog<object?>(windowOwner);
         }
         else
         {

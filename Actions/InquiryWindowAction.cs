@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Automation;
@@ -13,7 +14,9 @@ using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow.Actions;
 
-[ActionInfo("action.inquiryWindow", "询问窗", "\uE4C4")]
+// addDefaultToMenu: false —— 关闭系统自动加默认菜单，改由 Plugin.BuildActionMenuTree
+// 统一注册到「InquiryWindow 行动」集下，与 MultiButtonPromptAction 一起集中管理。
+[ActionInfo("action.inquiryWindow", "询问窗", "\uE4C4", addDefaultToMenu: false)]
 [SupportedOSPlatform("windows")]   // 调 IconExtractorService（仅 Windows）
 public class InquiryWindowAction(
     ILessonsService lessonsService,
@@ -55,7 +58,18 @@ public class InquiryWindowAction(
             CanExecute       = hasPath
         };
 
-        var owner = AppBase.Current.GetRootWindow();
+        // 4.4 亚克力背景：从插件级全局设置里读取（设置页可开关），无侵入式地挂到弹窗上
+        var pluginSettings = PluginSettingsStore.Instance.Data;
+        window.UseAcrylicBackground = pluginSettings.UseAcrylicBackground;
+        window.AcrylicTintOpacity = pluginSettings.AcrylicTintOpacity;
+
+        // 4.5 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
+        if (Settings.IsAutoExecuteEnabled && hasPath)
+        {
+            window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+        }
+
+        var owner = AppBase.Current.GetRootWindow() as Window;
         var result = await window.ShowDialog(owner);
         logger.LogDebug("用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");
 

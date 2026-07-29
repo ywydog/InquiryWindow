@@ -2,16 +2,16 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Attributes;
-using ClassIsland.Core.Controls.Automation;
-using ClassIsland.Shared.Helpers;
-using FluentAvalonia.UI.Controls;
-using InquiryWindow.Models;
 using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 using InquiryWindow.Views;
 
 namespace InquiryWindow.SettingsPage;
 
+/// <summary>
+/// InquiryWindow 主设置页：只管插件级全局设置（弹窗外观 / 预览）。
+/// 按钮预设库已拆为独立页面 <see cref="ButtonPresetSettingsPage"/>。
+/// </summary>
 [SettingsPageInfo("inquiryWindow.settings.main", "InquiryWindow 设置", "\uE82D", "\uE713")]
 public partial class InquiryWindowSettingsPage : SettingsPageBase
 {
@@ -24,131 +24,63 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
         InitializeComponent();
     }
 
-    private void OnAddPresetClick(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// 亚克力开关被切换后立即落盘，避免设置页关闭时丢改动。
+    /// </summary>
+    private void OnAcrylicIsCheckedChanged(object? sender, RoutedEventArgs e)
     {
-        ViewModel.AddPresetCommand.Execute(null);
+        PluginSettingsStore.Instance.SaveNow();
     }
 
-    private async void OnRemovePresetClick(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// 透明度滑块被拖动时也会持续触发 PropertyChanged。
+    /// 用防抖（去掉极小变化）后再写盘，避免每帧落盘。
+    /// </summary>
+    private void OnAcrylicOpacityChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
     {
-        var preset = ViewModel.SelectedPreset;
-        if (preset == null) return;
+        if (e.Property != Slider.ValueProperty) return;
+        // 滑块松手时写盘；按下过程不写（防抖由 UI 控件的 IsThumbDragCompleted 决定，
+        // 这里简单一点：每次变化都同步给 in-memory 模型，UI 同步，关闭设置页时再 SaveNow）。
+        // 但为安全起见，每次变化都直接 SaveNow（plugin-settings.json 体积小，可接受）。
+        PluginSettingsStore.Instance.SaveNow();
+    }
 
-        var dialog = new ContentDialog
+    /// <summary>
+    /// 「预览弹窗效果」按钮：按当前插件全局设置（亚克力开关 + 透明度）弹出一个示例
+    /// InquiryWindowWindow。预览模式下只显示「看完了」按钮，不会触发任何后续动作。
+    /// </summary>
+    private async void OnPreviewClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        var settings = PluginSettingsStore.Instance.Data;
+        var window = new InquiryWindowWindow
         {
-            Title = "删除预设？",
-            Content = $"确定删除预设「{preset.Name}」？已插入到按钮里的 Action 链不受影响。",
-            PrimaryButtonText = "删除",
-            CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Close
+            WindowTitle      = "预览 - 询问窗效果",
+            DialogTitleSmall = "预览",
+            DialogTitle      = "这就是你的弹窗效果",
+            DialogBody       = "调整左侧的「弹窗外观」设置，再点「预览」即可看到变化。\n\n点「看完了」关闭预览。",
+            IsPreviewMode    = true,
+            CanExecute       = false
         };
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
+
+        // 同步应用当前亚克力设置
+        window.UseAcrylicBackground = settings.UseAcrylicBackground;
+        window.AcrylicTintOpacity = settings.AcrylicTintOpacity;
+
+        try
         {
-            PresetsStore.Instance.RemovePreset(preset);
+            await window.ShowDialog(topLevel);
         }
-    }
-
-    private async void OnEditPresetClick(object? sender, RoutedEventArgs e)
-    {
-        var preset = ViewModel.SelectedPreset;
-        if (preset == null) return;
-
-        await EditPresetAsync(preset);
-    }
-
-    private async Task EditPresetAsync(ButtonPreset preset)
-    {
-        var nameBox = new TextBox
+        catch
         {
-            Text = preset.Name
-        };
-        var iconBox = new TextBox
-        {
-            Text = preset.Icon,
-            Width = 120,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left
-        };
-        // "选择图标" 按钮：放在 iconBox 旁边，不动文本框本身（保留手填能力）
-        var iconRow = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("Auto,Auto"),
-            ColumnSpacing = 6
-        };
-        iconRow.Children.Add(iconBox);
-        var pickIconButton = new Button
-        {
-            Content = "…",
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
-        };
-        Grid.SetColumn(pickIconButton, 1);
-        iconRow.Children.Add(pickIconButton);
-
-        pickIconButton.Click += async (_, _) =>
-        {
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel == null) return;
-            var picked = await IconPickerDialog.PickAsync(topLevel, title: "选择预设图标", highlightGlyph: iconBox.Text);
-            if (!string.IsNullOrEmpty(picked))
-            {
-                iconBox.Text = picked;
-            }
-        };
-
-        // 关键：克隆一份 ActionSet 给 ActionControl 编辑，
-        // 这样「取消」时用户的改动会随 workingActions 一起被丢弃，preset.Actions 不被污染。
-        var workingActions = ConfigureFileHelper.CopyObject(preset.Actions);
-        var actionControl = new ActionControl { ActionSet = workingActions };
-
-        var content = new StackPanel { Spacing = 10 };
-        content.Children.Add(MakeLabeled("名称", nameBox));
-        content.Children.Add(MakeLabeled("图标字符（Fluent SystemIcons）", iconRow));
-        content.Children.Add(new TextBlock
-        {
-            Text = "Action 链：",
-            FontWeight = Avalonia.Media.FontWeight.SemiBold
-        });
-        content.Children.Add(actionControl);
-
-        var dialog = new ContentDialog
-        {
-            Title = "编辑预设",
-            Content = content,
-            PrimaryButtonText = "保存",
-            CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result != ContentDialogResult.Primary)
-        {
-            return;
+            // 预览失败（例如主窗口已关闭）静默吞掉，避免设置页崩溃。
         }
-
-        preset.Name = string.IsNullOrWhiteSpace(nameBox.Text) ? "未命名预设" : nameBox.Text;
-        preset.Icon = string.IsNullOrWhiteSpace(iconBox.Text) ? "\uE10F" : iconBox.Text;
-        preset.Actions = workingActions;
-
-        // Name/Icon/Actions 的赋值都会通过 INPC 触发 PresetsStore 的 debounce save，
-        // 但 debounce 400ms 后才落盘。显式同步 SaveNow 兜底，避免用户编辑完立刻关 app 丢数据。
-        PresetsStore.Instance.SaveNow();
     }
 
     private void InitializeComponent()
     {
         Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
-
-    private static StackPanel MakeLabeled(string label, Control content)
-    {
-        // Avalonia 11.0 的 TextBox 没有 Header 属性，所以用 TextBlock 标签 + 控件的组合代替。
-        var sp = new StackPanel { Spacing = 4 };
-        sp.Children.Add(new TextBlock
-        {
-            Text = label,
-            FontWeight = Avalonia.Media.FontWeight.SemiBold
-        });
-        sp.Children.Add(content);
-        return sp;
     }
 }

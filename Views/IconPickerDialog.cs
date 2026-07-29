@@ -44,11 +44,11 @@ public static class IconPickerDialog
         EnsureGlyphsLoaded();
         var rows = BuildVirtualizedRows(columns: 8);
 
-        var dialog = new ContentDialog
+        var dialog = new FAContentDialog
         {
             Title = title,
             PrimaryButtonText = "关闭",
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = FAContentDialogButton.Primary
         };
 
         string? selected = null;
