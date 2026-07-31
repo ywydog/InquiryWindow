@@ -4,6 +4,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ClassIsland.Core;
 using ClassIsland.Core.Controls;
@@ -57,6 +59,28 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    // ===== 窗口背景：缩略图预览 =====
+    private Bitmap? _backgroundPreview;
+
+    /// <summary>
+    /// 窗口背景的缩略图（用于"窗口背景"卡片内的预览）。路径为空或加载失败时为 null。
+    /// 监听 <see cref="Settings"/> 的 <c>BackgroundImagePath</c> 变化自动刷新。
+    /// </summary>
+    public Bitmap? BackgroundPreview
+    {
+        get => _backgroundPreview;
+        private set
+        {
+            if (ReferenceEquals(_backgroundPreview, value)) return;
+            _backgroundPreview = value;
+            OnPropertyChanged(nameof(BackgroundPreview));
+            OnPropertyChanged(nameof(HasBackgroundPreview));
+        }
+    }
+
+    /// <summary>是否有可用的背景预览图（用于 Image 控件的 IsVisible 绑定）。</summary>
+    public bool HasBackgroundPreview => _backgroundPreview is not null;
+
     // ===== 拖拽状态（参照 SystemTools / SettingsControl 的实现） =====
     private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptDetailWindow.Button";
     private const double ButtonDragThreshold = 4.0;
@@ -77,14 +101,51 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     public MultiButtonPromptDetailWindow(MultiButtonPromptSettings settings) : this()
     {
         Settings = settings;
+        // 监听 BackgroundImagePath 变化，刷新缩略图
+        Settings.PropertyChanged += OnSettingsPropertyChanged;
         DataContext = this;
+    }
+
+    private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MultiButtonPromptSettings.BackgroundImagePath))
+        {
+            ReloadBackgroundPreview();
+        }
+    }
+
+    private void ReloadBackgroundPreview()
+    {
+        BackgroundPreview = LoadBitmapFromPath(Settings.BackgroundImagePath);
+    }
+
+    /// <summary>
+    /// 从绝对路径加载图片用于预览。返回 null 表示无图 / 加载失败。
+    /// 限制最大宽度为 1920 避免卡顿。
+    /// </summary>
+    private static Bitmap? LoadBitmapFromPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        if (!System.IO.File.Exists(path)) return null;
+        try
+        {
+            return new Bitmap(path);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        // 窗口加载时刷新一次列表
-        Dispatcher.UIThread.Post(RefreshList, DispatcherPriority.Background);
+        // 窗口加载时刷新一次列表 + 背景预览
+        Dispatcher.UIThread.Post(() =>
+        {
+            RefreshList();
+            ReloadBackgroundPreview();
+        }, DispatcherPriority.Background);
     }
 
     private void RefreshList()
@@ -175,6 +236,67 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         if (!string.IsNullOrEmpty(picked))
         {
             Settings.Icon = picked;
+        }
+    }
+
+    // ===== 窗口背景：浏览 / 清除 =====
+
+    private async void OnBrowseBackgroundImageClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control control) return;
+        var topLevel = TopLevel.GetTopLevel(control);
+        if (topLevel is null) return;
+
+        var storage = topLevel.StorageProvider;
+        var startLocation = await TryGetStartLocationAsync(storage, Settings.BackgroundImagePath);
+
+        var fileType = new FilePickerFileType("图片")
+        {
+            Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp" },
+            AppleUniformTypeIdentifiers = new[] { "public.image" },
+            MimeTypes = new[] { "image/png", "image/jpeg", "image/webp", "image/bmp" }
+        };
+
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "选择背景图片",
+            AllowMultiple = false,
+            FileTypeFilter = new[] { fileType },
+            SuggestedStartLocation = startLocation
+        });
+
+        if (files.Count > 0)
+        {
+            var path = files[0].TryGetLocalPath();
+            if (!string.IsNullOrEmpty(path))
+            {
+                Settings.BackgroundImagePath = path;
+                // PropertyChanged 监听会自动刷新预览
+            }
+        }
+    }
+
+    private void OnClearBackgroundImageClick(object? sender, RoutedEventArgs e)
+    {
+        Settings.BackgroundImagePath = string.Empty;
+    }
+
+    /// <summary>
+    /// 尝试把已有路径所在的目录作为文件选择器的起始位置。
+    /// 路径无效时返回 null（让系统决定起始目录）。
+    /// </summary>
+    private static async Task<IStorageFolder?> TryGetStartLocationAsync(IStorageProvider storage, string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        try
+        {
+            var dir = System.IO.Path.GetDirectoryName(path);
+            if (string.IsNullOrEmpty(dir) || !System.IO.Directory.Exists(dir)) return null;
+            return await storage.TryGetFolderFromPathAsync(new Uri(dir));
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -335,6 +457,16 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     {
         // 简化处理：直接关窗。如果后续需要"放弃修改"语义，可在此处加一份快照恢复。
         Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        // 解除订阅，避免 Settings 持有本窗口引用导致泄漏
+        if (Settings is not null)
+        {
+            Settings.PropertyChanged -= OnSettingsPropertyChanged;
+        }
+        base.OnClosed(e);
     }
 
     /// <summary>

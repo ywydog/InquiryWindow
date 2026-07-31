@@ -56,6 +56,7 @@ public partial class MultiButtonPromptWindow : MyWindow
         if (_subscribedVm is not null)
         {
             _subscribedVm.RequestClose -= CloseWindow;
+            _subscribedVm.Cleanup();
             _subscribedVm = null;
         }
         if (DataContext is MultiButtonPromptViewModel vm)
@@ -69,6 +70,17 @@ public partial class MultiButtonPromptWindow : MyWindow
     {
         _allowClose = true;
         Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (_subscribedVm is not null)
+        {
+            _subscribedVm.RequestClose -= CloseWindow;
+            _subscribedVm.Cleanup();
+            _subscribedVm = null;
+        }
+        base.OnClosed(e);
     }
 
     /// <summary>

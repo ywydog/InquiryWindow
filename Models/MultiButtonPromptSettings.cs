@@ -80,6 +80,20 @@ public partial class MultiButtonPromptSettings : ObservableObject
     private int _autoExecuteTargetIndex;
 
     /// <summary>
+    /// 窗口背景图片绝对路径；空字符串 / null 表示不使用图片背景（使用纯色背景）。
+    /// 支持 PNG / JPG / JPEG / WEBP / BMP。文件不存在或加载失败时降级到纯色背景。
+    /// </summary>
+    [ObservableProperty]
+    private string _backgroundImagePath = string.Empty;
+
+    /// <summary>
+    /// 背景图片缩放模式（0=Cover 覆盖，1=Contain 包含，2=Stretch 拉伸，3=Tile 平铺）。
+    /// 存为 int 索引方便 XAML 的 ComboBox SelectedIndex 直接绑定。
+    /// </summary>
+    [ObservableProperty]
+    private int _backgroundImageMode;
+
+    /// <summary>
     /// 自动执行下拉框的可选项集合（运行时由 <see cref="Buttons"/> + 末尾"无事发生"占位生成）。
     /// </summary>
     public ObservableCollection<AutoExecuteTarget> AutoExecuteTargets { get; } = new();

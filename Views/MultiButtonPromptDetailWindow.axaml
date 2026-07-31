@@ -5,6 +5,7 @@
                  xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                  xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
                  xmlns:models="clr-namespace:InquiryWindow.Models"
+                 xmlns:converters="clr-namespace:InquiryWindow.Converters"
                  xmlns:local="clr-namespace:InquiryWindow.Views"
                  x:DataType="local:MultiButtonPromptDetailWindow"
                  Title="多按钮询问行动 · 详细设置"
@@ -162,10 +163,84 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- 倒计时 / 自动执行 -->
+                            <!-- 窗口背景：默认折叠（Expander） -->
+                            <Expander HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <ci:FluentIcon Glyph="&#xE8B9;" FontSize="14"
+                                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                                                       VerticalAlignment="Center" />
+                                        <TextBlock Text="窗口背景" FontWeight="SemiBold" />
+                                        <TextBlock Text="（默认折叠）" FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Expander.Header>
+                                <Border Classes="pane-card" Margin="0,8,0,0">
+                                    <StackPanel Spacing="8">
+                                        <!-- 缩略图预览（绑定到 Settings.BackgroundImagePath） -->
+                                        <Border Height="80" ClipToBounds="True"
+                                                CornerRadius="4"
+                                                Background="{DynamicResource SubtleFillColorTertiaryBrush}">
+                                            <Panel>
+                                                <TextBlock Text="无背景（使用纯色背景）"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center">
+                                                    <TextBlock.IsVisible>
+                                                        <MultiBinding Converter="{x:Static StringConverters.IsNullOrEmpty}">
+                                                            <Binding Path="Settings.BackgroundImagePath" />
+                                                        </MultiBinding>
+                                                    </TextBlock.IsVisible>
+                                                </TextBlock>
+                                                <Image Source="{Binding BackgroundPreview}"
+                                                       Stretch="UniformToFill"
+                                                       IsVisible="{Binding HasBackgroundPreview}" />
+                                            </Panel>
+                                        </Border>
+
+                                        <!-- 路径 + 浏览 + 清除 -->
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="图片路径" FontSize="11"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding Settings.BackgroundImagePath, Mode=TwoWay}" />
+                                                <Button Grid.Column="1" Content="浏览…"
+                                                        Click="OnBrowseBackgroundImageClick" />
+                                                <Button Grid.Column="2" Content="✕"
+                                                        ToolTip.Tip="清除背景"
+                                                        Click="OnClearBackgroundImageClick" />
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- 缩放方式 -->
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="缩放方式" FontSize="11"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <ComboBox HorizontalAlignment="Stretch"
+                                                      SelectedIndex="{Binding Settings.BackgroundImageMode, Mode=TwoWay}">
+                                                <ComboBoxItem Content="覆盖（保持比例，超出裁剪）" />
+                                                <ComboBoxItem Content="包含（保持比例，留白）" />
+                                                <ComboBoxItem Content="拉伸（填满，可能变形）" />
+                                                <ComboBoxItem Content="平铺（重复铺满）" />
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <TextBlock Text="支持 PNG / JPG / JPEG / WEBP / BMP。文件不存在或加载失败时自动降级为纯色背景。"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                            <!-- 自动执行 -->
                             <Border Classes="pane-card">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="倒计时 / 自动执行" Classes="pane-card-title" />
+                                    <TextBlock Text="自动执行" Classes="pane-card-title" />
                                     <CheckBox x:Name="CountdownEnabledCheck"
                                               Content="启用倒计时（到时按指定按钮自动执行）"
                                               IsChecked="{Binding Settings.IsAutoExecuteEnabled, Mode=TwoWay}" />
@@ -383,6 +458,64 @@
                                                 ToolTip.Tip="从 Fluent 图标库选择" />
                                     </StackPanel>
                                 </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 外观：强调样式（学习 ClassIsland 倒计时组件的"强调色"设置）
+                             三种模式：默认（无强调） / 高亮（系统蓝色） / 自定义（用户选色） -->
+                        <Border Classes="pane-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="外观" Classes="pane-card-title" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="强调样式" FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <ComboBox HorizontalAlignment="Stretch"
+                                              SelectedIndex="{Binding ActiveButton.AccentMode, Mode=TwoWay}">
+                                        <ComboBoxItem Content="默认（跟随主题）" />
+                                        <ComboBoxItem Content="高亮（系统蓝色）" />
+                                        <ComboBoxItem Content="自定义颜色" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Spacing="4"
+                                            IsVisible="{Binding ActiveButton.AccentMode, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Custom}">
+                                    <TextBlock Text="自定义颜色" FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <ColorPicker Color="{Binding ActiveButton.CustomColor, Mode=TwoWay}"
+                                                  IsAlphaEnabled="False" />
+                                    <TextBlock Text="提示：仅在「自定义颜色」模式下生效。「高亮」使用系统蓝色。"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 交互倒计时（学习 SuperAutoIsland 的 YesNo 对话框：
+                             启用后按下按钮不会立刻执行 Action，而是禁用所有按钮 N 秒，
+                             在被按下的按钮上显示剩余秒数（Ns），倒计时结束恢复交互；
+                             不会自动执行 Action。若需到时间自动执行，请用左侧"自动执行"） -->
+                        <Border Classes="pane-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="交互倒计时" Classes="pane-card-title" />
+                                <CheckBox x:Name="ButtonCountdownEnabledCheck"
+                                          Content="启用交互倒计时（按下后禁用所有按钮 N 秒恢复交互）"
+                                          IsChecked="{Binding ActiveButton.IsCountdownEnabled, Mode=TwoWay}" />
+                                <StackPanel Spacing="4" Margin="24,0,0,0"
+                                            IsEnabled="{Binding #ButtonCountdownEnabledCheck.IsChecked}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="禁用时长（秒）" FontSize="11"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <controls:FANumberBox Minimum="0" Maximum="60"
+                                                                   SmallChange="1" LargeChange="5"
+                                                                   Value="{Binding ActiveButton.CountdownSeconds, Converter={x:Static ci:NotNaNConverter.Instance}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="运行时预览：按下按钮后该按钮文字后追加「(Ns)」显示倒计时（仿 YesNo 对话框），归零恢复交互，不执行 Action。"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
