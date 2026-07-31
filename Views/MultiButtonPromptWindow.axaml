@@ -25,11 +25,11 @@
         -->
 
         <!--
-          "自定义颜色"模式（customAccent class）：用按钮的 CustomColor 覆盖背景，
-          文字用白色保证对比度。ClassIsland 没有这个 class，可放心定义。
+          "自定义颜色"模式（customAccent class）：仅控制前景色（背景在 DataTemplate 内
+          通过 Background="{Binding CustomColor}" 绑定，因为 Button 没有 CustomColor 属性，
+          Style 的 Binding 默认上下文是 Button 自己，绑不到 MultiButtonPromptButton）。
         -->
         <Style Selector="Button.customAccent">
-            <Setter Property="Background" Value="{Binding CustomColor}" />
             <Setter Property="Foreground" Value="White" />
         </Style>
     </ci:MyWindow.Styles>
@@ -37,25 +37,24 @@
     <Border Padding="20" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
         <Panel>
-            <!-- 背景层（最底层）：有图时铺满；Tile 模式用 TileBrush 实现 -->
-            <Panel IsVisible="{Binding HasBackgroundImage}">
-                <!-- Cover/Contain/Stretch 模式 -->
-                <Image Source="{Binding BackgroundImage}"
-                       Stretch="{Binding BackgroundImageStretch}"
-                       IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsNotTileConverter.Instance}}" />
+            <!-- 背景层（最底层）：有图时铺满；Tile 模式用 Rectangle + ImageBrush 实现 -->
+        <Panel IsVisible="{Binding HasBackgroundImage}">
+            <!-- Cover/Contain/Stretch 模式 -->
+            <Image Source="{Binding BackgroundImage}"
+                   Stretch="{Binding BackgroundImageStretch}"
+                   IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsNotTileConverter.Instance}}" />
 
-                <!-- Tile 模式：用 ImageBrush + TileMode 实现平铺 -->
-                <Image Stretch="None"
-                       IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsTileConverter.Instance}}">
-                    <Image.Source>
-                        <ImageBrush Source="{Binding BackgroundImage}"
-                                    TileMode="Tile"
-                                    Stretch="None"
-                                    AlignmentX="Left"
-                                    AlignmentY="Top" />
-                    </Image.Source>
-                </Image>
-            </Panel>
+            <!-- Tile 模式：用 Rectangle + ImageBrush(TileMode=Tile) 实现平铺 -->
+            <Rectangle IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsTileConverter.Instance}}">
+                <Rectangle.Fill>
+                    <ImageBrush Source="{Binding BackgroundImage}"
+                                TileMode="Tile"
+                                Stretch="None"
+                                AlignmentX="Left"
+                                AlignmentY="Top" />
+                </Rectangle.Fill>
+            </Rectangle>
+        </Panel>
 
             <!-- 蒙层：有背景时加 rgba(0,0,0,0.25)，提高文字可读性 -->
             <Border IsVisible="{Binding HasBackgroundImage}"
@@ -117,6 +116,7 @@
                         <Button MinWidth="96" Height="34"
                                 Classes.accent="{Binding IsAccent}"
                                 Classes.customAccent="{Binding IsCustomAccent}"
+                                Background="{Binding CustomColor}"
                                 IsEnabled="{Binding $parent[Window].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
                                 Command="{Binding $parent[Window].DataContext.PressButtonCommand}"
                                 CommandParameter="{Binding}">

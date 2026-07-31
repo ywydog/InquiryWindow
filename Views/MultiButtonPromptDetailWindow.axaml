@@ -188,13 +188,8 @@
                                                            FontSize="11"
                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                            HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock.IsVisible>
-                                                        <MultiBinding Converter="{x:Static StringConverters.IsNullOrEmpty}">
-                                                            <Binding Path="Settings.BackgroundImagePath" />
-                                                        </MultiBinding>
-                                                    </TextBlock.IsVisible>
-                                                </TextBlock>
+                                                           VerticalAlignment="Center"
+                                                           IsVisible="{Binding Settings.BackgroundImagePath, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
                                                 <Image Source="{Binding BackgroundPreview}"
                                                        Stretch="UniformToFill"
                                                        IsVisible="{Binding HasBackgroundPreview}" />

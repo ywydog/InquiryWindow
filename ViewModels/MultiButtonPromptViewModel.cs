@@ -123,7 +123,7 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         {
             return new Bitmap(path);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // 图片格式不支持或文件损坏：返回 null 让 XAML 不显示 Image
             return null;
