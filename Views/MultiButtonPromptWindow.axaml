@@ -61,14 +61,15 @@
                     Background="#40000000" />
 
             <!-- 内容层 -->
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
 
                 <!-- 主提示（Markdown 渲染：仅上下滚动，横向强制关闭） -->
                 <mdxaml:MarkdownScrollViewer Grid.Row="0"
                                               Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
                                               Markdown="{Binding Prompt}"
                                               MinHeight="40"
-                                              MaxHeight="160" />
+                                              MaxHeight="160"
+                                              Margin="0,0,0,14" />
 
                 <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示。
                      位置：主提示下方、副提示上方（仿 AdvancedShutdownDialog.axaml 的 Row 0/1/2 顺序）。 -->
@@ -101,10 +102,11 @@
                                               Markdown="{Binding SubPrompt}"
                                               IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                               MinHeight="32"
-                                              MaxHeight="100" />
+                                              MaxHeight="100"
+                                              Margin="0,0,0,14" />
 
                 <!-- 按钮列表（运行时由 ViewModel 动态填入） -->
-                <ItemsControl Grid.Row="3" ItemsSource="{Binding Buttons}" Margin="0,4,0,0">
+                <ItemsControl Grid.Row="3" ItemsSource="{Binding Buttons}" Margin="0,14,0,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="10"

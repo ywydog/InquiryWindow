@@ -16,8 +16,8 @@
                 ComboBox 用法：枚举值 -> ItemsSource（来自 x:Static Array 暴露），
                 两段式中文文本来自 OrderModeConverter。
             -->
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center" Margin="0,0,8,0">
                     <TextBlock Text="触发时从以下候选组中按顺序模式选一个执行"
                                FontSize="12"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
@@ -57,7 +57,7 @@
                                 DragDrop.DragOver="OnGroupItemDragOver"
                                 DragDrop.Drop="OnGroupItemDrop">
                             <StackPanel Spacing="6" Margin="10">
-                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                     <!-- 拖拽手柄：按住拖动以重排顺序，仅拖到「顺序」模式才有意义 -->
                                     <Border Grid.Column="0"
                                             Tag="{Binding}"
@@ -75,9 +75,11 @@
                                                    HorizontalAlignment="Center" />
                                     </Border>
                                     <TextBox Grid.Column="1"
+                                             Margin="6,0,6,0"
                                              Watermark="组名称"
                                              Text="{Binding Name, Mode=TwoWay}" />
                                     <Button Grid.Column="2"
+                                            Margin="0,0,6,0"
                                             Content="从预设插入"
                                             Click="OnInsertPresetClick"
                                             Tag="{Binding}" />

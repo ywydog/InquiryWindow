@@ -85,7 +85,7 @@
                                   DragDrop.DragOver="OnButtonItemDragOver"
                                   DragDrop.Drop="OnButtonItemDrop">
                             <Expander.Header>
-                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
                                     <!-- 拖拽手柄：仅作为 PointerPressed 起点，视觉上提示可拖 -->
                                     <Border Grid.Column="0"
                                             Tag="{Binding}"
@@ -102,7 +102,7 @@
                                                    VerticalAlignment="Center"
                                                    HorizontalAlignment="Center" />
                                     </Border>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0">
                                         <TextBlock Text="{Binding Icon}"
                                                    FontFamily="{DynamicResource FluentIcons}"
                                                    FontSize="14"

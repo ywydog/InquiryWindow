@@ -144,7 +144,7 @@
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="弹窗图标" FontSize="11"
                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
                                             <Border Grid.Column="0" Width="28" Height="28"
                                                     CornerRadius="4"
                                                     Background="{DynamicResource SubtleFillColorTertiaryBrush}">
@@ -155,6 +155,7 @@
                                                                VerticalAlignment="Center" />
                                             </Border>
                                             <TextBox Grid.Column="1"
+                                                     Margin="6,0,6,0"
                                                      Text="{Binding Settings.Icon, Mode=TwoWay}" />
                                             <Button Grid.Column="2" Content="…"
                                                     Click="OnPickWindowIconClick" />
@@ -200,10 +201,11 @@
                                         <StackPanel Spacing="4">
                                             <TextBlock Text="图片路径" FontSize="11"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                                            <Grid ColumnDefinitions="*,Auto,Auto">
                                                 <TextBox Grid.Column="0"
                                                          Text="{Binding Settings.BackgroundImagePath, Mode=TwoWay}" />
                                                 <Button Grid.Column="1" Content="浏览…"
+                                                        Margin="6,0,6,0"
                                                         Click="OnBrowseBackgroundImageClick" />
                                                 <Button Grid.Column="2" Content="✕"
                                                         ToolTip.Tip="清除背景"
@@ -386,12 +388,13 @@
                                         DragDrop.AllowDrop="True"
                                         DragDrop.DragOver="OnButtonItemDragOver"
                                         DragDrop.Drop="OnButtonItemDrop">
-                                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                                    <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                                         <TextBlock Grid.Column="0" Text="{Binding Icon}"
                                                    FontFamily="{DynamicResource FluentIcons}"
                                                    FontSize="14" VerticalAlignment="Center" />
                                         <Border Grid.Column="1" Classes="drag-grip"
                                                 Tag="{Binding}"
+                                                Margin="8,0,8,0"
                                                 PointerPressed="OnButtonDragHandlePressed"
                                                 PointerMoved="OnButtonDragHandleMoved"
                                                 PointerReleased="OnButtonDragHandleReleased"
@@ -441,7 +444,7 @@
                         <Border Classes="pane-card">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="按钮基础信息" Classes="pane-card-title" />
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="6">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                                     <TextBox Grid.Row="0" Grid.Column="0"
                                              Watermark="按钮名称"
                                              Text="{Binding ActiveButton.Name, Mode=TwoWay}" />
