@@ -64,5 +64,16 @@ ClassIsland 自动化 Action 插件。提供两类询问行动 + 一个插件级
 ## 兼容性
 
 - ClassIsland 2.x
-- .NET 8
-- 仅 Windows（依赖 System.Drawing.Common）
+- .NET 8 / .NET 10
+- 桌面端（Windows / macOS / Linux）：使用 `main` 或 `new/for2.2` 分支，依赖 System.Drawing.Common（图
+  标提取）并在主设置页提供亚克力背景开关
+- 安卓端（ClassIsland Android / Misha 分支）：使用 `new/for-android-2.2` 分支——
+  System.Drawing.Common / Process.Start / WindowTransparencyLevel.AcrylicBlur
+  在 Android 上均不可用，本分支去掉了这些桌面端专有功能，仅保留"是 / 否"弹窗
+  和多按钮询问的核心交互。插件加载时 `PresetsStore.Instance` / `PluginSettingsStore.Instance`
+  的 `get_Instance()` 不再触发 `Microsoft.Extensions.Logging.Abstractions` 的
+  `NullLogger<T>.Instance`，避免 Android 上的 `Arg_TypeLoadException`
+
+分支选择：
+- 想用图标提取 / 亚克力背景 / 启动 .exe → `new/for2.2`
+- 想在 Android ClassIsland 跑 → `new/for-android-2.2`
