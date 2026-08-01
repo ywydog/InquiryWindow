@@ -11,7 +11,7 @@ namespace InquiryWindow.Services;
 public static partial class IconExtractorService
 {
     [SupportedOSPlatform("windows")]
-    static partial AvaloniaBitmap? ExtractIcon(string path)
+    private static partial AvaloniaBitmap? ExtractIcon(string path)
     {
         try
         {

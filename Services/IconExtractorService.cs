@@ -24,5 +24,5 @@ public static partial class IconExtractorService
     }
 
     /// <summary>平台相关实现：在 Windows 上用 System.Drawing；其他平台返回 null。</summary>
-    static partial AvaloniaBitmap? ExtractIcon(string path);
+    private static partial AvaloniaBitmap? ExtractIcon(string path);
 }

@@ -8,5 +8,5 @@ namespace InquiryWindow.Services;
 /// </summary>
 public static partial class IconExtractorService
 {
-    static partial AvaloniaBitmap? ExtractIcon(string path) => null;
+    private static partial AvaloniaBitmap? ExtractIcon(string path) => null;
 }
