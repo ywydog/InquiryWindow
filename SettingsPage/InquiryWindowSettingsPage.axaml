@@ -11,7 +11,9 @@
                      mc:Ignorable="d">
 
     <!--
-        此页面只保留「插件级全局设置」：弹窗外观（亚克力背景 + 透明度）+ 预览按钮。
+        Android 兼容说明（new/for-android-2.2 分支专用）：
+        此页面只保留"插件级全局设置"占位说明，弹窗外观/亚克力背景等桌面端专有
+        设置已移除（WindowTransparencyLevel.AcrylicBlur 在 Android 上不支持）。
         按钮预设库已拆为独立页面 (ButtonPresetSettingsPage)，注册在 Plugin.cs。
     -->
 
@@ -32,48 +34,18 @@
                 <Label VerticalAlignment="Center" FontSize="28">询问窗设置</Label>
             </StackPanel>
 
-            <TextBlock Text="弹窗外观与全局行为。按钮预设库已拆为独立页面（见左侧设置列表）。"
+            <TextBlock Text="弹窗的全局行为与外观。按钮预设库已拆为独立页面（见左侧设置列表）。"
                        TextWrapping="Wrap"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        FontSize="13" />
 
             <controls:FASettingsExpander IconSource="{ci:FluentIconSource &#xE7B3;}"
                                        Header="弹窗外观"
-                                       Description="为询问窗启用亚克力模糊背景，并调整色调不透明度。">
-                <StackPanel Spacing="12" Margin="0,4,0,0">
-                    <ToggleSwitch x:Name="AcrylicToggle"
-                                  IsChecked="{Binding PluginSettings.UseAcrylicBackground, Mode=TwoWay}"
-                                  OnContent="开"
-                                  OffContent="关"
-                                  IsCheckedChanged="OnAcrylicIsCheckedChanged" />
-                    <StackPanel Spacing="4"
-                                IsEnabled="{Binding PluginSettings.UseAcrylicBackground}">
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <TextBlock Grid.Row="0" Grid.Column="0"
-                                       Text="色调不透明度"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Grid.Row="0" Grid.Column="1"
-                                       Text="{Binding PluginSettings.AcrylicTintOpacity, StringFormat={}{0:P0}}"
-                                       FontFamily="Consolas, Menlo, monospace"
-                                       VerticalAlignment="Center" />
-                            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                    x:Name="AcrylicOpacitySlider"
-                                    Minimum="0" Maximum="1"
-                                    TickFrequency="0.05"
-                                    IsSnapToTickEnabled="True"
-                                    Value="{Binding PluginSettings.AcrylicTintOpacity, Mode=TwoWay}"
-                                    PropertyChanged="OnAcrylicOpacityChanged" />
-                        </Grid>
-                        <TextBlock Text="0 = 完全透到桌面；1 = 接近纯色（遮住桌面内容）。默认 0.5。"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-                    <Button Content="预览弹窗效果"
-                            HorizontalAlignment="Right"
-                            Margin="0,4,0,0"
-                            Click="OnPreviewClick" />
-                </StackPanel>
+                                       Description="当前 Android 版本下无可配置项。桌面端的亚克力背景等功能仅在 Windows 平台提供。">
+                <TextBlock Text="在 Android 上，弹窗外观使用系统默认样式。"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,4,0,0" />
             </controls:FASettingsExpander>
 
         </StackPanel>

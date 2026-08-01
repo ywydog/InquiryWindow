@@ -1,20 +1,26 @@
 using System.IO;
 using ClassIsland.Shared.Helpers;
 using InquiryWindow.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace InquiryWindow.Services;
 
 /// <summary>
 /// 插件级全局设置存储：落盘到 <c>&lt;PluginConfig&gt;/plugin-settings.json</c>。
 /// 与 <see cref="PresetsStore"/> 解耦：前者管按钮预设库，本类管跨 Action 共享的选项。
+///
+/// Android 兼容说明（new/for-android-2.2 分支专用）：
+/// 本分支去掉了 Microsoft.Extensions.Logging 依赖（避免 Android 上偶发的
+/// TypeLoadException 触发 cctor / ModuleInitialize），改为不记录日志。
+/// Windows / 桌面端的实现见 main / new/for2.2 分支。
 /// </summary>
 public class PluginSettingsStore
 {
     private static PluginSettingsStore? _instance;
     private static readonly object StaticLock = new();
 
+    /// <summary>
+    /// 兼容层：保留静态 <see cref="Instance"/> 属性。
+    /// </summary>
     public static PluginSettingsStore Instance
     {
         get
@@ -29,9 +35,15 @@ public class PluginSettingsStore
     }
 
     private readonly object _loadLock = new();
-    private readonly ILogger _logger;
     private string? _path;
     private bool _loaded;
+
+    /// <summary>
+    /// 公共构造函数：支持 DI 容器直接 new。
+    /// </summary>
+    public PluginSettingsStore()
+    {
+    }
 
     /// <summary>
     /// 插件根目录，由 <see cref="Plugin"/> 在初始化时注入。
@@ -41,11 +53,6 @@ public class PluginSettingsStore
     public PluginSettings Data { get; private set; } = new();
 
     public event EventHandler? DataChanged;
-
-    private PluginSettingsStore(ILogger? logger = null)
-    {
-        _logger = logger ?? NullLogger<PluginSettingsStore>.Instance;
-    }
 
     /// <summary>
     /// 从磁盘加载。重复调用安全。若 <see cref="PluginConfigFolder"/> 尚未注入则延后。
@@ -69,15 +76,11 @@ public class PluginSettingsStore
             {
                 Data = ConfigureFileHelper.LoadConfig<PluginSettings>(_path);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "加载插件全局设置失败，使用默认值：{Path}", _path);
+                // 加载失败时静默回退到默认设置，避免破坏 Android 上的插件加载。
                 Data = new PluginSettings();
             }
-
-            // 边界保护：旧版文件可能缺少新增字段。
-            if (Data.AcrylicTintOpacity < 0) Data.AcrylicTintOpacity = 0;
-            if (Data.AcrylicTintOpacity > 1) Data.AcrylicTintOpacity = 1;
 
             _loaded = true;
         }
@@ -100,9 +103,9 @@ public class PluginSettingsStore
                 ConfigureFileHelper.SaveConfig(_path, Data);
                 DataChanged?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "保存插件全局设置失败：{Path}", _path);
+                // 落盘失败时静默忽略。
             }
         }
     }

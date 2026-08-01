@@ -4,20 +4,28 @@ using System.ComponentModel;
 using System.IO;
 using ClassIsland.Shared.Helpers;
 using InquiryWindow.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace InquiryWindow.Services;
 
 /// <summary>
 /// 按钮预设库：落盘到 <c>&lt;PluginConfig&gt;/presets.json</c>，
 /// 启动时加载，编辑后自动写回。
+///
+/// Android 兼容说明（new/for-android-2.2 分支专用）：
+/// 本分支去掉了 Microsoft.Extensions.Logging 依赖（避免 Android 上偶发的
+/// TypeLoadException 触发 cctor / ModuleInitialize），改为不记录日志。
+/// Windows / 桌面端的实现见 main / new/for2.2 分支。
 /// </summary>
 public class PresetsStore
 {
     private static PresetsStore? _instance;
     private static readonly object StaticLock = new();
 
+    /// <summary>
+    /// 兼容层：保留静态 <see cref="Instance"/> 属性。
+    /// 桌面端 Plugin.Initialize 仍调用 <c>PresetsStore.Instance.Load()</c> 触发首次加载。
+    /// 真正推荐的方式是通过 DI 注入本类实例。
+    /// </summary>
     public static PresetsStore Instance
     {
         get
@@ -32,7 +40,6 @@ public class PresetsStore
     }
 
     private readonly object _loadLock = new();
-    private readonly ILogger _logger;
     private readonly HashSet<ButtonPreset> _trackedPresets = new();
 
     private CancellationTokenSource? _saveDebounce;
@@ -41,9 +48,11 @@ public class PresetsStore
 
     public PresetsData Data { get; private set; } = new();
 
-    private PresetsStore(ILogger? logger = null)
+    /// <summary>
+    /// 公共构造函数：支持 DI 容器直接 new。
+    /// </summary>
+    public PresetsStore()
     {
-        _logger = logger ?? NullLogger<PresetsStore>.Instance;
     }
 
     /// <summary>
@@ -79,9 +88,9 @@ public class PresetsStore
                 Data = ConfigureFileHelper.LoadConfig<PresetsData>(_path);
                 Data.Presets ??= new ObservableCollection<ButtonPreset>();
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "加载预设库失败，使用空库：{Path}", _path);
+                // 加载失败时静默回退到空库，避免破坏 Android 上的插件加载。
                 Data = new PresetsData();
             }
 
@@ -106,9 +115,9 @@ public class PresetsStore
             {
                 ConfigureFileHelper.SaveConfig(_path, Data);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "保存预设库失败：{Path}", _path);
+                // 落盘失败时静默忽略（Android 上可能因为权限问题落盘失败）。
             }
         }
     }

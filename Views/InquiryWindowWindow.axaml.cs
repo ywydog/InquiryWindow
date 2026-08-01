@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using ClassIsland.Core.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -120,38 +119,6 @@ public partial class InquiryWindowWindow : MyWindow
     public InquiryWindowResult Result { get; private set; } = InquiryWindowResult.Cancel;
 
     /// <summary>
-    /// 启用 / 关闭询问窗的亚克力模糊背景。
-    /// 启用时把窗口设为 <c>AcrylicBlur</c> 透明 + 内部 Border 改用半透明系统画刷。
-    /// tint 透明度由 <see cref="AcrylicTintOpacity"/> 控制（0~1）。
-    /// </summary>
-    public bool UseAcrylicBackground
-    {
-        get => _vm.IsAcrylicActive;
-        set
-        {
-            if (_vm.IsAcrylicActive == value) return;
-            _vm.IsAcrylicActive = value;
-            ApplyAcrylicState();
-        }
-    }
-
-    /// <summary>
-    /// 亚克力背景色调不透明度（0~1）。值越小背景越透明，桌面越清晰。
-    /// 仅在 <see cref="UseAcrylicBackground"/> 为 true 时生效。
-    /// </summary>
-    public double AcrylicTintOpacity
-    {
-        get => _vm.AcrylicTintOpacity;
-        set
-        {
-            var clamped = Math.Clamp(value, 0.0, 1.0);
-            if (Math.Abs(_vm.AcrylicTintOpacity - clamped) < 0.0001) return;
-            _vm.AcrylicTintOpacity = clamped;
-            ApplyAcrylicState();
-        }
-    }
-
-    /// <summary>
     /// 显示确认弹窗并等待用户选择。
     /// 复刻 v1 的语义：通过 <see cref="Result"/> 统一返回结果，
     /// 并在关闭前用 <see cref="_allowClose"/> 拦截非按钮关闭。
@@ -171,58 +138,6 @@ public partial class InquiryWindowWindow : MyWindow
         var tcs = new TaskCompletionSource<InquiryWindowResult>();
         Closed += (_, _) => tcs.TrySetResult(Result);
         return await tcs.Task;
-    }
-
-    /// <summary>
-    /// 把当前的 <see cref="UseAcrylicBackground"/> + <see cref="AcrylicTintOpacity"/>
-    /// 实际应用到窗口和内容 Border 上。
-    /// 默认状态是纯色风格（沿用原版），打开亚克力时改用 AcrylicBlur 透明 + 半透明系统画刷。
-    /// </summary>
-    private void ApplyAcrylicState()
-    {
-        if (_vm.IsAcrylicActive)
-        {
-            // 打开亚克力：窗口透到桌面 + AcrylicBlur 模糊，
-            // Border 用系统 ChromeMediumLow 画刷并按用户设定的 tint 调整不透明度。
-            TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
-            Background = Brushes.Transparent;
-
-            if (this.FindControl<Border>("ContentRoot") is { } border)
-            {
-                border.Background = new SolidColorBrush(GetAcrylicTintColor(_vm.AcrylicTintOpacity));
-                border.Opacity = 1.0;
-            }
-        }
-        else
-        {
-            // 关闭亚克力：还原成纯色 LayerFillColorAltBrush（与原版视觉一致）。
-            TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
-            Background = null;     // 让窗口回到默认主题背景
-
-            if (this.FindControl<Border>("ContentRoot") is { } border)
-            {
-                border.Background = null;     // 还原成 XAML 里 DynamicResource 绑定的 LayerFillColorAltBrush
-                border.Opacity = 1.0;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 按不透明度算出一组用于亚克力 tint 的颜色（深色/浅色主题各一套）。
-    /// 直接用 alpha 比对会偏暗，这里用 FluentAvalonia 自带的 ChromeMediumLow 颜色为基础，
-    /// 按用户值在 0（完全透明）~1（接近纯色）之间插值。
-    /// </summary>
-    private static Color GetAcrylicTintColor(double opacity)
-    {
-        // 参考 ConvenientText 的视觉：深色模式用 #2D2D2D 半透、浅色模式用 #F3F3F3 半透。
-        // FluentAvalonia 的请求主题：深色用偏黑、浅色用偏白。
-        var isDark = Application.Current?.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
-        var baseColor = isDark
-            ? Color.FromRgb(0x2D, 0x2D, 0x2D)
-            : Color.FromRgb(0xF3, 0xF3, 0xF3);
-        // opacity 0.5 → 半透；1 → 全不透明；0 → 完全透明（交给 AcrylicBlur 看桌面）。
-        var alpha = (byte)Math.Clamp(opacity * 255, 0, 255);
-        return Color.FromArgb(alpha, baseColor.R, baseColor.G, baseColor.B);
     }
 
     private void OnCancelClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -339,10 +254,6 @@ public partial class InquiryWindowWindow : MyWindow
         [ObservableProperty] private string _countdownText = string.Empty;
         [ObservableProperty] private double _autoExecuteMaxSeconds;
         [ObservableProperty] private double _autoExecuteRemainingSeconds;
-
-        // 亚克力背景：仅用于本窗口内 UI 与初始化时同步；最终值由外部属性驱动。
-        [ObservableProperty] private bool _isAcrylicActive;
-        [ObservableProperty] private double _acrylicTintOpacity = 0.5;
 
         // 预览模式：仅显示「看完了」按钮，隐藏「取消 / 执行」。
         [ObservableProperty] private bool _isPreviewMode;
