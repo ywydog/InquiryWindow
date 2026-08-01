@@ -19,7 +19,25 @@
     <PackageReference Include="ClassIsland.PluginSdk" Version="$(ClassIslandPluginSdkVersion)">
       <ExcludeAssets>runtime; native</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Drawing.Common" Version="10.0.10" />
+    <!--
+      System.Drawing.Common 在 .NET 6+ 已被官方标记为 Windows-only：在非 Windows 平台
+      （含 Android）加载会抛 TypeLoadException / PlatformNotSupportedException。
+      这里用 OS 条件把包引用限定到 Windows，并配合 IconExtractorService.{Windows|Other}.cs
+      的 partial class，让插件在 Android / macOS / Linux 上也能正常加载（图标提取返回 null）。
+    -->
+    <PackageReference Include="System.Drawing.Common" Version="10.0.10" Condition="'$(OS)' == 'Windows_NT'" />
+  </ItemGroup>
+
+  <!--
+    平台相关源文件：Windows 平台编译 IconExtractorService.Windows.cs，其它平台编译 .Other.cs。
+    用 Exclude 互斥，确保同一份代码不会同时被编译两次。
+  -->
+  <ItemGroup>
+    <Compile Update="Services/IconExtractorService.Windows.cs" Condition="'$(OS)' != 'Windows_NT'">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
+    <Compile Remove="Services/IconExtractorService.Windows.cs" Condition="'$(OS)' != 'Windows_NT'" />
+    <Compile Remove="Services/IconExtractorService.Other.cs" Condition="'$(OS)' == 'Windows_NT'" />
   </ItemGroup>
 
   <ItemGroup>
