@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using InquiryWindow.Models;
 using InquiryWindow.Services;
 
 namespace InquiryWindow.ViewModels;
