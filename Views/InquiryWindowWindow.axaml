@@ -28,16 +28,17 @@
     <Border x:Name="ContentRoot"
             Padding="16" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
-        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="8">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
 
             <!-- 弹窗标题小字（窗口内顶部） -->
             <TextBlock Grid.Row="0"
                        Text="{Binding DialogTitleSmall}"
                        FontSize="14"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Margin="0,0,0,8" />
 
             <!-- 主标题 + 图标（图标的可见性由 ShowIcon 控制） -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
                 <Image Source="{Binding Icon}"
                        Width="32" Height="32"
                        IsVisible="{Binding IsIconVisible}" />
@@ -62,14 +63,16 @@
                        FontSize="11"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        TextWrapping="Wrap"
-                       IsVisible="{Binding IsPathVisible}" />
+                       IsVisible="{Binding IsPathVisible}"
+                       Margin="0,8,0,8" />
 
             <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示 -->
             <Border Grid.Row="4"
                     Padding="12"
                     CornerRadius="6"
                     IsVisible="{Binding IsAutoExecuteActive}"
-                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}">
+                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
+                    Margin="0,0,0,8">
                 <StackPanel Spacing="8">
                     <TextBlock Text="{Binding CountdownText}"
                                FontSize="14"
