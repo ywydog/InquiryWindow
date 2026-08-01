@@ -4,6 +4,7 @@ using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Extensions.Registry;
 using ClassIsland.Core.Models.Automation;
+using ClassIsland.Core.Services.Registry;
 using InquiryWindow.Actions;
 using InquiryWindow.Services;
 using InquiryWindow.SettingsPage;
