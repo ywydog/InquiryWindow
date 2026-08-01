@@ -6,6 +6,7 @@ using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Controls;
 using InquiryWindow.Models;
+using InquiryWindow.Services;
 using InquiryWindow.Views;
 using Microsoft.Extensions.Logging;
 
