@@ -37,6 +37,23 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
     /// </summary>
     private async void OnOpenDetailWindowClick(object? sender, RoutedEventArgs e)
     {
+        // Avalonia Android 的 WindowingPlatformStub 不支持创建子窗口（FAAppWindow
+        // 走的是 Window..ctor → PlatformManager.CreateWindow → Android stub 直接抛
+        // NotSupportedException），所以在 Android 平台上禁用"打开详细设置"按钮
+        // 的弹窗行为，改用 ContentDialog 提示用户该功能在 Android 暂不可用。
+        if (OperatingSystem.IsAndroid())
+        {
+            var dialog = new FAContentDialog
+            {
+                Title = "暂不可用",
+                Content = "「多按钮询问行动 · 详细设置」需要打开独立窗口进行编辑，目前在 Android 平台暂不支持。请直接在本设置面板中编辑按钮（点击下方按钮的 Expander 展开后可重命名、改图标、插入预设）。",
+                PrimaryButtonText = "好的",
+                DefaultButton = FAContentDialogButton.Primary
+            };
+            await dialog.ShowAsync();
+            return;
+        }
+
         var win = new MultiButtonPromptDetailWindow(Settings);
         await win.ShowDialogCompat();
     }
