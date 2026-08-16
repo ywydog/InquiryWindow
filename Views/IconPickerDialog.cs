@@ -55,7 +55,7 @@ public static class IconPickerDialog
         dialog.Content = BuildPickerContent(rows, token =>
         {
             selected = token;
-            dialog.Hide();
+            dialog.Hide(FAContentDialogResult.None);
         }, highlightGlyph);
 
         await dialog.ShowAsync(owner);

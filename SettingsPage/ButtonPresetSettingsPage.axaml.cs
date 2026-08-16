@@ -35,10 +35,9 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
-        if (ViewModel.PickIconCommand.CanExecute(topLevel))
-        {
-            await ViewModel.PickIconCommand.ExecuteAsync(topLevel);
-        }
+        // 注：不先调用 CanExecute —— Android AOT 下 IRelayCommand<T>.CanExecute 无法解析，
+        // 命令内部自带 null 保护，直接执行即可。
+        await ViewModel.PickIconCommand.ExecuteAsync(topLevel);
     }
 
     /// <summary>
@@ -49,10 +48,9 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
-        if (ViewModel.BeginEditActionsCommand.CanExecute(topLevel))
-        {
-            await ViewModel.BeginEditActionsCommand.ExecuteAsync(topLevel);
-        }
+        // 注：不先调用 CanExecute —— Android AOT 下 IRelayCommand<T>.CanExecute 无法解析，
+        // 命令内部自带 null 保护，直接执行即可。
+        await ViewModel.BeginEditActionsCommand.ExecuteAsync(topLevel);
     }
 
     /// <summary>
@@ -63,10 +61,9 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
-        if (ViewModel.RemovePresetCommand.CanExecute(topLevel))
-        {
-            await ViewModel.RemovePresetCommand.ExecuteAsync(topLevel);
-        }
+        // 注：不先调用 CanExecute —— Android AOT 下 IRelayCommand<T>.CanExecute 无法解析，
+        // 命令内部自带 null 保护，直接执行即可。
+        await ViewModel.RemovePresetCommand.ExecuteAsync(topLevel);
     }
 
     /// <summary>

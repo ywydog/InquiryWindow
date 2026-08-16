@@ -50,7 +50,6 @@
             <!-- 路径预览 -->
             <TextBlock Grid.Row="3"
                        Text="{Binding PathText}"
-                       FontFamily="Consolas, Menlo, monospace"
                        FontSize="11"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        TextWrapping="Wrap"

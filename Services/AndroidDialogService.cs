@@ -71,7 +71,7 @@ public static class AndroidDialogService
                 }
                 vm.IsAutoExecuteActive = false;
                 tcs.TrySetResult(result);
-                dialog.Hide();
+                dialog.Hide(FAContentDialogResult.None);
             }
         }
 
@@ -149,7 +149,7 @@ public static class AndroidDialogService
         var dialog = new FAContentDialog { Content = content };
 
         // ViewModel 通过 RequestClose 请求关闭（用户点了某个按钮）。
-        void OnRequestClose() => dialog.Hide();
+        void OnRequestClose() => dialog.Hide(FAContentDialogResult.None);
         vm.RequestClose += OnRequestClose;
 
         // 自动执行倒计时（与桌面版一致，由 ViewModel 驱动）。

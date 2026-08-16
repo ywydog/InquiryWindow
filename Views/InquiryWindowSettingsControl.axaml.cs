@@ -85,7 +85,7 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
         var content = new InquiryWindowDialogContent { DataContext = vm };
         var dialog = new FAContentDialog { Content = content };
 
-        void OnResultChosen(InquiryWindowResult _) => dialog.Hide();
+        void OnResultChosen(InquiryWindowResult _) => dialog.Hide(FAContentDialogResult.None);
         content.ResultChosen += OnResultChosen;
 
         try
