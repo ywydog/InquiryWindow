@@ -3,6 +3,9 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Controls;
+using ClassIsland.Core.Extensions.UI;
+using FluentAvalonia.UI.Controls;
+using InquiryWindow.Actions;
 using InquiryWindow.Models;
 
 namespace InquiryWindow.Views;
@@ -64,13 +67,35 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
 
     private async void OnPreviewBodyClick(object? sender, RoutedEventArgs e)
     {
-        // 弹一个独立弹窗预览 Markdown 渲染效果（用户点按钮才看，不是实时）。
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
-        await MarkdownPreviewDialog.ShowAsync(
-            topLevel,
-            title: "弹窗正文预览",
-            markdown: Settings.DialogBody ?? "");
+        // 预览完整的询问窗弹窗（预览模式：只显示「看完了」按钮，不触发执行）。
+        // Android 不能创建 Window，用 FAContentDialog 承载从 InquiryWindowWindow 抽取的内容。
+        var vm = new InquiryWindowWindow.ViewModel
+        {
+            DialogTitleSmall = Settings.DialogTitle,
+            DialogTitle = Settings.DialogTitle,
+            DialogBody = Settings.DialogBody ?? "",
+            PathText = Settings.TargetPath,
+            IsPathVisible = Settings.ShowPath && !string.IsNullOrWhiteSpace(Settings.TargetPath),
+            CanExecute = !string.IsNullOrWhiteSpace(Settings.TargetPath),
+            Icon = null,
+            IsIconVisible = false,
+            IsPreviewMode = true
+        };
+
+        var content = new InquiryWindowDialogContent { DataContext = vm };
+        var dialog = new FAContentDialog { Content = content };
+
+        void OnResultChosen(InquiryWindowResult _) => dialog.Hide();
+        content.ResultChosen += OnResultChosen;
+
+        try
+        {
+            await dialog.ShowAsyncAuto();
+        }
+        finally
+        {
+            content.ResultChosen -= OnResultChosen;
+        }
     }
 
     private async Task PickAsync(Func<TopLevel, Task> picker)
