@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
+using Avalonia.Media;
 using ClassIsland.Core.Controls;
-using FluentAvalonia.UI.Controls;
 
 namespace InquiryWindow.Views;
 
@@ -18,6 +19,9 @@ namespace InquiryWindow.Views;
 /// - 一次性缓存所有 glyph 字符
 /// - 弹窗用 ListBox + VirtualizingStackPanel + 每行 WrapPanel 做虚拟化
 /// - 返回点击的字符（已是真实 Unicode glyph），未选则返回 null
+///
+/// Android 兼容：Android 的 AOT 会裁剪 <c>FAContentDialog.Hide(...)</c>，因此这里改用
+/// 核心控件 <see cref="Popup"/> 承载内容，通过 <c>IsOpen</c> 实现打开/关闭。
 /// </summary>
 public static class IconPickerDialog
 {
@@ -44,21 +48,60 @@ public static class IconPickerDialog
         EnsureGlyphsLoaded();
         var rows = BuildVirtualizedRows(columns: 8);
 
-        var dialog = new FAContentDialog
+        var popup = new Popup
         {
-            Title = title,
-            PrimaryButtonText = "关闭",
-            DefaultButton = FAContentDialogButton.Primary
+            IsLightDismissEnabled = false,
+            Placement = PlacementMode.Center
         };
 
         string? selected = null;
-        dialog.Content = BuildPickerContent(rows, token =>
+        var picker = BuildPickerContent(rows, token =>
         {
             selected = token;
-            dialog.Hide(FAContentDialogResult.None);
+            popup.IsOpen = false;
         }, highlightGlyph);
 
-        await dialog.ShowAsync(owner);
+        // 用 Border 包一层标题噪音最小的干净背景，替换原来 ContentDialog 的自带框架。
+        var header = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Margin = new Thickness(4, 0, 4, 8)
+        };
+        header.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 16,
+            FontWeight = FontWeight.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+        var closeButton = new Button
+        {
+            Content = "关闭",
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        closeButton.Click += (_, _) => popup.IsOpen = false;
+        header.Children.Add(closeButton);
+
+        var root = new StackPanel
+        {
+            Spacing = 4,
+            Children = { header, picker }
+        };
+
+        popup.Child = new Border
+        {
+            Padding = new Thickness(12),
+            CornerRadius = new CornerRadius(8),
+            Background = Avalonia.Application.Current?.FindResource("LayerFillColorAltBrush")
+                as Avalonia.Media.IBrush,
+            Child = root
+        };
+
+        var tcs = new TaskCompletionSource();
+        popup.Closed += (_, _) => tcs.TrySetResult();
+        popup.IsOpen = true;
+        await tcs.Task;
         return selected;
     }
 

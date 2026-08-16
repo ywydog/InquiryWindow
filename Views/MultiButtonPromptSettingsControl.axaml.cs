@@ -131,121 +131,94 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             markdown: Settings.SubPrompt ?? "");
     }
 
-    // ---- 按钮排序拖拽（参考 SystemTools 的实现） ----
+    // ---- 按钮排序（手动指针拖拽） ----
+    // 注：Android 的 AOT 会裁剪 DataFormat.CreateInProcessFormat<T>/DragDrop，运行时会崩溃，
+    // 因此这里不依赖系统拖拽，改用指针捕获 + 实时 Move 的自实现排序。
 
-    private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptButton.Id";
     private const double ButtonDragThreshold = 4.0;
 
-    private Point? _buttonDragStartPoint;
-    private Border? _buttonDragSourceHandle;
-    private PointerPressedEventArgs? _buttonDragPressedArgs;
+    private bool _buttonDragging;
+    private Point? _buttonDragStart;
+    private MultiButtonPromptButton? _buttonDragSource;
 
     private void OnButtonDragHandlePressed(object? sender, PointerPressedEventArgs e)
     {
         if (sender is not Border handle) return;
         if (!e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed) return;
+        if (handle.Tag is not MultiButtonPromptButton source) return;
 
-        _buttonDragSourceHandle = handle;
-        _buttonDragStartPoint = e.GetPosition(handle);
-        _buttonDragPressedArgs = e;
-        // 触摸/笔才需要 e.Handled = true，鼠标不需要
+        _buttonDragSource = source;
+        _buttonDragStart = e.GetPosition(handle);
+        _buttonDragging = false;
+        // 捕获指针，保证拖动期间即使移出手柄也能持续收到 PointerMoved。
+        e.Pointer.Capture(handle);
+        e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+    }
+
+    private void OnButtonDragHandleMoved(object? sender, PointerEventArgs e)
+    {
+        if (sender is not Border handle) return;
+        if (_buttonDragSource is null) return;
+
+        var now = e.GetPosition(handle);
+        if (!_buttonDragging)
+        {
+            if (_buttonDragStart is null) return;
+            if (Math.Abs(now.X - _buttonDragStart.Value.X) + Math.Abs(now.Y - _buttonDragStart.Value.Y) < ButtonDragThreshold)
+            {
+                return;
+            }
+            _buttonDragging = true;
+        }
+
+        var items = handle.FindAncestorOfType<ItemsControl>();
+        if (items is null) return;
+        var pt = e.GetPosition(items);
+        if (TryGetHoveredButton(items, pt, out var target))
+        {
+            TryMoveButtonTo(_buttonDragSource, target);
+        }
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
 
     private void OnButtonDragHandleReleased(object? sender, PointerReleasedEventArgs e)
     {
-        _buttonDragSourceHandle = null;
-        _buttonDragStartPoint = null;
-        _buttonDragPressedArgs = null;
-    }
-
-    private async void OnButtonDragHandleMoved(object? sender, PointerEventArgs e)
-    {
-        if (sender is not Border handle) return;
-        if (_buttonDragSourceHandle != handle || _buttonDragStartPoint is null) return;
-        if (!e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed) return;
-
-        var now = e.GetPosition(handle);
-        if (Math.Abs(now.X - _buttonDragStartPoint.Value.X) + Math.Abs(now.Y - _buttonDragStartPoint.Value.Y) < ButtonDragThreshold)
+        if (sender is Border handle)
         {
-            return;
+            e.Pointer.Capture(null);
         }
+        _buttonDragSource = null;
+        _buttonDragStart = null;
+        _buttonDragging = false;
+    }
 
-        if (handle.Tag is not MultiButtonPromptButton source) return;
-
-        // 拖动源就是被拖对象本身；不需要再回查 sender，data 包 buttonId
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
-
-        // Avalonia 12 的 DoDragDropAsync 需要原始的 PointerPressedEventArgs
-        var pressedArgs = _buttonDragPressedArgs;
-        _buttonDragSourceHandle = null;
-        _buttonDragStartPoint = null;
-        _buttonDragPressedArgs = null;
-        if (pressedArgs != null)
+    /// <summary>从悬停点向上查找命中的按钮数据（类比 InputHitTest 后沿可视树取 DataContext）。</summary>
+    private static bool TryGetHoveredButton(ItemsControl host, Point pt, out MultiButtonPromptButton target)
+    {
+        target = null!;
+        var hit = host.InputHitTest(pt);
+        var node = hit as Visual;
+        while (node is not null)
         {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
+            if (node is Control c && c.DataContext is MultiButtonPromptButton b)
+            {
+                target = b;
+                return true;
+            }
+            node = node.VisualParent as Visual;
         }
-        e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+        return false;
     }
 
-    private void OnButtonListDragOver(object? sender, DragEventArgs e)
-    {
-        e.DragEffects = TryGetButtonDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private void OnButtonListDrop(object? sender, DragEventArgs e)
-    {
-        if (!TryGetButtonDrag(e, out var source)) return;
-        // 拖到列表空白区：移到末尾
-        MoveButton(source, Settings.Buttons.Count);
-    }
-
-    private void OnButtonItemDragOver(object? sender, DragEventArgs e)
-    {
-        e.DragEffects = TryGetButtonDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private void OnButtonItemDrop(object? sender, DragEventArgs e)
-    {
-        if (!TryGetButtonDrag(e, out var source)) return;
-        if (sender is not Control targetControl) return;
-        if (targetControl.DataContext is not MultiButtonPromptButton target) return;
-
-        var pointerY = e.GetPosition(targetControl).Y;
-        var insertIndex = pointerY > targetControl.Bounds.Height / 2
-            ? Settings.Buttons.IndexOf(target) + 1
-            : Settings.Buttons.IndexOf(target);
-
-        MoveButton(source, insertIndex);
-    }
-
-    private static bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
-    {
-        source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
-    }
-
-    private void MoveButton(MultiButtonPromptButton source, int insertIndex)
+    /// <summary>把源按钮移动到目标按钮所在位置（交换式实时排序）。</summary>
+    private bool TryMoveButtonTo(MultiButtonPromptButton source, MultiButtonPromptButton target)
     {
         var list = Settings.Buttons;
         var oldIndex = list.IndexOf(source);
-        if (oldIndex < 0) return;
-
-        // 同位置或相邻位置直接忽略
-        var normalized = insertIndex > oldIndex ? insertIndex - 1 : insertIndex;
-        if (normalized == oldIndex) return;
-
-        list.Move(oldIndex, Math.Clamp(normalized, 0, list.Count - 1));
+        var targetIndex = list.IndexOf(target);
+        if (oldIndex < 0 || targetIndex < 0 || oldIndex == targetIndex) return false;
+        list.Move(oldIndex, targetIndex);
+        return true;
     }
 
     private static async Task ShowEmptyDialogAsync()
@@ -313,14 +286,8 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         {
             dialog.IsPrimaryButtonEnabled = listBox.SelectedItem is ButtonPreset;
         };
-        // 双击 = 直接插入并关闭
-        listBox.DoubleTapped += (_, _) =>
-        {
-            if (listBox.SelectedItem is ButtonPreset)
-            {
-                dialog.Hide(FAContentDialogResult.Primary);
-            }
-        };
+        // 注意：Android 的 AOT 会裁剪 FAContentDialog.Hide，因此这里不再提供
+        // "双击直接插入并关闭"的快捷操作，统一走下方主按钮"插入"来关闭。
 
         var result = await dialog.ShowAsync();
         if (result != FAContentDialogResult.Primary) return null;

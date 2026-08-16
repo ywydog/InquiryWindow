@@ -156,126 +156,93 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         }
     }
 
-    // ---- 结果组排序拖拽（参考 MultiButtonPromptSettingsControl 的实现） ----
+    // ---- 结果组排序（手动指针拖拽） ----
+    // 注：Android 的 AOT 会裁剪 DataFormat.CreateInProcessFormat<T>/DragDrop，运行时会崩溃，
+    // 因此这里不依赖系统拖拽，改用指针捕获 + 实时 Move 的自实现排序。
 
-    private const string GroupDragDataKey = "InquiryWindow.MultiResultGroup";
     private const double GroupDragThreshold = 4.0;
 
-    private Point? _groupDragStartPoint;
-    private Border? _groupDragSourceHandle;
-    private PointerPressedEventArgs? _groupDragPressedArgs;
+    private bool _groupDragging;
+    private Point? _groupDragStart;
+    private MultiResultGroup? _groupDragSource;
 
     private void OnGroupDragHandlePressed(object? sender, PointerPressedEventArgs e)
     {
         if (sender is not Border handle) return;
         if (!e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed) return;
+        if (handle.Tag is not MultiResultGroup source) return;
 
-        _groupDragSourceHandle = handle;
-        _groupDragStartPoint = e.GetPosition(handle);
-        _groupDragPressedArgs = e;
-        // 触摸/笔才需要 e.Handled = true，鼠标不需要
+        _groupDragSource = source;
+        _groupDragStart = e.GetPosition(handle);
+        _groupDragging = false;
+        e.Pointer.Capture(handle);
+        e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+    }
+
+    private void OnGroupDragHandleMoved(object? sender, PointerEventArgs e)
+    {
+        if (sender is not Border handle) return;
+        if (_groupDragSource is null) return;
+
+        var now = e.GetPosition(handle);
+        if (!_groupDragging)
+        {
+            if (_groupDragStart is null) return;
+            if (Math.Abs(now.X - _groupDragStart.Value.X) + Math.Abs(now.Y - _groupDragStart.Value.Y) < GroupDragThreshold)
+            {
+                return;
+            }
+            _groupDragging = true;
+        }
+
+        var items = handle.FindAncestorOfType<ItemsControl>();
+        if (items is null) return;
+        var pt = e.GetPosition(items);
+        if (TryGetHoveredGroup(items, pt, out var target))
+        {
+            TryMoveGroupTo(_groupDragSource, target);
+        }
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
 
     private void OnGroupDragHandleReleased(object? sender, PointerReleasedEventArgs e)
     {
-        _groupDragSourceHandle = null;
-        _groupDragStartPoint = null;
-        _groupDragPressedArgs = null;
-    }
-
-    private async void OnGroupDragHandleMoved(object? sender, PointerEventArgs e)
-    {
-        if (sender is not Border handle) return;
-        if (_groupDragSourceHandle != handle || _groupDragStartPoint is null) return;
-        if (!e.GetCurrentPoint(handle).Properties.IsLeftButtonPressed) return;
-
-        var now = e.GetPosition(handle);
-        if (Math.Abs(now.X - _groupDragStartPoint.Value.X) + Math.Abs(now.Y - _groupDragStartPoint.Value.Y) < GroupDragThreshold)
+        if (sender is Border handle)
         {
-            return;
+            e.Pointer.Capture(null);
         }
+        _groupDragSource = null;
+        _groupDragStart = null;
+        _groupDragging = false;
+    }
 
-        if (handle.Tag is not MultiResultGroup source) return;
-
-        // 拖动源就是被拖对象本身；data 直接包对象引用
-        var format = DataFormat.CreateInProcessFormat<MultiResultGroup>(GroupDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
-
-        // Avalonia 12 的 DoDragDropAsync 需要原始的 PointerPressedEventArgs
-        var pressedArgs = _groupDragPressedArgs;
-        _groupDragSourceHandle = null;
-        _groupDragStartPoint = null;
-        _groupDragPressedArgs = null;
-        if (pressedArgs != null)
+    /// <summary>从悬停点向上查找命中的结果组数据。</summary>
+    private static bool TryGetHoveredGroup(ItemsControl host, Point pt, out MultiResultGroup target)
+    {
+        target = null!;
+        var hit = host.InputHitTest(pt);
+        var node = hit as Visual;
+        while (node is not null)
         {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
+            if (node is Control c && c.DataContext is MultiResultGroup g)
+            {
+                target = g;
+                return true;
+            }
+            node = node.VisualParent as Visual;
         }
-        e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+        return false;
     }
 
-    private void OnGroupListDragOver(object? sender, DragEventArgs e)
-    {
-        e.DragEffects = TryGetGroupDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private void OnGroupListDrop(object? sender, DragEventArgs e)
-    {
-        if (!TryGetGroupDrag(e, out var source)) return;
-        // 拖到列表空白区：移到末尾
-        MoveGroup(source, Settings.Groups.Count);
-    }
-
-    private void OnGroupItemDragOver(object? sender, DragEventArgs e)
-    {
-        e.DragEffects = TryGetGroupDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private void OnGroupItemDrop(object? sender, DragEventArgs e)
-    {
-        if (!TryGetGroupDrag(e, out var source)) return;
-        if (sender is not Control targetControl) return;
-        if (targetControl.DataContext is not MultiResultGroup target) return;
-
-        // 按指针 Y 落在目标卡片的上半 / 下半决定插入到目标前还是后
-        var pointerY = e.GetPosition(targetControl).Y;
-        var insertIndex = pointerY > targetControl.Bounds.Height / 2
-            ? Settings.Groups.IndexOf(target) + 1
-            : Settings.Groups.IndexOf(target);
-
-        MoveGroup(source, insertIndex);
-    }
-
-    private static bool TryGetGroupDrag(DragEventArgs e, out MultiResultGroup source)
-    {
-        source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiResultGroup>(GroupDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
-    }
-
-    /// <summary>
-    /// 把 <paramref name="source"/> 移动到 <paramref name="insertIndex"/>。
-    /// 索引经过规范化：拖到比原位置更后的位置时，因为 Move 会先把原位置抹掉，
-    /// 需要把 insertIndex - 1 修正回期望位置。
-    /// </summary>
-    private void MoveGroup(MultiResultGroup source, int insertIndex)
+    /// <summary>把源组移动到目标组所在位置（交换式实时排序）。</summary>
+    private bool TryMoveGroupTo(MultiResultGroup source, MultiResultGroup target)
     {
         var list = Settings.Groups;
         var oldIndex = list.IndexOf(source);
-        if (oldIndex < 0) return;
-
-        var normalized = insertIndex > oldIndex ? insertIndex - 1 : insertIndex;
-        if (normalized == oldIndex) return;
-
-        list.Move(oldIndex, Math.Clamp(normalized, 0, list.Count - 1));
+        var targetIndex = list.IndexOf(target);
+        if (oldIndex < 0 || targetIndex < 0 || oldIndex == targetIndex) return false;
+        list.Move(oldIndex, targetIndex);
+        return true;
     }
 
     private async void OnInsertPresetClick(object? sender, RoutedEventArgs e)
@@ -365,13 +332,8 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         {
             dialog.IsPrimaryButtonEnabled = listBox.SelectedItem is ButtonPreset;
         };
-        listBox.DoubleTapped += (_, _) =>
-        {
-            if (listBox.SelectedItem is ButtonPreset)
-            {
-                dialog.Hide(FAContentDialogResult.Primary);
-            }
-        };
+        // 注意：Android 的 AOT 会裁剪 FAContentDialog.Hide，因此这里不再提供
+        // "双击直接插入并关闭"的快捷操作，统一走下方主按钮"插入"来关闭。
 
         var result = await dialog.ShowAsync();
         if (result != FAContentDialogResult.Primary) return null;

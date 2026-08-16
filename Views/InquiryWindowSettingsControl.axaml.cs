@@ -3,8 +3,6 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Controls;
-using ClassIsland.Core.Extensions.UI;
-using FluentAvalonia.UI.Controls;
 using InquiryWindow.Actions;
 using InquiryWindow.Models;
 
@@ -65,10 +63,10 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
         });
     }
 
-    private async void OnPreviewBodyClick(object? sender, RoutedEventArgs e)
+    private void OnPreviewBodyClick(object? sender, RoutedEventArgs e)
     {
         // 预览完整的询问窗弹窗（预览模式：只显示「看完了」按钮，不触发执行）。
-        // Android 不能创建 Window，用 FAContentDialog 承载从 InquiryWindowWindow 抽取的内容。
+        // Android 不能创建 Window，用 Popup 承载从 InquiryWindowWindow 抽取的内容。
         var vm = new InquiryWindowWindow.ViewModel
         {
             DialogTitleSmall = Settings.DialogTitle,
@@ -83,19 +81,20 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
         };
 
         var content = new InquiryWindowDialogContent { DataContext = vm };
-        var dialog = new FAContentDialog { Content = content };
+        // Android AOT 会裁剪 FAContentDialog.Hide，预览弹窗统一改用 Popup（IsOpen 开关）。
+        var popup = new Avalonia.Controls.Primitives.Popup
+        {
+            IsLightDismissEnabled = false,
+            Placement = Avalonia.Controls.PlacementMode.Center,
+            Child = content
+        };
 
-        void OnResultChosen(InquiryWindowResult _) => dialog.Hide(FAContentDialogResult.None);
+        void OnResultChosen(InquiryWindowResult _) => popup.IsOpen = false;
         content.ResultChosen += OnResultChosen;
+        // Popup 关闭后解绑，避免残留引用。
+        popup.Closed += (_, _) => content.ResultChosen -= OnResultChosen;
 
-        try
-        {
-            await dialog.ShowAsyncAuto();
-        }
-        finally
-        {
-            content.ResultChosen -= OnResultChosen;
-        }
+        popup.IsOpen = true;
     }
 
     private async Task PickAsync(Func<TopLevel, Task> picker)

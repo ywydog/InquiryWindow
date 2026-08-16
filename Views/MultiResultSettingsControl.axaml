@@ -42,20 +42,14 @@
 
             <TextBlock Text="结果组" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
 
-            <ItemsControl ItemsSource="{Binding Settings.Groups}"
-                          DragDrop.AllowDrop="True"
-                          DragDrop.DragOver="OnGroupListDragOver"
-                          DragDrop.Drop="OnGroupListDrop">
+            <ItemsControl ItemsSource="{Binding Settings.Groups}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:MultiResultGroup">
                         <Border Margin="0,4"
                                 Padding="0"
                                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                 BorderThickness="1"
-                                CornerRadius="6"
-                                DragDrop.AllowDrop="True"
-                                DragDrop.DragOver="OnGroupItemDragOver"
-                                DragDrop.Drop="OnGroupItemDrop">
+                                CornerRadius="6">
                             <StackPanel Spacing="6" Margin="10">
                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                     <!-- 拖拽手柄：按住拖动以重排顺序，仅拖到「顺序」模式才有意义 -->

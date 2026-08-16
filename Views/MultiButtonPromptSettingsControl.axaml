@@ -73,17 +73,11 @@
 
             <TextBlock Text="按钮" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0" />
 
-            <ItemsControl ItemsSource="{Binding Settings.Buttons}"
-                          DragDrop.AllowDrop="True"
-                          DragDrop.DragOver="OnButtonListDragOver"
-                          DragDrop.Drop="OnButtonListDrop">
+            <ItemsControl ItemsSource="{Binding Settings.Buttons}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:MultiButtonPromptButton">
                         <Expander Margin="0,4" HorizontalAlignment="Stretch"
-                                  HorizontalContentAlignment="Stretch"
-                                  DragDrop.AllowDrop="True"
-                                  DragDrop.DragOver="OnButtonItemDragOver"
-                                  DragDrop.Drop="OnButtonItemDrop">
+                                  HorizontalContentAlignment="Stretch">
                             <Expander.Header>
                                 <Grid ColumnDefinitions="Auto,*,Auto">
                                     <!-- 拖拽手柄：仅作为 PointerPressed 起点，视觉上提示可拖 -->
