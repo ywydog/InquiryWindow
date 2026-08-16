@@ -51,4 +51,11 @@ public partial class InquiryWindowActionSettings : ObservableObject
     /// </summary>
     [ObservableProperty]
     private double _autoExecuteSeconds = 5;
+
+    /// <summary>
+    /// 是否启用「交互融合」显示模式：开启后把询问内容融合到 ClassIsland 主界面
+    /// 覆盖层显示（而非打开独立窗口）。默认 false。
+    /// </summary>
+    [ObservableProperty]
+    private bool _isInteractiveFusion;
 }

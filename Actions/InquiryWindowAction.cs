@@ -38,40 +38,51 @@ public class InquiryWindowAction(
 
         // 3. 提取图标（仅在 ShowIcon=true 且是 .exe 时提取）
         Bitmap? icon = null;
-        if (Settings.ShowIcon && hasPath)
+        if (Settings.ShowIcon && hasPath && !Settings.IsInteractiveFusion)
         {
             icon = IconExtractorService.TryExtract(Settings.TargetPath);
             logger.LogDebug("图标提取{Result}", icon != null ? "成功" : "失败或目标非 .exe");
         }
 
-        // 4. 构造并显示弹窗
-        var window = new InquiryWindowWindow
+        InquiryWindowResult result;
+        if (Settings.IsInteractiveFusion)
         {
-            WindowTitle      = Settings.WindowTitle,
-            DialogTitleSmall = titleResolved,
-            DialogTitle      = titleResolved,
-            DialogBody       = bodyResolved,
-            PathText         = Settings.TargetPath,
-            IsPathVisible    = Settings.ShowPath && hasPath,
-            Icon             = icon,
-            IsIconVisible    = icon != null,
-            CanExecute       = hasPath
-        };
-
-        // 4.4 亚克力背景：从插件级全局设置里读取（设置页可开关），无侵入式地挂到弹窗上
-        var pluginSettings = PluginSettingsStore.Instance.Data;
-        window.UseAcrylicBackground = pluginSettings.UseAcrylicBackground;
-        window.AcrylicTintOpacity = pluginSettings.AcrylicTintOpacity;
-
-        // 4.5 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
-        if (Settings.IsAutoExecuteEnabled && hasPath)
-        {
-            window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+            // 5.0 「交互融合」模式：把询问内容融合到 ClassIsland 主界面覆盖层显示（而非独立窗口）
+            result = await InquiryWindowFusionOverlay.ShowInquiryWindowAsync(
+                Settings, logger, titleResolved, bodyResolved, hasPath);
+            logger.LogDebug("交互融合模式：用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");
         }
+        else
+        {
+            // 4. 构造并显示弹窗
+            var window = new InquiryWindowWindow
+            {
+                WindowTitle      = Settings.WindowTitle,
+                DialogTitleSmall = titleResolved,
+                DialogTitle      = titleResolved,
+                DialogBody       = bodyResolved,
+                PathText         = Settings.TargetPath,
+                IsPathVisible    = Settings.ShowPath && hasPath,
+                Icon             = icon,
+                IsIconVisible    = icon != null,
+                CanExecute       = hasPath
+            };
 
-        var owner = AppBase.Current.GetRootWindow() as Window;
-        var result = await window.ShowDialog(owner);
-        logger.LogDebug("用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");
+            // 4.4 亚克力背景：从插件级全局设置里读取（设置页可开关），无侵入式地挂到弹窗上
+            var pluginSettings = PluginSettingsStore.Instance.Data;
+            window.UseAcrylicBackground = pluginSettings.UseAcrylicBackground;
+            window.AcrylicTintOpacity = pluginSettings.AcrylicTintOpacity;
+
+            // 4.5 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
+            if (Settings.IsAutoExecuteEnabled && hasPath)
+            {
+                window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+            }
+
+            var owner = AppBase.Current.GetRootWindow() as Window;
+            result = await window.ShowDialog(owner);
+            logger.LogDebug("用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");
+        }
 
         // 5. 根据结果处理
         if (result == InquiryWindowResult.Execute && hasPath)

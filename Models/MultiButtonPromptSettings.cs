@@ -123,6 +123,13 @@ public partial class MultiButtonPromptSettings : ObservableObject
     [Newtonsoft.Json.JsonIgnore]
     public ObservableCollection<AutoExecuteTarget> AutoExecuteTargets { get; } = new();
 
+    /// <summary>
+    /// 是否启用「交互融合」显示模式：开启后把多按钮询问内容融合到 ClassIsland 主界面
+    /// 覆盖层显示（而非打开独立窗口）。默认 false。该开关在「详细设置」窗口中配置。
+    /// </summary>
+    [ObservableProperty]
+    private bool _isInteractiveFusion;
+
     public MultiButtonPromptSettings()
     {
         Buttons.CollectionChanged += OnButtonsCollectionChanged;

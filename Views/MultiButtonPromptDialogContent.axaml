@@ -1,0 +1,137 @@
+<UserControl x:Class="InquiryWindow.Views.MultiButtonPromptDialogContent"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ci="http://classisland.tech/schemas/xaml/core"
+             xmlns:models="clr-namespace:InquiryWindow.Models"
+             xmlns:vm="clr-namespace:InquiryWindow.ViewModels"
+             xmlns:converters="clr-namespace:InquiryWindow.Converters"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
+             xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core"
+             x:DataType="vm:MultiButtonPromptViewModel">
+
+    <!--
+        「多按钮询问」弹窗内容（桌面版「交互融合」覆盖窗口专用）。
+        从 MultiButtonPromptWindow.axaml 抽取，供 InquiryWindowFusionOverlay 承载，
+        使询问内容可以融合到 ClassIsland 主界面覆盖层显示（而非独立窗口）。
+        原 Window 上的 $parent[Window] 绑定改为 $parent[UserControl]。
+    -->
+    <UserControl.Styles>
+        <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
+
+        <!-- "自定义颜色"模式（customAccent class）：仅控制前景色 -->
+        <Style Selector="Button.customAccent">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Padding="20" CornerRadius="8"
+            Background="{DynamicResource LayerFillColorAltBrush}">
+        <Panel>
+            <!-- 背景层（最底层）：有图时铺满；Tile 模式用 Rectangle + ImageBrush 实现 -->
+            <Panel IsVisible="{Binding HasBackgroundImage}">
+                <!-- Cover/Contain/Stretch 模式 -->
+                <Image Source="{Binding BackgroundImage}"
+                       Stretch="{Binding BackgroundImageStretch}"
+                       IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsNotTileConverter.Instance}}" />
+
+                <!-- Tile 模式：用 Rectangle + ImageBrush(TileMode=Tile) 实现平铺 -->
+                <Rectangle IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsTileConverter.Instance}}">
+                    <Rectangle.Fill>
+                        <ImageBrush Source="{Binding BackgroundImage}"
+                                    TileMode="Tile"
+                                    Stretch="None"
+                                    AlignmentX="Left"
+                                    AlignmentY="Top" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Panel>
+
+            <!-- 蒙层：有背景时加 rgba(0,0,0,0.25)，提高文字可读性 -->
+            <Border IsVisible="{Binding HasBackgroundImage}"
+                    Background="#40000000" />
+
+            <!-- 内容层 -->
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+
+                <!-- 主提示（Markdown 渲染） -->
+                <mdxaml:MarkdownScrollViewer Grid.Row="0"
+                                              Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                              Markdown="{Binding Prompt}"
+                                              MinHeight="40"
+                                              MaxHeight="160"
+                                              Margin="0,0,0,14" />
+
+                <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示 -->
+                <Border Grid.Row="1"
+                        Padding="12"
+                        CornerRadius="6"
+                        IsVisible="{Binding IsAutoExecuteActive}"
+                        Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding CountdownText}"
+                                   FontSize="14"
+                                   FontWeight="DemiBold" />
+                        <ProgressBar Height="5"
+                                     Minimum="0"
+                                     Maximum="{Binding AutoExecuteMaxSeconds}"
+                                     Value="{Binding AutoExecuteRemainingSeconds}">
+                            <ProgressBar.Styles>
+                                <Style Selector="ProgressBar">
+                                    <Setter Property="Foreground"
+                                            Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                                </Style>
+                            </ProgressBar.Styles>
+                        </ProgressBar>
+                    </StackPanel>
+                </Border>
+
+                <!-- 副提示（Markdown 渲染） -->
+                <mdxaml:MarkdownScrollViewer Grid.Row="2"
+                                              Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                              Markdown="{Binding SubPrompt}"
+                                              IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                              MinHeight="32"
+                                              MaxHeight="100"
+                                              Margin="0,0,0,14" />
+
+                <!-- 按钮列表（运行时由 ViewModel 动态填入） -->
+                <ItemsControl Grid.Row="3" ItemsSource="{Binding Buttons}" Margin="0,14,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="10"
+                                        HorizontalAlignment="Right" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:MultiButtonPromptButton">
+                            <Button MinWidth="96" Height="34"
+                                    Classes.accent="{Binding IsAccent}"
+                                    Classes.customAccent="{Binding IsCustomAccent}"
+                                    Background="{Binding CustomColor}"
+                                    IsEnabled="{Binding $parent[UserControl].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
+                                    Command="{Binding $parent[UserControl].DataContext.PressButtonCommand}"
+                                    CommandParameter="{Binding}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding Icon}"
+                                               FontFamily="{DynamicResource FluentIcons}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock VerticalAlignment="Center">
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{x:Static converters:ButtonCountdownTextConverter.Instance}">
+                                                <Binding />
+                                                <Binding Path="$parent[UserControl].DataContext.PressCountdownButton" />
+                                                <Binding Path="$parent[UserControl].DataContext.PressCountdownRemaining" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            </Grid>
+        </Panel>
+    </Border>
+</UserControl>
