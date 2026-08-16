@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Controls;
 using InquiryWindow.Models;
@@ -64,13 +65,19 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
 
     private async void OnPreviewBodyClick(object? sender, RoutedEventArgs e)
     {
-        // 弹一个独立弹窗预览 Markdown 渲染效果（用户点按钮才看，不是实时）。
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
-        await MarkdownPreviewDialog.ShowAsync(
-            topLevel,
-            title: "弹窗正文预览",
-            markdown: Settings.DialogBody ?? "");
+        // 预览完整的询问窗弹窗（预览模式：只显示「看完了」按钮，不触发执行）。
+        var window = new InquiryWindowWindow
+        {
+            WindowTitle = Settings.WindowTitle,
+            DialogTitleSmall = Settings.DialogTitle,
+            DialogTitle = Settings.DialogTitle,
+            DialogBody = Settings.DialogBody ?? "",
+            PathText = Settings.TargetPath,
+            IsPathVisible = Settings.ShowPath && !string.IsNullOrWhiteSpace(Settings.TargetPath),
+            CanExecute = !string.IsNullOrWhiteSpace(Settings.TargetPath),
+            IsPreviewMode = true
+        };
+        await window.ShowDialog(AppBase.Current.GetRootWindow() as Window);
     }
 
     private async Task PickAsync(Func<TopLevel, Task> picker)
