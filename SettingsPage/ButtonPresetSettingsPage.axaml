@@ -45,7 +45,7 @@
                     </StackPanel>
                 </Button>
                 <Button Content="删除"
-                        Command="{Binding RemovePresetCommand}"
+                        Click="OnRemovePresetClick"
                         IsEnabled="{Binding SelectedPreset, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
 

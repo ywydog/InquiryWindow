@@ -372,6 +372,7 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         {
             _settings.PropertyChanged -= OnSettingsPropertyChanged;
         }
+        _backgroundImage?.Dispose();
         _backgroundImage = null;
     }
 }

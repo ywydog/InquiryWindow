@@ -2,6 +2,7 @@ using ClassIsland.Core.Abstractions.Automation;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
 using InquiryWindow.Models;
+using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 using InquiryWindow.Views;
 using Microsoft.Extensions.Logging;
@@ -41,18 +42,25 @@ public class MultiButtonPromptAction(
                 "多按钮询问触发：Buttons 已清空但启用了自动执行。弹窗将出现并按「无事发生」处理（到时间后自动关闭，不执行任何 Action）。");
         }
 
-        var window = new MultiButtonPromptWindow
-        {
-            WindowTitle = Settings.Title,
-            DataContext = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger)
-        };
+        var vm = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger);
 
-        // 启用自动执行时启动倒计时，倒计时归零按指定目标触发（按钮 Action 链或"无事发生"）。
-        if (window.DataContext is MultiButtonPromptViewModel vm)
+        if (OperatingSystem.IsAndroid())
         {
-            vm.StartAutoExecuteCountdown();
+            // Android 的 WindowingPlatformStub 不支持创建 Window，改用 ContentDialog 承载。
+            await AndroidDialogService.ShowMultiButtonPromptAsync(vm, logger);
         }
+        else
+        {
+            var window = new MultiButtonPromptWindow
+            {
+                WindowTitle = Settings.Title,
+                DataContext = vm
+            };
 
-        await window.ShowDialogCompat();
+            // 启用自动执行时启动倒计时，倒计时归零按指定目标触发（按钮 Action 链或"无事发生"）。
+            vm.StartAutoExecuteCountdown();
+
+            await window.ShowDialogCompat();
+        }
     }
 }

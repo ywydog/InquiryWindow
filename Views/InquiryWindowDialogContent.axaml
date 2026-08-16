@@ -1,0 +1,115 @@
+<UserControl x:Class="InquiryWindow.Views.InquiryWindowDialogContent"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ci="http://classisland.tech/schemas/xaml/core"
+             xmlns:vm="clr-namespace:InquiryWindow.Views"
+             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
+             xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core"
+             x:DataType="vm:InquiryWindowWindow+ViewModel">
+
+    <!--
+        「询问窗」弹窗内容（Android 分支专用）。
+        从 InquiryWindowWindow.axaml 抽取出来，供 FAContentDialog 承载，
+        使 Android 上无需创建 Window 也能显示弹窗（Android 的 WindowingPlatformStub
+        不支持 Window）。按钮点击通过 ResultChosen 事件通知宿主关闭并返回结果。
+    -->
+    <UserControl.Styles>
+        <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
+    </UserControl.Styles>
+
+    <Border Padding="16" CornerRadius="8"
+            Background="{DynamicResource LayerFillColorAltBrush}">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+
+            <!-- 弹窗标题小字 -->
+            <TextBlock Grid.Row="0"
+                       Text="{Binding DialogTitleSmall}"
+                       FontSize="14"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Margin="0,0,0,8" />
+
+            <!-- 主标题 + 图标 -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+                <Image Source="{Binding Icon}"
+                       Width="32" Height="32"
+                       IsVisible="{Binding IsIconVisible}" />
+                <TextBlock Text="{Binding DialogTitle}"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- 正文（Markdown 渲染） -->
+            <mdxaml:MarkdownScrollViewer Grid.Row="2"
+                                          Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                          Markdown="{Binding DialogBody}"
+                                          MinHeight="40"
+                                          MaxHeight="320"
+                                          VerticalAlignment="Top" />
+
+            <!-- 路径预览 -->
+            <TextBlock Grid.Row="3"
+                       Text="{Binding PathText}"
+                       FontFamily="Consolas, Menlo, monospace"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding IsPathVisible}"
+                       Margin="0,8,0,8" />
+
+            <!-- 倒计时（文本 + 进度条） -->
+            <Border Grid.Row="4"
+                    Padding="12"
+                    CornerRadius="6"
+                    IsVisible="{Binding IsAutoExecuteActive}"
+                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
+                    Margin="0,0,0,8">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding CountdownText}"
+                               FontSize="14"
+                               FontWeight="DemiBold" />
+                    <ProgressBar Height="5"
+                                 Minimum="0"
+                                 Maximum="{Binding AutoExecuteMaxSeconds}"
+                                 Value="{Binding AutoExecuteRemainingSeconds}">
+                        <ProgressBar.Styles>
+                            <Style Selector="ProgressBar">
+                                <Setter Property="Foreground"
+                                        Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Style>
+                        </ProgressBar.Styles>
+                    </ProgressBar>
+                </StackPanel>
+            </Border>
+
+            <!-- 按钮区：实际模式「取消」+「执行」；预览模式「看完了」 -->
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto,Auto">
+                <Button Grid.Column="1"
+                        Content="取消"
+                        MinWidth="84"
+                        Height="33"
+                        Margin="0,0,8,0"
+                        IsVisible="{Binding !IsPreviewMode}"
+                        Click="OnCancelClick" />
+                <Button Grid.Column="2"
+                        Content="执行"
+                        Classes="accent"
+                        IsDefault="True"
+                        MinWidth="84"
+                        Height="33"
+                        IsEnabled="{Binding CanExecute}"
+                        IsVisible="{Binding !IsPreviewMode}"
+                        Click="OnExecuteClick" />
+                <Button Grid.Column="3"
+                        Content="看完了"
+                        Classes="accent"
+                        IsDefault="True"
+                        MinWidth="84"
+                        Height="33"
+                        IsVisible="{Binding IsPreviewMode}"
+                        Click="OnAcknowledgeClick" />
+            </Grid>
+
+        </Grid>
+    </Border>
+</UserControl>

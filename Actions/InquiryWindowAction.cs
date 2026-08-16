@@ -33,33 +33,40 @@ public class InquiryWindowAction(
         var titleResolved = VariableReplacer.Replace(Settings.DialogTitle, lessonsService, exactTimeService);
         var bodyResolved  = VariableReplacer.Replace(Settings.DialogBody,  lessonsService, exactTimeService);
 
-        // 3. 构造并显示弹窗
-        //    Android 兼容说明（new/for-android-2.2 分支专用）：
-        //    移除了图标提取（System.Drawing.Common 在 Android 上不支持）、
-        //    移除了亚克力背景（WindowTransparencyLevel.AcrylicBlur 在 Android 上不支持）、
-        //    移除了 Process.Start 打开目标路径（Android 上不能直接启动 exe）。
-        //    弹窗仅展示"是 / 否"的提示，不触发任何系统调用。
-        var window = new InquiryWindowWindow
+        InquiryWindowResult result;
+        if (OperatingSystem.IsAndroid())
         {
-            WindowTitle      = Settings.WindowTitle,
-            DialogTitleSmall = titleResolved,
-            DialogTitle      = titleResolved,
-            DialogBody       = bodyResolved,
-            PathText         = Settings.TargetPath,
-            IsPathVisible    = Settings.ShowPath && hasPath,
-            Icon             = null,
-            IsIconVisible    = false,
-            CanExecute       = hasPath
-        };
+            // Android 的 WindowingPlatformStub 不支持创建 Window，改用 ContentDialog 承载「询问窗」内容。
+            // 不去提取图标、不设亚克力、不实际启动目标路径（均不适用于 Android）。
+            result = await AndroidDialogService.ShowInquiryWindowAsync(
+                Settings, logger, titleResolved, bodyResolved, hasPath);
+        }
+        else
+        {
+            // 3. 桌面端：独立窗口弹窗
+            var window = new InquiryWindowWindow
+            {
+                WindowTitle      = Settings.WindowTitle,
+                DialogTitleSmall = titleResolved,
+                DialogTitle      = titleResolved,
+                DialogBody       = bodyResolved,
+                PathText         = Settings.TargetPath,
+                IsPathVisible    = Settings.ShowPath && hasPath,
+                Icon             = null,
+                IsIconVisible    = false,
+                CanExecute       = hasPath
+            };
 
-        // 4. 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
-        if (Settings.IsAutoExecuteEnabled && hasPath)
-        {
-            window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+            // 4. 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
+            if (Settings.IsAutoExecuteEnabled && hasPath)
+            {
+                window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+            }
+
+            var owner = AppBase.Current.GetRootWindow() as Window;
+            result = await window.ShowDialog(owner);
         }
 
-        var owner = AppBase.Current.GetRootWindow() as Window;
-        var result = await window.ShowDialog(owner);
         logger.LogDebug("用户选择：{Result}", result == InquiryWindowResult.Execute ? "执行" : "取消");
 
         // 5. Android 分支不实际执行目标路径（不能直接 Process.Start），仅记录日志。

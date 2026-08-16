@@ -143,11 +143,14 @@ public partial class Plugin : PluginBase
         {
             // 回退方案：旧版 ClassIsland 不支持 AddSettingsPageGroup，那就只能改 Name 字段。
             var nameField = InjectServices.GetSettingsPageInfoNameField();
-            foreach (var info in SettingsWindowRegistryService.Registered
-                         .Where(info => info.Id.StartsWith(SettingsGroupId, StringComparison.OrdinalIgnoreCase)))
+            if (nameField is not null)
             {
-                var currentName = (string?)nameField.GetValue(info);
-                nameField.SetValue(info, $"{SettingsGroupName} - {currentName}");
+                foreach (var info in SettingsWindowRegistryService.Registered
+                             .Where(info => info.Id.StartsWith(SettingsGroupId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var currentName = (string?)nameField.GetValue(info);
+                    nameField.SetValue(info, $"{SettingsGroupName} - {currentName}");
+                }
             }
         }
     }
