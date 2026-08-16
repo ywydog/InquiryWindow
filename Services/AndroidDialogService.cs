@@ -76,14 +76,8 @@ public static class AndroidDialogService
         }
 
         // 任何途径关闭（含 ContentDialog 的关闭按钮）都兜底为「取消」。
-        dialog.Closing += (_, _) =>
-        {
-            if (!tcs.Task.IsCompleted)
-            {
-                tcs.TrySetResult(InquiryWindowResult.Cancel);
-            }
-        };
-
+        // 注：FluentAvalonia 运行时版本没有 dialog.Closing 事件，改为在 ShowAsyncAuto
+        // 返回后检测 tcs 是否已被按钮结果填充，未填充则视为「取消」。
         content.ResultChosen += Complete;
 
         // 自动执行倒计时：归零时等效「执行」。
@@ -121,6 +115,12 @@ public static class AndroidDialogService
         {
             logger.LogError(ex, "Android 上显示「询问窗」弹窗失败。");
             Complete(InquiryWindowResult.Cancel);
+        }
+
+        // 兜底：弹窗以任何未选择按钮的方式关闭（如系统返回 / 关闭按钮）时按「取消」处理。
+        if (!tcs.Task.IsCompleted)
+        {
+            tcs.TrySetResult(InquiryWindowResult.Cancel);
         }
 
         var result = await tcs.Task;
