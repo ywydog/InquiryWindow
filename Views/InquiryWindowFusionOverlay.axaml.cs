@@ -25,6 +25,8 @@ public partial class InquiryWindowFusionOverlay : Window
     public InquiryWindowFusionOverlay()
     {
         InitializeComponent();
+        // 无边框（Avalonia 11 中 WindowStyle 不可在 XAML 解析，改用 SystemDecorations）。
+        SystemDecorations = SystemDecorations.None;
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
         Background = Brushes.Transparent;
     }
