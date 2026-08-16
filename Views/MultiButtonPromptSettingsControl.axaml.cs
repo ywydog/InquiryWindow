@@ -15,6 +15,12 @@ namespace InquiryWindow.Views;
 
 public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBase<MultiButtonPromptSettings>
 {
+    /// <summary>
+    /// 公开暴露设置对象，供 Avalonia 编译型绑定访问（基类的 Settings 是 protected，编译型
+    /// 绑定无法访问，会导致 XAML 中 {Binding Settings.XXX} 全部失效）。
+    /// </summary>
+    public new MultiButtonPromptSettings Settings => base.Settings;
+
     public MultiButtonPromptSettingsControl()
     {
         InitializeComponent();

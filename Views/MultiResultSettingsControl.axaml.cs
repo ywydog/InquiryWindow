@@ -45,6 +45,12 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
     /// </summary>
     private NotifyCollectionChangedEventHandler? _groupsCollectionChangedHandler;
 
+    /// <summary>
+    /// 公开暴露设置对象，供 Avalonia 编译型绑定访问（基类的 Settings 是 protected，编译型
+    /// 绑定无法访问，会导致 XAML 中 {Binding Settings.XXX} 全部失效）。
+    /// </summary>
+    public new MultiResultSettings Settings => base.Settings;
+
     public MultiResultSettingsControl()
     {
         // ⚠️ 不要在这里访问 Settings——基类注释明确写了「请勿在构造函数中访问」。

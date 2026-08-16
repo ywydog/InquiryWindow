@@ -37,23 +37,13 @@
     <Border Padding="20" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
         <Panel>
-            <!-- 背景层（最底层）：有图时铺满；Tile 模式用 Rectangle + ImageBrush 实现 -->
+            <!-- 背景层（最底层）：有图时铺满。
+                 注：Avalonia 12 运行时 ImageBrush 无参构造不存在，若在 XAML 使用会把
+                 运行时弹窗搞崩（MissingMethodException）。故平铺(Tile)模式不再用 ImageBrush，
+                 退化为按 Stretch=None 显示原始大小。 -->
         <Panel IsVisible="{Binding HasBackgroundImage}">
-            <!-- Cover/Contain/Stretch 模式 -->
             <Image Source="{Binding BackgroundImage}"
-                   Stretch="{Binding BackgroundImageStretch}"
-                   IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsNotTileConverter.Instance}}" />
-
-            <!-- Tile 模式：用 Rectangle + ImageBrush(TileMode=Tile) 实现平铺 -->
-            <Rectangle IsVisible="{Binding BackgroundImageStretch, Converter={x:Static converters:StretchIsTileConverter.Instance}}">
-                <Rectangle.Fill>
-                    <ImageBrush Source="{Binding BackgroundImage}"
-                                TileMode="Tile"
-                                Stretch="None"
-                                AlignmentX="Left"
-                                AlignmentY="Top" />
-                </Rectangle.Fill>
-            </Rectangle>
+                   Stretch="{Binding BackgroundImageStretch}" />
         </Panel>
 
             <!-- 蒙层：有背景时加 rgba(0,0,0,0.25)，提高文字可读性 -->

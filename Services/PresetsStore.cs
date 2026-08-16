@@ -115,18 +115,27 @@ public class PresetsStore
 
     /// <summary>
     /// 防抖落盘：把 N ms 内的多次写盘请求合并为一次，避免每键写盘。
+    /// 注：显式引用 TaskScheduler.Default 在 AOT/裁剪环境可能触发 TypeLoadException，
+    /// 因此这里改用 async/await（不显式引用 TaskScheduler）。
     /// </summary>
-    public void SaveDebounced(int delayMs = 400)
+    public async void SaveDebounced(int delayMs = 400)
     {
         _saveDebounce?.Cancel();
         var cts = new CancellationTokenSource();
         _saveDebounce = cts;
 
-        Task.Delay(delayMs, cts.Token).ContinueWith(t =>
+        try
         {
-            if (t.IsCanceled) return;
-            SaveNow();
-        }, TaskScheduler.Default);
+            await Task.Delay(delayMs, cts.Token);
+            if (!cts.IsCancellationRequested)
+            {
+                SaveNow();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 被后续的防抖请求取消，忽略。
+        }
     }
 
     /// <summary>兼容旧调用，立即落盘。</summary>
