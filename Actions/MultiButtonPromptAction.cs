@@ -24,6 +24,14 @@ public class MultiButtonPromptAction(
     {
         await base.OnInvoke();
 
+        // Android 的 WindowingPlatformStub 不支持创建 Window，运行时弹窗在 Android 上会抛
+        // NotSupportedException。这里直接跳过（仅记录日志）。
+        if (OperatingSystem.IsAndroid())
+        {
+            logger.LogWarning("Android 平台不支持「多按钮询问」运行时弹窗（无法创建 Window），已跳过。");
+            return;
+        }
+
         if (Settings.Buttons.Count == 0 && !Settings.IsAutoExecuteEnabled)
         {
             // 没有任何按钮 + 没启用自动执行：弹窗没有可点的按钮，倒计时也不会启动。

@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
@@ -45,10 +46,36 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
     /// </summary>
     private async void OnEditActionsClick(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel.BeginEditActionsCommand.CanExecute(null))
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        if (ViewModel.BeginEditActionsCommand.CanExecute(topLevel))
         {
-            await ViewModel.BeginEditActionsCommand.ExecuteAsync(null);
+            await ViewModel.BeginEditActionsCommand.ExecuteAsync(topLevel);
         }
+    }
+
+    /// <summary>
+    /// 「删除」按钮：把当前 TopLevel 透传给 ViewModel，避免在 VM 里直接依赖 UI 类型。
+    /// </summary>
+    private async void OnRemovePresetClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        if (ViewModel.RemovePresetCommand.CanExecute(topLevel))
+        {
+            await ViewModel.RemovePresetCommand.ExecuteAsync(topLevel);
+        }
+    }
+
+    /// <summary>
+    /// 页面从可视树卸载时释放 ViewModel 对静态 PresetsStore 的订阅，避免泄漏。
+    /// </summary>
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        ViewModel.Dispose();
     }
 
     private void InitializeComponent()

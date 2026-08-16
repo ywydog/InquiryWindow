@@ -48,13 +48,35 @@ public partial class MultiButtonPromptSettings : ObservableObject
     [ObservableProperty]
     private bool _isMarkdownRendered = true;
 
+    private ObservableCollection<MultiButtonPromptButton> _buttons = new();
+
     /// <summary>
     /// 按钮集合（按显示顺序）。
     /// setter 仍保留以兼容 ConfigureFileHelper 的 JSON 反序列化（整体赋值）。
     /// 反序列化之外请通过 Add/Remove 变更集合，**不要**整体替换，否则持旧引用的代码
     /// （包括弹窗 ViewModel）会看不到新数据。
     /// </summary>
-    public ObservableCollection<MultiButtonPromptButton> Buttons { get; set; } = new();
+    public ObservableCollection<MultiButtonPromptButton> Buttons
+    {
+        get => _buttons;
+        set
+        {
+            if (ReferenceEquals(_buttons, value)) return;
+
+            // 反序列化会走 setter 整体替换集合，必须把 CollectionChanged 订阅迁移到新集合，
+            // 否则 AutoExecuteTargets 无法随按钮增删自动刷新。
+            if (_buttons is not null)
+            {
+                _buttons.CollectionChanged -= OnButtonsCollectionChanged;
+            }
+            _buttons = value ?? new ObservableCollection<MultiButtonPromptButton>();
+            _buttons.CollectionChanged += OnButtonsCollectionChanged;
+
+            // 整体替换后重建"自动执行"目标下拉，并把索引夹到合法范围。
+            OnButtonsCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// 是否启用自动执行（到时间后自动触发指定按钮的 Action 链或"无事发生"）。默认 false。
@@ -95,7 +117,10 @@ public partial class MultiButtonPromptSettings : ObservableObject
 
     /// <summary>
     /// 自动执行下拉框的可选项集合（运行时由 <see cref="Buttons"/> + 末尾"无事发生"占位生成）。
+    /// 运行时派生数据，不参与 JSON 持久化；反序列化后由 <see cref="Buttons"/> 的 setter 重建，
+    /// 若序列化/反序列化会追加导致下拉重复错位，故标记 [JsonIgnore]。
     /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
     public ObservableCollection<AutoExecuteTarget> AutoExecuteTargets { get; } = new();
 
     public MultiButtonPromptSettings()

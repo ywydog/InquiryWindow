@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Avalonia.Controls;
 using ClassIsland.Core.Controls.Automation;
 using ClassIsland.Shared.Helpers;
@@ -40,8 +41,20 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
         PresetsStore.Instance.Load();
 
         // 选中即打开右侧详情面板（类似 SuperAutoIsland 的 SelectionChanged → IsPanelOpened）。
-        PresetsStore.Instance.Presets.CollectionChanged += (_, _) => RefreshNextNumber();
+        // 用命名方法而非 lambda，便于 Dispose 时精确取消订阅，避免静态单例持有本 VM 导致泄漏。
+        PresetsStore.Instance.Presets.CollectionChanged += OnPresetsCollectionChanged;
         RefreshNextNumber();
+    }
+
+    private void OnPresetsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => RefreshNextNumber();
+
+    /// <summary>
+    /// 取消对静态 <see cref="PresetsStore"/> 集合的订阅。
+    /// 由设置页卸载时调用，避免 VM 被静态单例持有的集合事件永久引用。
+    /// </summary>
+    public void Dispose()
+    {
+        PresetsStore.Instance.Presets.CollectionChanged -= OnPresetsCollectionChanged;
     }
 
     /// <summary>
@@ -61,10 +74,10 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     /// 「删除预设」：弹窗确认后从 PresetsStore 移除。
     /// </summary>
     [RelayCommand]
-    public async Task RemovePresetAsync()
+    public async Task RemovePresetAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
-        if (preset == null) return;
+        if (preset == null || topLevel == null) return;
 
         var dialog = new FAContentDialog
         {
@@ -74,7 +87,7 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
             CloseButtonText = "取消",
             DefaultButton = FAContentDialogButton.Close
         };
-        var result = await dialog.ShowAsync();
+        var result = await dialog.ShowAsync(topLevel);
         if (result == FAContentDialogResult.Primary)
         {
             PresetsStore.Instance.RemovePreset(preset);
@@ -109,10 +122,10 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     /// 一起被丢弃，preset.Actions 不被污染。
     /// </summary>
     [RelayCommand]
-    public async Task BeginEditActionsAsync()
+    public async Task BeginEditActionsAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
-        if (preset is null) return;
+        if (preset is null || topLevel is null) return;
 
         var workingActions = ConfigureFileHelper.CopyObject(preset.Actions);
         var actionControl = new ActionControl
@@ -129,7 +142,7 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
             DefaultButton = FAContentDialogButton.Primary
         };
 
-        var result = await dialog.ShowAsync();
+        var result = await dialog.ShowAsync(topLevel);
         if (result != FAContentDialogResult.Primary) return;
 
         preset.Actions = workingActions;

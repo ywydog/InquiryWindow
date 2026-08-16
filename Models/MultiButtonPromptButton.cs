@@ -52,9 +52,11 @@ public partial class MultiButtonPromptButton : ObservableObject
     // ===== 派生属性（不持久化，运行时用） =====
 
     /// <summary>是否使用系统主题强调色（"高亮"模式）。用于 XAML 的 <c>Classes.accent</c> 绑定。</summary>
+    [Newtonsoft.Json.JsonIgnore]
     public bool IsAccent => AccentMode == ButtonAccentMode.Highlighted;
 
     /// <summary>是否使用自定义颜色（"自定义"模式）。用于 XAML 的 <c>Classes.customAccent</c> 绑定。</summary>
+    [Newtonsoft.Json.JsonIgnore]
     public bool IsCustomAccent => AccentMode == ButtonAccentMode.Custom;
 
     // AccentMode / CustomColor 变化时通知 IsAccent / IsCustomAccent
