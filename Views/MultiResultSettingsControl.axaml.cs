@@ -229,7 +229,7 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
                 target = g;
                 return true;
             }
-            node = node.VisualParent as Visual;
+            node = node.GetVisualParent();
         }
         return false;
     }

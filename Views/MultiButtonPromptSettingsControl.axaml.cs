@@ -205,7 +205,7 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
                 target = b;
                 return true;
             }
-            node = node.VisualParent as Visual;
+            node = node.GetVisualParent();
         }
         return false;
     }
