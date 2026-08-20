@@ -249,16 +249,19 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
     {
         if (sender is not Control { Tag: MultiResultGroup target } control) return;
 
+        var topLevel = TopLevel.GetTopLevel(control);
+        if (topLevel is null) return;
+
         var store = PresetsStore.Instance;
         store.Load();
 
         if (store.Presets.Count == 0)
         {
-            await ShowEmptyDialogAsync();
+            await ShowEmptyDialogAsync(topLevel);
             return;
         }
 
-        var selected = await ShowPresetPickerDialogAsync(store.Presets);
+        var selected = await ShowPresetPickerDialogAsync(topLevel, store.Presets);
         if (selected is null) return;
 
         // 深拷贝整条 Action 链（避免和预设共享引用）
@@ -270,7 +273,7 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         }
     }
 
-    private static async Task ShowEmptyDialogAsync()
+    private static async Task ShowEmptyDialogAsync(TopLevel topLevel)
     {
         var dialog = new FAContentDialog
         {
@@ -279,7 +282,8 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
             PrimaryButtonText = "确定",
             DefaultButton = FAContentDialogButton.Primary
         };
-        await dialog.ShowAsync();
+        // 注：Android AOT 会裁剪无参 ShowAsync()，改用带 TopLevel 的重载。
+        await dialog.ShowAsync(topLevel);
     }
 
     /// <summary>
@@ -288,6 +292,7 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
     /// 可视树，避免 FluentAvalonia MenuFlyout 在代码创建 + 鼠标 hover 时的 NRE 问题。
     /// </summary>
     private static async Task<ButtonPreset?> ShowPresetPickerDialogAsync(
+        TopLevel topLevel,
         IReadOnlyList<ButtonPreset> presets)
     {
         var listBox = new ListBox
@@ -335,7 +340,7 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         // 注意：Android 的 AOT 会裁剪 FAContentDialog.Hide，因此这里不再提供
         // "双击直接插入并关闭"的快捷操作，统一走下方主按钮"插入"来关闭。
 
-        var result = await dialog.ShowAsync();
+        var result = await dialog.ShowAsync(topLevel);
         if (result != FAContentDialogResult.Primary) return null;
         return listBox.SelectedItem as ButtonPreset;
     }
