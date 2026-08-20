@@ -72,8 +72,9 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
 
     /// <summary>
     /// 「删除预设」：弹窗确认后从 PresetsStore 移除。
+    /// 注：不用 [RelayCommand] —— Android AOT 会裁剪 IAsyncRelayCommand&lt;T&gt;.ExecuteAsync(T)，
+    /// 因此这里暴露可直接调用的公开方法，由设置页 code-behind 直接调用。
     /// </summary>
-    [RelayCommand]
     public async Task RemovePresetAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
@@ -120,8 +121,8 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     /// 「编辑 Action 链…」：弹出 FAContentDialog，承载 ActionControl 让用户调整链内容。
     /// 关键：克隆一份 ActionSet 给 ActionControl 编辑，「取消」时改动随 workingActions
     /// 一起被丢弃，preset.Actions 不被污染。
+    /// 注：不用 [RelayCommand] —— Android AOT 会裁剪 IAsyncRelayCommand&lt;T&gt;.ExecuteAsync(T)。
     /// </summary>
-    [RelayCommand]
     public async Task BeginEditActionsAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
@@ -151,8 +152,8 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
 
     /// <summary>
     /// 「选择图标」按钮的弹窗：复刻 InquiryWindowSettingsPage 的行为。
+    /// 注：不用 [RelayCommand] —— Android AOT 会裁剪 IAsyncRelayCommand&lt;T&gt;.ExecuteAsync(T)。
     /// </summary>
-    [RelayCommand]
     public async Task PickIconAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
