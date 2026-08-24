@@ -432,6 +432,44 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         }
     }
 
+    /// <summary>
+    /// 「操作验证」里"配置/修改凭据"按钮：调用 ClassIsland 的 AuthorizeService 创建/修改本按钮的凭据。
+    /// 使用 AuthorizeService 内置的 AuthorizeWindow（桌面端支持，Android 不支持创建 Window）。
+    /// </summary>
+    private async void OnConfigureVerificationClick(object? sender, RoutedEventArgs e)
+    {
+        if (ActiveButton is null) return;
+
+        // 桌面端：AuthorizeService 用 AuthorizeWindow（Window）承载，owner 取当前详情窗口。
+        var authorizeService = IAppHost.TryGetService<ClassIsland.Core.Abstractions.Services.IAuthorizeService>();
+        if (authorizeService is null)
+        {
+            await CommonTaskDialogs.ShowDialog(
+                "无法使用操作验证",
+                "ClassIsland 的 AuthorizeService 不可用，请确认运行环境支持。",
+                this);
+            return;
+        }
+
+        try
+        {
+            var credential = await authorizeService.SetupCredentialStringAsync(
+                string.IsNullOrWhiteSpace(ActiveButton.CredentialString) ? null : ActiveButton.CredentialString,
+                this);
+            if (!string.IsNullOrEmpty(credential))
+            {
+                ActiveButton.CredentialString = credential;
+            }
+        }
+        catch (Exception ex)
+        {
+            await CommonTaskDialogs.ShowDialog(
+                "配置凭据失败",
+                $"配置操作验证凭据时发生错误：{ex.Message}",
+                this);
+        }
+    }
+
     private void OnPreviewClick(object? sender, RoutedEventArgs e)
     {
         // 复用运行时的预览逻辑：直接复用 MultiButtonPromptWindow + ViewModel 即可

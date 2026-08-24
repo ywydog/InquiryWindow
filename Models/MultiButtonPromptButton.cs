@@ -49,6 +49,28 @@ public partial class MultiButtonPromptButton : ObservableObject
     [ObservableProperty]
     private Color _customColor = Color.FromRgb(0x2D, 0x7F, 0xF9);
 
+    /// <summary>
+    /// 是否启用「操作验证」。启用后，按下该按钮执行其 Action 链前，
+    /// 需要先通过 <see cref="CredentialString"/> 调用 ClassIsland 的 AuthorizeService 进行身份验证。
+    /// </summary>
+    [ObservableProperty]
+    private bool _isOperationVerification;
+
+    /// <summary>
+    /// 「操作验证」使用的凭据字符串，由 ClassIsland 的 AuthorizeService
+    /// （<c>SetupCredentialStringAsync</c>）生成、本插件负责保管。
+    /// 各按钮独立一份。为空时运行时不进行验证（等同未启用）。
+    /// </summary>
+    [ObservableProperty]
+    private string _credentialString = string.Empty;
+
+    /// <summary>
+    /// 验证失败时弹窗的处理方式。仅 <see cref="IsOperationVerification"/> 启用且
+    /// 已配置凭据时生效。默认保持弹窗打开，允许用户重试或改选其它按钮。
+    /// </summary>
+    [ObservableProperty]
+    private VerificationFailureBehavior _verificationFailureBehavior = VerificationFailureBehavior.KeepOpen;
+
     // ===== 派生属性（不持久化，运行时用） =====
 
     /// <summary>是否使用系统主题强调色（"高亮"模式）。用于 XAML 的 <c>Classes.accent</c> 绑定。</summary>
@@ -66,6 +88,12 @@ public partial class MultiButtonPromptButton : ObservableObject
     [Newtonsoft.Json.JsonIgnore]
     public IBrush CustomColorBrush => new SolidColorBrush(CustomColor);
 
+    /// <summary>操作验证的凭据配置状态描述，用于按钮详情的状态展示。</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string VerificationStatusText => string.IsNullOrWhiteSpace(CredentialString)
+        ? "未配置（将不会验证）"
+        : "已配置凭据";
+
     // AccentMode / CustomColor 变化时通知 IsAccent / IsCustomAccent
     partial void OnAccentModeChanged(ButtonAccentMode value)
     {
@@ -77,6 +105,12 @@ public partial class MultiButtonPromptButton : ObservableObject
     {
         // 通知 CustomColorBrush 一并刷新。
         OnPropertyChanged(nameof(CustomColorBrush));
+    }
+
+    partial void OnCredentialStringChanged(string value)
+    {
+        // 通知验证状态描述（已配置/未配置）一并刷新。
+        OnPropertyChanged(nameof(VerificationStatusText));
     }
 
     public MultiButtonPromptButton()

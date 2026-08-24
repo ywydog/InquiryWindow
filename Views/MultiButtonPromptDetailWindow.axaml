@@ -523,6 +523,46 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- 操作验证（调用 ClassIsland 的 AuthorizeService：
+                             启用后按下按钮执行其 Action 链前，先进行身份验证） -->
+                        <Border Classes="pane-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="操作验证" Classes="pane-card-title" />
+                                <CheckBox x:Name="OperationVerificationCheck"
+                                          Content="启用操作验证（执行前进行身份验证）"
+                                          IsChecked="{Binding ActiveButton.IsOperationVerification, Mode=TwoWay}" />
+                                <StackPanel Spacing="6" Margin="24,0,0,0"
+                                            IsEnabled="{Binding ActiveButton.IsOperationVerification}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="凭据状态" FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding ActiveButton.VerificationStatusText}"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center" />
+                                        <Button Content="配置/修改凭据…"
+                                                FontSize="12"
+                                                Click="OnConfigureVerificationClick"
+                                                ToolTip.Tip="创建或修改本按钮使用的身份验证方式（密码等）。" />
+                                    </StackPanel>
+                                    <TextBlock FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                               TextWrapping="Wrap"
+                                               Text="需要先在 ClassIsland 中配置认证方式（如密码），再在这里创建/修改凭据。
+验证失败时："
+                                               IsVisible="{Binding ActiveButton.IsOperationVerification}" />
+                                    <ComboBox HorizontalAlignment="Stretch"
+                                              SelectedIndex="{Binding ActiveButton.VerificationFailureBehavior, Mode=TwoWay}">
+                                        <ComboBoxItem Content="不执行，弹窗保持打开" />
+                                        <ComboBoxItem Content="不执行，并关闭弹窗" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
                         <Border Classes="pane-card">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Action 链（按下按钮后依次执行）" Classes="pane-card-title" />

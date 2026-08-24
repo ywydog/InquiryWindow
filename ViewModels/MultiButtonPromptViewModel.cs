@@ -1,9 +1,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Services;
+using ClassIsland.Shared;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using InquiryWindow.Models;
@@ -342,9 +345,31 @@ public partial class MultiButtonPromptViewModel : ObservableObject
 
     /// <summary>
     /// 真正执行按钮的 Action 链并请求关闭弹窗。
+    /// 若该按钮启用了「操作验证」，会先调用 AuthorizeService 进行身份验证，验证通过才执行 Action 链。
     /// </summary>
     private async Task ExecuteButtonAsync(MultiButtonPromptButton button)
     {
+        // 操作验证：启用且已配置凭据时，先进行身份验证。
+        if (button.IsOperationVerification && !string.IsNullOrWhiteSpace(button.CredentialString))
+        {
+            var authorized = await AuthorizeButtonAsync(button);
+            if (!authorized)
+            {
+                if (button.VerificationFailureBehavior == VerificationFailureBehavior.CloseDialog)
+                {
+                    // 验证失败且配置为"关闭弹窗"：不执行 Action，直接关闭。
+                    _logger.LogInformation("操作验证失败，按配置关闭弹窗，按钮={Button}", button.Name);
+                    RequestClose?.Invoke();
+                }
+                else
+                {
+                    // 验证失败且配置为"保持打开"：不执行 Action，留在弹窗让用户重试/改选。
+                    _logger.LogInformation("操作验证失败，弹窗保持打开，按钮={Button}", button.Name);
+                }
+                return;
+            }
+        }
+
         if (button.Actions.ActionItems.Count > 0)
         {
             // 单个 Action 失败不应阻断弹窗关闭，其它 Action 也应继续。
@@ -359,6 +384,33 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         }
 
         RequestClose?.Invoke();
+    }
+
+    /// <summary>
+    /// 调用 ClassIsland 的 AuthorizeService 验证当前按钮的凭据。
+    /// 验证需要弹出 AuthorizeWindow（桌面端 Window），因此仅在桌面平台可用；
+    /// Android 分支本就不走本 ViewModel 的窗口路径。
+    /// </summary>
+    private async Task<bool> AuthorizeButtonAsync(MultiButtonPromptButton button)
+    {
+        var authorizeService = IAppHost.TryGetService<IAuthorizeService>();
+        if (authorizeService is null)
+        {
+            _logger.LogWarning("AuthorizeService 不可用，跳过操作验证，按钮={Button}", button.Name);
+            return true; // 服务不可用时不阻断（避免插件本身不可用导致询问无法推进）。
+        }
+
+        try
+        {
+            // owner 传主窗口；TopLevel 适配（AuthorizeService 内部会回退到根窗口）。
+            var owner = AppBase.Current.GetRootWindow() as Window;
+            return await authorizeService.AuthenticateAsync(button.CredentialString, owner);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "调用 AuthorizeService 进行操作验证时发生错误，按钮={Button}", button.Name);
+            return false;
+        }
     }
 
     /// <summary>
