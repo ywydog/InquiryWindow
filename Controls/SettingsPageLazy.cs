@@ -4,6 +4,7 @@ using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using ClassIsland.Core.Abstractions.Services;
 using FluentAvalonia.UI.Controls;
 
 namespace InquiryWindow.Controls;
@@ -17,7 +18,7 @@ public class SettingsPageLazy : ContentControl
 {
     private ContentPresenter? _contentPresenter;
     private FAProgressRing? _loadingIndicator;
-    private bool _isContentChangesPending;
+    private bool _isContentChangesPending = true;
 
     public SettingsPageLazy()
     {
@@ -35,10 +36,15 @@ public class SettingsPageLazy : ContentControl
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        // 控件在 Content 变化后、尚未 Loaded 时，先挂起，等 Loaded 后再渲染内容。
+        // 控件在 Content 变化后、尚未 Loaded 时，先挂起，等 Loaded 后再渲染内容；
+        // 若内容已渲染过（再次进入可视树），直接显示，不再闪加载圈。
         if (_isContentChangesPending)
         {
             UpdateContent();
+        }
+        else
+        {
+            ShowContentImmediately();
         }
     }
 
@@ -51,6 +57,14 @@ public class SettingsPageLazy : ContentControl
         }
 
         _isContentChangesPending = false;
+
+        // 用户禁用「动画等待」时直接显示内容：不延迟渲染、不显示加载圈，
+        // 避免加载指示器在设置页切换时意外闪烁（对应 ClassIsland Lazy 的修复思路）。
+        if (IThemeService.IsWaitForTransientDisabled)
+        {
+            ShowContentImmediately();
+            return;
+        }
 
         // 先让加载圈渲染一帧，再把真实内容填充进 ContentPresenter，
         // 避免大块内容（如预设列表/详情）一次性构建阻塞页面切换。
@@ -77,6 +91,20 @@ public class SettingsPageLazy : ContentControl
                 }
             }, DispatcherPriority.Loaded);
         });
+    }
+
+    /// <summary>
+    /// 立即显示内容：不做延迟渲染、不显示加载圈。
+    /// </summary>
+    private void ShowContentImmediately()
+    {
+        if (_contentPresenter is not null)
+        {
+            _contentPresenter.Content = Content;
+            _contentPresenter.ContentTemplate = ContentTemplate;
+            _contentPresenter.Opacity = 1;
+        }
+        SetLoading(false);
     }
 
     private void SetLoading(bool show)
