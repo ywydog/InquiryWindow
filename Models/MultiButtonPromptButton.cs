@@ -59,6 +59,13 @@ public partial class MultiButtonPromptButton : ObservableObject
     [Newtonsoft.Json.JsonIgnore]
     public bool IsCustomAccent => AccentMode == ButtonAccentMode.Custom;
 
+    /// <summary>
+    /// <see cref="CustomColor"/> 对应的画刷，用于 XAML 的 <c>Background</c> 绑定。
+    /// （Avalonia 12 运行时不再把 Color 自动转换为 IBrush，直接绑 Color 会失败。）
+    /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public IBrush CustomColorBrush => new SolidColorBrush(CustomColor);
+
     // AccentMode / CustomColor 变化时通知 IsAccent / IsCustomAccent
     partial void OnAccentModeChanged(ButtonAccentMode value)
     {
@@ -68,8 +75,8 @@ public partial class MultiButtonPromptButton : ObservableObject
 
     partial void OnCustomColorChanged(Color value)
     {
-        // CustomColor 变化时不需要通知 IsAccent / IsCustomAccent（这两个只与 AccentMode 相关），
-        // 但绑定 CustomColor 的 Style 自身会被通知。
+        // 通知 CustomColorBrush 一并刷新。
+        OnPropertyChanged(nameof(CustomColorBrush));
     }
 
     public MultiButtonPromptButton()
