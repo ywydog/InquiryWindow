@@ -393,11 +393,13 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     /// </summary>
     private async Task<bool> AuthorizeButtonAsync(MultiButtonPromptButton button)
     {
+        // 操作验证是安全功能，采用 fail-closed 语义：服务不可用时视为验证失败，
+        // 拒绝执行该按钮的 Action 链，而不是静默放行（避免"以为验证了却绕过"）。
         var authorizeService = IAppHost.TryGetService<IAuthorizeService>();
         if (authorizeService is null)
         {
-            _logger.LogWarning("AuthorizeService 不可用，跳过操作验证，按钮={Button}", button.Name);
-            return true; // 服务不可用时不阻断（避免插件本身不可用导致询问无法推进）。
+            _logger.LogError("操作验证无法进行：AuthorizeService 不可用，按验证失败处理，按钮={Button}", button.Name);
+            return false;
         }
 
         try
