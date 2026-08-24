@@ -4,11 +4,17 @@
                      xmlns:ci="http://classisland.tech/schemas/xaml/core"
                      xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                      xmlns:vm="clr-namespace:InquiryWindow.ViewModels"
+                     xmlns:local="clr-namespace:InquiryWindow.Controls"
                      d:DesignHeight="450" d:DesignWidth="800"
                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      x:DataType="vm:InquiryWindowSettingsViewModel"
                      mc:Ignorable="d">
+
+    <ci:SettingsPageBase.Styles>
+        <!-- 引入设置页懒加载容器的模板样式 -->
+        <StyleInclude Source="avares://InquiryWindow/Controls/SettingsPageLazy.axaml" />
+    </ci:SettingsPageBase.Styles>
 
     <!--
         Android 兼容说明（new/for-android-2.2 分支专用）：
@@ -17,6 +23,8 @@
         按钮预设库已拆为独立页面 (ButtonPresetSettingsPage)，注册在 Plugin.cs。
     -->
 
+    <!-- 懒加载：打开设置页时先显示加载指示器，内容延迟淡入，避免页面切换卡顿。 -->
+    <local:SettingsPageLazy>
     <ScrollViewer>
         <StackPanel Classes="settings-container" Spacing="10">
 
@@ -50,4 +58,5 @@
 
         </StackPanel>
     </ScrollViewer>
+    </local:SettingsPageLazy>
 </ci:SettingsPageBase>
