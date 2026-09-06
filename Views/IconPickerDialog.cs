@@ -44,18 +44,18 @@ public static class IconPickerDialog
         EnsureGlyphsLoaded();
         var rows = BuildVirtualizedRows(columns: 8);
 
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = title,
             PrimaryButtonText = "关闭",
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
 
         string? selected = null;
         dialog.Content = BuildPickerContent(rows, token =>
         {
             selected = token;
-            dialog.Hide();
+            dialog.Hide(ContentDialogResult.None);
         }, highlightGlyph);
 
         await dialog.ShowAsync(owner);

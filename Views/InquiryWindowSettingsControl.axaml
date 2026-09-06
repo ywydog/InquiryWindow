@@ -64,6 +64,16 @@
                       IsChecked="{Binding Settings.ShowIcon, Mode=TwoWay}" />
         </StackPanel>
 
+        <!-- 交互融合（默认关闭） -->
+        <StackPanel Spacing="6" Margin="0,8,0,0">
+            <CheckBox Content="交互融合（贴合主界面覆盖层显示，而非独立窗口）"
+                      IsChecked="{Binding Settings.IsInteractiveFusion, Mode=TwoWay}" />
+            <TextBlock Margin="24,0,0,0" FontSize="11"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Text="开启后，询问内容将融合到 ClassIsland 主界面覆盖层显示（无边框、贴合主界面），而不是打开独立窗口。默认关闭。" />
+        </StackPanel>
+
         <!-- 自动执行（默认关闭） -->
         <StackPanel Spacing="6" Margin="0,8,0,0">
             <CheckBox x:Name="AutoExecuteCheck"
@@ -73,7 +83,7 @@
                         IsEnabled="{Binding #AutoExecuteCheck.IsChecked}">
                 <TextBlock Text="在" VerticalAlignment="Center" />
                 <ci:Field Suffix="秒">
-                    <controls:FANumberBox MinWidth="120"
+                    <controls:NumberBox MinWidth="120"
                                           VerticalAlignment="Center"
                                           SpinButtonPlacementMode="Inline"
                                           Minimum="1" Maximum="3600"

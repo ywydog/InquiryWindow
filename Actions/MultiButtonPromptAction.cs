@@ -41,16 +41,25 @@ public class MultiButtonPromptAction(
                 "多按钮询问触发：Buttons 已清空但启用了自动执行。弹窗将出现并按「无事发生」处理（到时间后自动关闭，不执行任何 Action）。");
         }
 
+        var vm = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger);
+
+        if (Settings.IsInteractiveFusion)
+        {
+            // 「交互融合」模式：把多按钮询问内容融合到 ClassIsland 主界面覆盖层显示（而非独立窗口）
+            await InquiryWindowFusionOverlay.ShowMultiButtonPromptAsync(vm, logger);
+            return;
+        }
+
         var window = new MultiButtonPromptWindow
         {
             WindowTitle = Settings.Title,
-            DataContext = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger)
+            DataContext = vm
         };
 
         // 启用自动执行时启动倒计时，倒计时归零按指定目标触发（按钮 Action 链或"无事发生"）。
-        if (window.DataContext is MultiButtonPromptViewModel vm)
+        if (window.DataContext is MultiButtonPromptViewModel viewModel)
         {
-            vm.StartAutoExecuteCountdown();
+            viewModel.StartAutoExecuteCountdown();
         }
 
         await window.ShowDialogCompat();

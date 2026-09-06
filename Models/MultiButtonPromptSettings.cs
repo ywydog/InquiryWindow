@@ -48,13 +48,35 @@ public partial class MultiButtonPromptSettings : ObservableObject
     [ObservableProperty]
     private bool _isMarkdownRendered = true;
 
+    private ObservableCollection<MultiButtonPromptButton> _buttons = new();
+
     /// <summary>
     /// 按钮集合（按显示顺序）。
     /// setter 仍保留以兼容 ConfigureFileHelper 的 JSON 反序列化（整体赋值）。
     /// 反序列化之外请通过 Add/Remove 变更集合，**不要**整体替换，否则持旧引用的代码
     /// （包括弹窗 ViewModel）会看不到新数据。
     /// </summary>
-    public ObservableCollection<MultiButtonPromptButton> Buttons { get; set; } = new();
+    public ObservableCollection<MultiButtonPromptButton> Buttons
+    {
+        get => _buttons;
+        set
+        {
+            if (ReferenceEquals(_buttons, value)) return;
+
+            // 反序列化会走 setter 整体替换集合，必须把 CollectionChanged 订阅迁移到新集合，
+            // 否则 AutoExecuteTargets 无法随按钮增删自动刷新。
+            if (_buttons is not null)
+            {
+                _buttons.CollectionChanged -= OnButtonsCollectionChanged;
+            }
+            _buttons = value ?? new ObservableCollection<MultiButtonPromptButton>();
+            _buttons.CollectionChanged += OnButtonsCollectionChanged;
+
+            // 整体替换后重建"自动执行"目标下拉，并把索引夹到合法范围。
+            OnButtonsCollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// 是否启用自动执行（到时间后自动触发指定按钮的 Action 链或"无事发生"）。默认 false。
@@ -80,9 +102,33 @@ public partial class MultiButtonPromptSettings : ObservableObject
     private int _autoExecuteTargetIndex;
 
     /// <summary>
-    /// 自动执行下拉框的可选项集合（运行时由 <see cref="Buttons"/> + 末尾"无事发生"占位生成）。
+    /// 窗口背景图片绝对路径；空字符串 / null 表示不使用图片背景（使用纯色背景）。
+    /// 支持 PNG / JPG / JPEG / WEBP / BMP。文件不存在或加载失败时降级到纯色背景。
     /// </summary>
+    [ObservableProperty]
+    private string _backgroundImagePath = string.Empty;
+
+    /// <summary>
+    /// 背景图片缩放模式（0=Cover 覆盖，1=Contain 包含，2=Stretch 拉伸，3=Tile 平铺）。
+    /// 存为 int 索引方便 XAML 的 ComboBox SelectedIndex 直接绑定。
+    /// </summary>
+    [ObservableProperty]
+    private int _backgroundImageMode;
+
+    /// <summary>
+    /// 自动执行下拉框的可选项集合（运行时由 <see cref="Buttons"/> + 末尾"无事发生"占位生成）。
+    /// 运行时派生数据，不参与 JSON 持久化；反序列化后由 <see cref="Buttons"/> 的 setter 重建，
+    /// 若序列化/反序列化会追加导致下拉重复错位，故标记 [JsonIgnore]。
+    /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
     public ObservableCollection<AutoExecuteTarget> AutoExecuteTargets { get; } = new();
+
+    /// <summary>
+    /// 是否启用「交互融合」显示模式：开启后把多按钮询问内容融合到 ClassIsland 主界面
+    /// 覆盖层显示（而非打开独立窗口）。默认 false。该开关在「详细设置」窗口中配置。
+    /// </summary>
+    [ObservableProperty]
+    private bool _isInteractiveFusion;
 
     public MultiButtonPromptSettings()
     {

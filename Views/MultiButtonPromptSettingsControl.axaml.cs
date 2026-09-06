@@ -15,6 +15,12 @@ namespace InquiryWindow.Views;
 
 public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBase<MultiButtonPromptSettings>
 {
+    /// <summary>
+    /// 公开暴露设置对象，供 Avalonia 编译型绑定访问（基类的 Settings 是 protected，编译型
+    /// 绑定无法访问，会导致 XAML 中 {Binding Settings.XXX} 全部失效）。
+    /// </summary>
+    public new MultiButtonPromptSettings Settings => base.Settings;
+
     public MultiButtonPromptSettingsControl()
     {
         InitializeComponent();
@@ -116,6 +122,7 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
     private Point? _buttonDragStartPoint;
     private Border? _buttonDragSourceHandle;
     private PointerPressedEventArgs? _buttonDragPressedArgs;
+    private MultiButtonPromptButton? _buttonDragSource;
 
     private void OnButtonDragHandlePressed(object? sender, PointerPressedEventArgs e)
     {
@@ -150,21 +157,17 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
 
         if (handle.Tag is not MultiButtonPromptButton source) return;
 
-        // 拖动源就是被拖对象本身；不需要再回查 sender，data 包 buttonId
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
-
-        // Avalonia 12 的 DoDragDropAsync 需要原始的 PointerPressedEventArgs
+        // Avalonia 11 拖拽：用 DataObject 携带标记，拖拽源通过实例字段引用。
+        _buttonDragSource = source;
         var pressedArgs = _buttonDragPressedArgs;
         _buttonDragSourceHandle = null;
         _buttonDragStartPoint = null;
         _buttonDragPressedArgs = null;
         if (pressedArgs != null)
         {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
+            var data = new DataObject();
+            data.Set(ButtonDragDataKey, source.Name ?? "");
+            await DragDrop.DoDragDrop(pressedArgs, data, DragDropEffects.Move);
         }
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
@@ -202,14 +205,12 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         MoveButton(source, insertIndex);
     }
 
-    private static bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
+    private bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
     {
         source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
+        if (!e.Data.Contains(ButtonDragDataKey)) return false;
+        source = _buttonDragSource!;
+        return source != null;
     }
 
     private void MoveButton(MultiButtonPromptButton source, int insertIndex)
@@ -227,21 +228,21 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
 
     private static async Task ShowEmptyDialogAsync()
     {
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = "没有可用的预设",
             Content = "请到插件设置（InquiryWindow 设置 → 按钮预设库）里先添加按钮预设。",
             PrimaryButtonText = "确定",
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
         await dialog.ShowAsync();
     }
 
     /// <summary>
-    /// 用 FAContentDialog + ListBox 显示预设选择器。
+    /// 用 ContentDialog + ListBox 显示预设选择器。
     /// 之所以不直接复用 MenuFlyout：FluentAvalonia.MenuFlyoutItemBase.OnPointerEntered
     /// 在代码创建 + 鼠标 hover 时会因模板上下文未就绪而抛 NullReferenceException
-    /// （ClassIsland.App 日志可见），FAContentDialog 走的是完整可视树，无此问题。
+    /// （ClassIsland.App 日志可见），ContentDialog 走的是完整可视树，无此问题。
     /// </summary>
     private static async Task<ButtonPreset?> ShowPresetPickerDialogAsync(
         System.Collections.Generic.IReadOnlyList<ButtonPreset> presets)
@@ -275,14 +276,14 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             })
         };
 
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = "选择要插入的预设",
             Content = listBox,
             PrimaryButtonText = "插入",
             SecondaryButtonText = "取消",
             IsPrimaryButtonEnabled = false,
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
 
         // 只有选中一行后才能点"插入"
@@ -295,12 +296,12 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         {
             if (listBox.SelectedItem is ButtonPreset)
             {
-                dialog.Hide(FAContentDialogResult.Primary);
+                dialog.Hide(ContentDialogResult.Primary);
             }
         };
 
         var result = await dialog.ShowAsync();
-        if (result != FAContentDialogResult.Primary) return null;
+        if (result != ContentDialogResult.Primary) return null;
         return listBox.SelectedItem as ButtonPreset;
     }
 

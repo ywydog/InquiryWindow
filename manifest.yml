@@ -4,7 +4,7 @@ description: 触发后弹出询问窗口，点击「执行」打开配置的文�
 entranceAssembly: "InquiryWindow.dll"
 url: https://github.com/ywydog/InquiryWindow
 version: 2.0.0.0
-apiVersion: 2.2.0.0
+apiVersion: 2.0.0.0
 author: ywydog
 readme: README.md
 icon: icon.png

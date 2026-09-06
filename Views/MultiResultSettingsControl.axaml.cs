@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using ClassIsland.Core.Abstractions.Controls;
+using ClassIsland.Core.Controls;
 using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
@@ -43,6 +44,12 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
     /// 已订阅的 Groups CollectionChanged 处理器：同上，存引用便于取消订阅。
     /// </summary>
     private NotifyCollectionChangedEventHandler? _groupsCollectionChangedHandler;
+
+    /// <summary>
+    /// 公开暴露设置对象，供 Avalonia 编译型绑定访问（基类的 Settings 是 protected，编译型
+    /// 绑定无法访问，会导致 XAML 中 {Binding Settings.XXX} 全部失效）。
+    /// </summary>
+    public new MultiResultSettings Settings => base.Settings;
 
     public MultiResultSettingsControl()
     {
@@ -157,6 +164,7 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
     private Point? _groupDragStartPoint;
     private Border? _groupDragSourceHandle;
     private PointerPressedEventArgs? _groupDragPressedArgs;
+    private MultiResultGroup? _groupDragSource;
 
     private void OnGroupDragHandlePressed(object? sender, PointerPressedEventArgs e)
     {
@@ -191,21 +199,17 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
 
         if (handle.Tag is not MultiResultGroup source) return;
 
-        // 拖动源就是被拖对象本身；data 直接包对象引用
-        var format = DataFormat.CreateInProcessFormat<MultiResultGroup>(GroupDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
-
-        // Avalonia 12 的 DoDragDropAsync 需要原始的 PointerPressedEventArgs
+        // Avalonia 11 拖拽：用 DataObject 携带标记，拖拽源通过实例字段引用。
+        _groupDragSource = source;
         var pressedArgs = _groupDragPressedArgs;
         _groupDragSourceHandle = null;
         _groupDragStartPoint = null;
         _groupDragPressedArgs = null;
         if (pressedArgs != null)
         {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
+            var data = new DataObject();
+            data.Set(GroupDragDataKey, source.Name ?? "");
+            await DragDrop.DoDragDrop(pressedArgs, data, DragDropEffects.Move);
         }
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
@@ -244,14 +248,12 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         MoveGroup(source, insertIndex);
     }
 
-    private static bool TryGetGroupDrag(DragEventArgs e, out MultiResultGroup source)
+    private bool TryGetGroupDrag(DragEventArgs e, out MultiResultGroup source)
     {
         source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiResultGroup>(GroupDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
+        if (!e.Data.Contains(GroupDragDataKey)) return false;
+        source = _groupDragSource!;
+        return source != null;
     }
 
     /// <summary>
@@ -298,19 +300,19 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
 
     private static async Task ShowEmptyDialogAsync()
     {
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = "没有可用的预设",
             Content = "请到插件设置（InquiryWindow 设置 → 按钮预设库）里先添加按钮预设。",
             PrimaryButtonText = "确定",
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
         await dialog.ShowAsync();
     }
 
     /// <summary>
-    /// 用 FAContentDialog + ListBox 显示预设选择器。
-    /// 实现与 MultiButtonPromptSettingsControl 中同名方法一致：FAContentDialog 走完整
+    /// 用 ContentDialog + ListBox 显示预设选择器。
+    /// 实现与 MultiButtonPromptSettingsControl 中同名方法一致：ContentDialog 走完整
     /// 可视树，避免 FluentAvalonia MenuFlyout 在代码创建 + 鼠标 hover 时的 NRE 问题。
     /// </summary>
     private static async Task<ButtonPreset?> ShowPresetPickerDialogAsync(
@@ -344,14 +346,14 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
             })
         };
 
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = "选择要插入的预设",
             Content = listBox,
             PrimaryButtonText = "插入",
             SecondaryButtonText = "取消",
             IsPrimaryButtonEnabled = false,
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
 
         listBox.SelectionChanged += (_, _) =>
@@ -362,12 +364,12 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         {
             if (listBox.SelectedItem is ButtonPreset)
             {
-                dialog.Hide(FAContentDialogResult.Primary);
+                dialog.Hide(ContentDialogResult.Primary);
             }
         };
 
         var result = await dialog.ShowAsync();
-        if (result != FAContentDialogResult.Primary) return null;
+        if (result != ContentDialogResult.Primary) return null;
         return listBox.SelectedItem as ButtonPreset;
     }
 

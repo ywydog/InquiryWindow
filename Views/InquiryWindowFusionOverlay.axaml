@@ -1,0 +1,23 @@
+<Window x:Class="InquiryWindow.Views.InquiryWindowFusionOverlay"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        SystemDecorations="None"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        CanResize="False"
+        ShowActivated="True"
+        Width="500" Height="300">
+
+    <!--
+        「交互融合」覆盖窗口（桌面版专用）。
+        无边框、透明背景、置顶、不显示任务栏图标，贴合 ClassIsland 主界面，
+        把询问内容（InquiryWindowDialogContent / MultiButtonPromptDialogContent）
+        融合到主界面覆盖层显示，而非打开独立窗口。
+    -->
+    <Grid>
+        <ContentControl x:Name="ContentHost"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+    </Grid>
+</Window>

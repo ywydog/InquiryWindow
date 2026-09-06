@@ -1,0 +1,31 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:InquiryWindow.Controls"
+        xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <Style Selector="controls|SettingsPageLazy">
+        <!-- 模板：ContentPresenter 承载真实内容，ProgressRing 为加载指示器 -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                        <ContentPresenter.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                            </Transitions>
+                        </ContentPresenter.Transitions>
+                    </ContentPresenter>
+                    <fa:ProgressRing x:Name="PART_LoadingIndicator"
+                                       Margin="8"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsActive="False"
+                                       IsVisible="False" />
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

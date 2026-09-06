@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Avalonia.Controls;
 using ClassIsland.Core.Controls.Automation;
 using ClassIsland.Shared.Helpers;
@@ -40,8 +41,20 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
         PresetsStore.Instance.Load();
 
         // 选中即打开右侧详情面板（类似 SuperAutoIsland 的 SelectionChanged → IsPanelOpened）。
-        PresetsStore.Instance.Presets.CollectionChanged += (_, _) => RefreshNextNumber();
+        // 用命名方法而非 lambda，便于 Dispose 时精确取消订阅，避免静态单例持有本 VM 导致泄漏。
+        PresetsStore.Instance.Presets.CollectionChanged += OnPresetsCollectionChanged;
         RefreshNextNumber();
+    }
+
+    private void OnPresetsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => RefreshNextNumber();
+
+    /// <summary>
+    /// 取消对静态 <see cref="PresetsStore"/> 集合的订阅。
+    /// 由设置页卸载时调用，避免 VM 被静态单例持有的集合事件永久引用。
+    /// </summary>
+    public void Dispose()
+    {
+        PresetsStore.Instance.Presets.CollectionChanged -= OnPresetsCollectionChanged;
     }
 
     /// <summary>
@@ -61,21 +74,21 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     /// 「删除预设」：弹窗确认后从 PresetsStore 移除。
     /// </summary>
     [RelayCommand]
-    public async Task RemovePresetAsync()
+    public async Task RemovePresetAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
-        if (preset == null) return;
+        if (preset == null || topLevel == null) return;
 
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = "删除预设？",
             Content = $"确定删除预设「{preset.Name}」？已插入到按钮里的 Action 链不受影响。",
             PrimaryButtonText = "删除",
             CloseButtonText = "取消",
-            DefaultButton = FAContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close
         };
-        var result = await dialog.ShowAsync();
-        if (result == FAContentDialogResult.Primary)
+        var result = await dialog.ShowAsync(topLevel);
+        if (result == ContentDialogResult.Primary)
         {
             PresetsStore.Instance.RemovePreset(preset);
             SelectedPreset = null;
@@ -104,15 +117,15 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 「编辑 Action 链…」：弹出 FAContentDialog，承载 ActionControl 让用户调整链内容。
+    /// 「编辑 Action 链…」：弹出 ContentDialog，承载 ActionControl 让用户调整链内容。
     /// 关键：克隆一份 ActionSet 给 ActionControl 编辑，「取消」时改动随 workingActions
     /// 一起被丢弃，preset.Actions 不被污染。
     /// </summary>
     [RelayCommand]
-    public async Task BeginEditActionsAsync()
+    public async Task BeginEditActionsAsync(TopLevel? topLevel)
     {
         var preset = SelectedPreset;
-        if (preset is null) return;
+        if (preset is null || topLevel is null) return;
 
         var workingActions = ConfigureFileHelper.CopyObject(preset.Actions);
         var actionControl = new ActionControl
@@ -120,17 +133,17 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
             ActionSet = workingActions
         };
 
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = $"编辑「{preset.Name}」的 Action 链",
             Content = actionControl,
             PrimaryButtonText = "保存",
             CloseButtonText = "取消",
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
 
-        var result = await dialog.ShowAsync();
-        if (result != FAContentDialogResult.Primary) return;
+        var result = await dialog.ShowAsync(topLevel);
+        if (result != ContentDialogResult.Primary) return;
 
         preset.Actions = workingActions;
         PresetsStore.Instance.SaveNow();

@@ -1,4 +1,4 @@
-<ci:MyWindow x:Class="InquiryWindow.Views.MultiButtonPromptWindow"
+<UserControl x:Class="InquiryWindow.Views.MultiButtonPromptDialogContent"
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ci="http://classisland.tech/schemas/xaml/core"
@@ -7,32 +7,22 @@
              xmlns:converters="clr-namespace:InquiryWindow.Converters"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
              xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core"
-             x:DataType="vm:MultiButtonPromptViewModel"
-             Width="500" Height="280"
-             MinHeight="220" MinWidth="360"
-             WindowStartupLocation="CenterScreen"
-             CanResize="True"
-             Topmost="True"
-             ShowAsDialog="True">
+             x:DataType="vm:MultiButtonPromptViewModel">
 
-    <ci:MyWindow.Styles>
-        <!-- ClassIsland 自带的 Markdown 主题，让弹窗和系统设置/更新日志风格一致 -->
+    <!--
+        「多按钮询问」弹窗内容（桌面版「交互融合」覆盖窗口专用）。
+        从 MultiButtonPromptWindow.axaml 抽取，供 InquiryWindowFusionOverlay 承载，
+        使询问内容可以融合到 ClassIsland 主界面覆盖层显示（而非独立窗口）。
+        原 Window 上的 $parent[Window] 绑定改为 $parent[UserControl]。
+    -->
+    <UserControl.Styles>
         <StyleInclude Source="avares://ClassIsland.Core/Themes/RichTextStyles.axaml" />
 
-        <!--
-          "高亮"模式（accent class）：沿用 ClassIsland 内置的 accent 样式（系统蓝色），
-          这里不重复定义，避免与主题冲突。
-        -->
-
-        <!--
-          "自定义颜色"模式（customAccent class）：仅控制前景色（背景在 DataTemplate 内
-          通过 Background="{Binding CustomColorBrush}" 绑定，因为 Button 没有 CustomColor 属性，
-          Style 的 Binding 默认上下文是 Button 自己，绑不到 MultiButtonPromptButton）。
-        -->
+        <!-- "自定义颜色"模式（customAccent class）：仅控制前景色 -->
         <Style Selector="Button.customAccent">
             <Setter Property="Foreground" Value="White" />
         </Style>
-    </ci:MyWindow.Styles>
+    </UserControl.Styles>
 
     <Border Padding="20" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
@@ -41,10 +31,10 @@
                  注：Avalonia 12 运行时 ImageBrush 无参构造不存在，若在 XAML 使用会把
                  运行时弹窗搞崩（MissingMethodException）。故平铺(Tile)模式不再用 ImageBrush，
                  退化为按 Stretch=None 显示原始大小。 -->
-        <Panel IsVisible="{Binding HasBackgroundImage}">
-            <Image Source="{Binding BackgroundImage}"
-                   Stretch="{Binding BackgroundImageStretch}" />
-        </Panel>
+            <Panel IsVisible="{Binding HasBackgroundImage}">
+                <Image Source="{Binding BackgroundImage}"
+                       Stretch="{Binding BackgroundImageStretch}" />
+            </Panel>
 
             <!-- 蒙层：有背景时加 rgba(0,0,0,0.25)，提高文字可读性 -->
             <Border IsVisible="{Binding HasBackgroundImage}"
@@ -53,7 +43,7 @@
             <!-- 内容层 -->
             <Grid RowDefinitions="Auto,Auto,Auto,Auto">
 
-                <!-- 主提示（Markdown 渲染：仅上下滚动，横向强制关闭） -->
+                <!-- 主提示（Markdown 渲染） -->
                 <mdxaml:MarkdownScrollViewer Grid.Row="0"
                                               Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
                                               Markdown="{Binding Prompt}"
@@ -61,8 +51,7 @@
                                               MaxHeight="160"
                                               Margin="0,0,0,14" />
 
-                <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示。
-                     位置：主提示下方、副提示上方（仿 AdvancedShutdownDialog.axaml 的 Row 0/1/2 顺序）。 -->
+                <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示 -->
                 <Border Grid.Row="1"
                         Padding="12"
                         CornerRadius="6"
@@ -86,7 +75,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 副提示（Markdown 渲染，可见性由是否非空控制） -->
+                <!-- 副提示（Markdown 渲染） -->
                 <mdxaml:MarkdownScrollViewer Grid.Row="2"
                                               Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
                                               Markdown="{Binding SubPrompt}"
@@ -105,28 +94,24 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:MultiButtonPromptButton">
-                        <Button MinWidth="96" Height="34"
-                                Classes.accent="{Binding IsAccent}"
-                                Classes.customAccent="{Binding IsCustomAccent}"
-                                Background="{Binding CustomColorBrush}"
-                                IsEnabled="{Binding $parent[Window].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
-                                Command="{Binding $parent[Window].DataContext.PressButtonCommand}"
-                                CommandParameter="{Binding}">
+                            <Button MinWidth="96" Height="34"
+                                    Classes.accent="{Binding IsAccent}"
+                                    Classes.customAccent="{Binding IsCustomAccent}"
+                                    Background="{Binding CustomColorBrush}"
+                                    IsEnabled="{Binding $parent[UserControl].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
+                                    Command="{Binding $parent[UserControl].DataContext.PressButtonCommand}"
+                                    CommandParameter="{Binding}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <TextBlock Text="{Binding Icon}"
                                                FontFamily="{DynamicResource FluentIcons}"
                                                FontSize="14"
                                                VerticalAlignment="Center" />
-                                    <!--
-                                      按钮文字：未在倒计时时显示 Name；
-                                      是当前倒计时按钮时显示 "Name (Ns)"（仿 YesNo 对话框）。
-                                    -->
                                     <TextBlock VerticalAlignment="Center">
                                         <TextBlock.Text>
                                             <MultiBinding Converter="{x:Static converters:ButtonCountdownTextConverter.Instance}">
                                                 <Binding />
-                                                <Binding Path="$parent[Window].DataContext.PressCountdownButton" />
-                                                <Binding Path="$parent[Window].DataContext.PressCountdownRemaining" />
+                                                <Binding Path="$parent[UserControl].DataContext.PressCountdownButton" />
+                                                <Binding Path="$parent[UserControl].DataContext.PressCountdownRemaining" />
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>
@@ -139,4 +124,4 @@
             </Grid>
         </Panel>
     </Border>
-</ci:MyWindow>
+</UserControl>

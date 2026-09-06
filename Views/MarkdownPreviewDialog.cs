@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml.Styling;
 using ClassIsland.Core.Helpers;
 using FluentAvalonia.UI.Controls;
 using Markdown.Avalonia;
@@ -34,7 +35,7 @@ public static class MarkdownPreviewDialog
         };
 
         // 始终套上 ClassIsland 的 RichText 主题，与运行时弹窗保持一致。
-        viewer.Styles.Add(new StyleInclude
+        viewer.Styles.Add(new StyleInclude((Uri?)null)
         {
             Source = new Uri("avares://ClassIsland.Core/Themes/RichTextStyles.axaml")
         });
@@ -48,12 +49,12 @@ public static class MarkdownPreviewDialog
             Child = viewer
         };
 
-        var dialog = new FAContentDialog
+        var dialog = new ContentDialog
         {
             Title = string.IsNullOrWhiteSpace(title) ? "Markdown 预览" : title,
             Content = container,
             PrimaryButtonText = "关闭",
-            DefaultButton = FAContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary
         };
 
         await dialog.ShowAsync(owner);

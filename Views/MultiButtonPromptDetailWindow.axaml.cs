@@ -1,11 +1,15 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ClassIsland.Core;
 using ClassIsland.Core.Controls;
-using CommunityToolkit.Mvvm.ComponentModel;
+using ClassIsland.Shared;
 using InquiryWindow.Models;
 using InquiryWindow.Views;
 
@@ -22,16 +26,60 @@ namespace InquiryWindow.Views;
 /// 触发方式参考 <c>YesNoDialogRuleSettingsControl.ShowSettingsButton_OnClick</c>：
 /// 由设置面板里的"打开详细设置"按钮通过 <see cref="OpenAsync"/> 弹出本窗口。
 /// </summary>
-public partial class MultiButtonPromptDetailWindow : MyWindow
+public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyChanged
 {
     /// <summary>
     /// 当前正在编辑的设置对象（与 <see cref="MultiButtonPromptSettingsControl"/> 共享同一实例，
     /// 因此窗口内的修改会自动反映回原设置的"打开"按钮所在的抽屉中）。
     /// </summary>
-    public MultiButtonPromptSettings Settings { get; }
+    public MultiButtonPromptSettings Settings { get; private set; } = null!;
 
-    [ObservableProperty]
     private MultiButtonPromptButton? _activeButton;
+
+    /// <summary>
+    /// 当前选中的按钮（供右侧详情面板绑定）。
+    /// 由于本类继承自 <see cref="MyWindow"/>（非 <c>ObservableObject</c>），
+    /// 不能用 <c>[ObservableProperty]</c>，这里手动实现 <see cref="INotifyPropertyChanged"/>。
+    /// </summary>
+    public MultiButtonPromptButton? ActiveButton
+    {
+        get => _activeButton;
+        set
+        {
+            if (ReferenceEquals(_activeButton, value)) return;
+            _activeButton = value;
+            OnPropertyChanged(nameof(ActiveButton));
+        }
+    }
+
+    public new event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    // ===== 窗口背景：缩略图预览 =====
+    private Bitmap? _backgroundPreview;
+
+    /// <summary>
+    /// 窗口背景的缩略图（用于"窗口背景"卡片内的预览）。路径为空或加载失败时为 null。
+    /// 监听 <see cref="Settings"/> 的 <c>BackgroundImagePath</c> 变化自动刷新。
+    /// </summary>
+    public Bitmap? BackgroundPreview
+    {
+        get => _backgroundPreview;
+        private set
+        {
+            if (ReferenceEquals(_backgroundPreview, value)) return;
+            _backgroundPreview = value;
+            OnPropertyChanged(nameof(BackgroundPreview));
+            OnPropertyChanged(nameof(HasBackgroundPreview));
+        }
+    }
+
+    /// <summary>是否有可用的背景预览图（用于 Image 控件的 IsVisible 绑定）。</summary>
+    public bool HasBackgroundPreview => _backgroundPreview is not null;
 
     // ===== 拖拽状态（参照 SystemTools / SettingsControl 的实现） =====
     private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptDetailWindow.Button";
@@ -40,6 +88,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
     private Point? _buttonDragStartPoint;
     private Border? _buttonDragSourceHandle;
     private PointerPressedEventArgs? _buttonDragPressedArgs;
+    private MultiButtonPromptButton? _buttonDragSource;
 
     public MultiButtonPromptDetailWindow()
     {
@@ -53,14 +102,51 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
     public MultiButtonPromptDetailWindow(MultiButtonPromptSettings settings) : this()
     {
         Settings = settings;
+        // 监听 BackgroundImagePath 变化，刷新缩略图
+        Settings.PropertyChanged += OnSettingsPropertyChanged;
         DataContext = this;
+    }
+
+    private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MultiButtonPromptSettings.BackgroundImagePath))
+        {
+            ReloadBackgroundPreview();
+        }
+    }
+
+    private void ReloadBackgroundPreview()
+    {
+        BackgroundPreview = LoadBitmapFromPath(Settings.BackgroundImagePath);
+    }
+
+    /// <summary>
+    /// 从绝对路径加载图片用于预览。返回 null 表示无图 / 加载失败。
+    /// 限制最大宽度为 1920 避免卡顿。
+    /// </summary>
+    private static Bitmap? LoadBitmapFromPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        if (!System.IO.File.Exists(path)) return null;
+        try
+        {
+            return new Bitmap(path);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        // 窗口加载时刷新一次列表
-        Dispatcher.UIThread.Post(RefreshList, DispatcherPriority.Background);
+        // 窗口加载时刷新一次列表 + 背景预览
+        Dispatcher.UIThread.Post(() =>
+        {
+            RefreshList();
+            ReloadBackgroundPreview();
+        }, DispatcherPriority.Background);
     }
 
     private void RefreshList()
@@ -154,6 +240,67 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
         }
     }
 
+    // ===== 窗口背景：浏览 / 清除 =====
+
+    private async void OnBrowseBackgroundImageClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control control) return;
+        var topLevel = TopLevel.GetTopLevel(control);
+        if (topLevel is null) return;
+
+        var storage = topLevel.StorageProvider;
+        var startLocation = await TryGetStartLocationAsync(storage, Settings.BackgroundImagePath);
+
+        var fileType = new FilePickerFileType("图片")
+        {
+            Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp" },
+            AppleUniformTypeIdentifiers = new[] { "public.image" },
+            MimeTypes = new[] { "image/png", "image/jpeg", "image/webp", "image/bmp" }
+        };
+
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "选择背景图片",
+            AllowMultiple = false,
+            FileTypeFilter = new[] { fileType },
+            SuggestedStartLocation = startLocation
+        });
+
+        if (files.Count > 0)
+        {
+            var path = files[0].TryGetLocalPath();
+            if (!string.IsNullOrEmpty(path))
+            {
+                Settings.BackgroundImagePath = path;
+                // PropertyChanged 监听会自动刷新预览
+            }
+        }
+    }
+
+    private void OnClearBackgroundImageClick(object? sender, RoutedEventArgs e)
+    {
+        Settings.BackgroundImagePath = string.Empty;
+    }
+
+    /// <summary>
+    /// 尝试把已有路径所在的目录作为文件选择器的起始位置。
+    /// 路径无效时返回 null（让系统决定起始目录）。
+    /// </summary>
+    private static async Task<IStorageFolder?> TryGetStartLocationAsync(IStorageProvider storage, string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return null;
+        try
+        {
+            var dir = System.IO.Path.GetDirectoryName(path);
+            if (string.IsNullOrEmpty(dir) || !System.IO.Directory.Exists(dir)) return null;
+            return await storage.TryGetFolderFromPathAsync(new Uri(dir));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     // ===== 按钮列表拖拽（参照 SystemTools / SettingsControl 的实现） =====
 
     private void OnButtonDragHandlePressed(object? sender, PointerPressedEventArgs e)
@@ -189,20 +336,17 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
 
         if (handle.Tag is not MultiButtonPromptButton source) return;
 
-        // 用 Avalonia 12 的 InProcessFormat 跨 ItemsControl 传引用类型
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
-
+        // Avalonia 11 拖拽：用 DataObject 携带标记，拖拽源通过实例字段引用。
+        _buttonDragSource = source;
         var pressedArgs = _buttonDragPressedArgs;
         _buttonDragSourceHandle = null;
         _buttonDragStartPoint = null;
         _buttonDragPressedArgs = null;
         if (pressedArgs != null)
         {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
+            var data = new DataObject();
+            data.Set(ButtonDragDataKey, source.Name ?? "");
+            await DragDrop.DoDragDrop(pressedArgs, data, DragDropEffects.Move);
         }
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
@@ -247,14 +391,12 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
         e.Handled = true;
     }
 
-    private static bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
+    private bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
     {
         source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
+        if (!e.Data.Contains(ButtonDragDataKey)) return false;
+        source = _buttonDragSource!;
+        return source != null;
     }
 
     private void MoveButton(MultiButtonPromptButton source, int insertIndex)
@@ -286,13 +428,51 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
         }
     }
 
+    /// <summary>
+    /// 「操作验证」里"配置/修改凭据"按钮：调用 ClassIsland 的 AuthorizeService 创建/修改本按钮的凭据。
+    /// 使用 AuthorizeService 内置的 AuthorizeWindow（桌面端支持，Android 不支持创建 Window）。
+    /// </summary>
+    private async void OnConfigureVerificationClick(object? sender, RoutedEventArgs e)
+    {
+        if (ActiveButton is null) return;
+
+        // 桌面端：AuthorizeService 用 AuthorizeWindow（Window）承载，owner 取当前详情窗口。
+        var authorizeService = IAppHost.TryGetService<ClassIsland.Core.Abstractions.Services.IAuthorizeService>();
+        if (authorizeService is null)
+        {
+            await CommonTaskDialogs.ShowDialog(
+                "无法使用操作验证",
+                "ClassIsland 的 AuthorizeService 不可用，请确认运行环境支持。",
+                this);
+            return;
+        }
+
+        try
+        {
+            var credential = await authorizeService.SetupCredentialStringAsync(
+                string.IsNullOrWhiteSpace(ActiveButton.CredentialString) ? null : ActiveButton.CredentialString,
+                this);
+            if (!string.IsNullOrEmpty(credential))
+            {
+                ActiveButton.CredentialString = credential;
+            }
+        }
+        catch (Exception ex)
+        {
+            await CommonTaskDialogs.ShowDialog(
+                "配置凭据失败",
+                $"配置操作验证凭据时发生错误：{ex.Message}",
+                this);
+        }
+    }
+
     private void OnPreviewClick(object? sender, RoutedEventArgs e)
     {
         // 复用运行时的预览逻辑：直接复用 MultiButtonPromptWindow + ViewModel 即可
         var vm = new ViewModels.MultiButtonPromptViewModel(
             Settings,
-            AppBase.Current.GetServiceRequired<ClassIsland.Core.Abstractions.Services.IActionService>(),
-            AppBase.Current.GetServiceRequired<Microsoft.Extensions.Logging.ILogger<ViewModels.MultiButtonPromptViewModel>>());
+            IAppHost.GetService<ClassIsland.Core.Abstractions.Services.IActionService>(),
+            IAppHost.GetService<Microsoft.Extensions.Logging.ILogger<ViewModels.MultiButtonPromptViewModel>>());
 
         var win = new MultiButtonPromptWindow { DataContext = vm };
         // 预览时按原 MultiButtonPromptWindow 的方式启动倒计时
@@ -311,6 +491,16 @@ public partial class MultiButtonPromptDetailWindow : MyWindow
     {
         // 简化处理：直接关窗。如果后续需要"放弃修改"语义，可在此处加一份快照恢复。
         Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        // 解除订阅，避免 Settings 持有本窗口引用导致泄漏
+        if (Settings is not null)
+        {
+            Settings.PropertyChanged -= OnSettingsPropertyChanged;
+        }
+        base.OnClosed(e);
     }
 
     /// <summary>
