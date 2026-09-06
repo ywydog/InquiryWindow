@@ -21,8 +21,12 @@
     </PackageReference>
     <!-- 桌面 Windows-only：图标提取使用 System.Drawing.Common（Windows 平台）。 -->
     <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
-    <!-- 宿主 (ClassIsland 2.1.0.1) 使用 FluentAvaloniaUI 2.4.1；PluginSdk 2.0 不传递引用，需显式声明。 -->
-    <PackageReference Include="FluentAvaloniaUI" Version="2.4.1" />
+    <!-- 宿主 (ClassIsland 2.1.0.1) 使用 FluentAvaloniaUI 2.4.1；PluginSdk 2.0 不传递引用，需显式声明。
+     仅编译期引用，运行期由宿主提供，故排除 runtime/native，避免把 Avalonia/SkiaSharp 等
+     原生运行库一并打进产物。 -->
+    <PackageReference Include="FluentAvaloniaUI" Version="2.4.1">
+      <ExcludeAssets>runtime; native</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
