@@ -193,7 +193,12 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         {
             ButtonCountLabel.Text = $"({Settings.Buttons.Count})";
         }
-        ButtonList.SelectedItem = btn;
+        // 与 OnButtonListSelectionChanged/OnSearchTextChanged 一致：ButtonList 可能尚未解析，
+        // 直接访问 SelectedItem 会抛 NullReferenceException 拖垮整个 ClassIsland，这里做防御。
+        if (ButtonList is not null)
+        {
+            ButtonList.SelectedItem = btn;
+        }
     }
 
     private void OnDeleteButtonClick(object? sender, RoutedEventArgs e)
