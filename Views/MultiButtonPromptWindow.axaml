@@ -53,11 +53,10 @@
             <!-- 内容层 -->
             <Grid RowDefinitions="Auto,Auto,Auto,Auto">
 
-                <!-- 主提示（Markdown 渲染：仅上下滚动，横向强制关闭） -->
+                <!-- 主提示（Markdown 渲染；MaxHeight 为 Auto 行的护栏，防止长内容撑破弹窗，写法与 SystemTools 一致） -->
                 <mdxaml:MarkdownScrollViewer Grid.Row="0"
                                               Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
                                               Markdown="{Binding Prompt}"
-                                              MinHeight="40"
                                               MaxHeight="160"
                                               Margin="0,0,0,14" />
 
@@ -91,7 +90,6 @@
                                               Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
                                               Markdown="{Binding SubPrompt}"
                                               IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                              MinHeight="32"
                                               MaxHeight="100"
                                               Margin="0,0,0,14" />
 

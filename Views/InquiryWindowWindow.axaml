@@ -48,13 +48,10 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- 正文（Markdown 渲染：仅上下滚动，横向强制关闭） -->
+            <!-- 正文（Markdown 渲染，仅上下滚动；高度由外层 * 行约束，写法与 SystemTools 一致） -->
             <mdxaml:MarkdownScrollViewer Grid.Row="2"
                                           Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                                          Markdown="{Binding DialogBody}"
-                                          MinHeight="40"
-                                          MaxHeight="320"
-                                          VerticalAlignment="Top" />
+                                          Markdown="{Binding DialogBody}" />
 
             <!-- 路径预览（独立一行，可见性由 ShowPath 控制） -->
             <TextBlock Grid.Row="3"
