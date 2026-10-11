@@ -95,7 +95,7 @@
                             <Button MinWidth="96" Height="34"
                                     Classes.accent="{Binding IsAccent}"
                                     Classes.customAccent="{Binding IsCustomAccent}"
-                                    Background="{Binding CustomColorBrush}"
+                                    Background="{Binding ButtonBackground, Converter={x:Static converters:NullToUnsetConverter.Instance}}"
                                     IsEnabled="{Binding $parent[UserControl].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
                                     Command="{Binding $parent[UserControl].DataContext.PressButtonCommand}"
                                     CommandParameter="{Binding}">

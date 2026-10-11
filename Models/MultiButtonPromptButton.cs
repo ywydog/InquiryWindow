@@ -60,23 +60,31 @@ public partial class MultiButtonPromptButton : ObservableObject
     public bool IsCustomAccent => AccentMode == ButtonAccentMode.Custom;
 
     /// <summary>
-    /// <see cref="CustomColor"/> 对应的画刷，用于 XAML 的 <c>Background</c> 绑定。
+    /// 运行按钮的背景画刷，按 <see cref="AccentMode"/> 分派：
+    /// <list type="bullet">
+    ///   <item><see cref="ButtonAccentMode.Custom"/>：返回 <see cref="CustomColor"/>（用户自定义色）。</item>
+    ///   <item><see cref="ButtonAccentMode.Default"/> / <see cref="ButtonAccentMode.Highlighted"/>：
+    ///   返回 <c>null</c>，让按钮回退到 ClassIsland 主题默认背景（跟随主题变化；
+    ///   "高亮"模式下背景由内置 accent 样式提供，即系统主题蓝）。</item>
+    /// </list>
     /// （Avalonia 12 运行时不再把 Color 自动转换为 IBrush，直接绑 Color 会失败。）
     /// </summary>
     [Newtonsoft.Json.JsonIgnore]
-    public IBrush CustomColorBrush => new SolidColorBrush(CustomColor);
+    public IBrush? ButtonBackground =>
+        AccentMode == ButtonAccentMode.Custom ? new SolidColorBrush(CustomColor) : null;
 
-    // AccentMode / CustomColor 变化时通知 IsAccent / IsCustomAccent
+    // AccentMode / CustomColor 变化时通知派生 UI 属性一并刷新
     partial void OnAccentModeChanged(ButtonAccentMode value)
     {
         OnPropertyChanged(nameof(IsAccent));
         OnPropertyChanged(nameof(IsCustomAccent));
+        OnPropertyChanged(nameof(ButtonBackground));
     }
 
     partial void OnCustomColorChanged(Color value)
     {
-        // 通知 CustomColorBrush 一并刷新。
-        OnPropertyChanged(nameof(CustomColorBrush));
+        // 通知 ButtonBackground 一并刷新。
+        OnPropertyChanged(nameof(ButtonBackground));
     }
 
     public MultiButtonPromptButton()

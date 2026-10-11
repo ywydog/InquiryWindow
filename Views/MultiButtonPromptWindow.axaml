@@ -25,9 +25,10 @@
         -->
 
         <!--
-          "自定义颜色"模式（customAccent class）：仅控制前景色（背景在 DataTemplate 内
-          通过 Background="{Binding CustomColor}" 绑定，因为 Button 没有 CustomColor 属性，
-          Style 的 Binding 默认上下文是 Button 自己，绑不到 MultiButtonPromptButton）。
+          "自定义颜色"模式（customAccent class）：仅控制前景色（背景由 DataTemplate 内
+          Background="{Binding ButtonBackground, Converter={x:Static converters:NullToUnsetConverter.Instance}}" 在 Custom 模式下提供——自定义色，否则回退主题；
+          因 Button 没有 CustomColor 属性，Style 的 Binding 默认上下文是 Button 自己，
+          绑不到 MultiButtonPromptButton，故背景在模板内绑定）。
         -->
         <Style Selector="Button.customAccent">
             <Setter Property="Foreground" Value="White" />
@@ -116,7 +117,7 @@
                         <Button MinWidth="96" Height="34"
                                 Classes.accent="{Binding IsAccent}"
                                 Classes.customAccent="{Binding IsCustomAccent}"
-                                Background="{Binding CustomColorBrush}"
+                                Background="{Binding ButtonBackground, Converter={x:Static converters:NullToUnsetConverter.Instance}}"
                                 IsEnabled="{Binding $parent[Window].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
                                 Command="{Binding $parent[Window].DataContext.PressButtonCommand}"
                                 CommandParameter="{Binding}">
