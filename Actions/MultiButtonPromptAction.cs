@@ -43,6 +43,8 @@ public class MultiButtonPromptAction(
         }
 
         var vm = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger);
+        logger.LogInformation("触发「多按钮询问」行动：按钮数={Count}, 自动执行={AutoExecute}, Android={Android}。",
+            Settings.Buttons.Count, Settings.IsAutoExecuteEnabled, OperatingSystem.IsAndroid());
 
         if (OperatingSystem.IsAndroid())
         {

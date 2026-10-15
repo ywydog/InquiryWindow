@@ -250,6 +250,7 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         if (idx >= 0 && idx < Buttons.Count)
         {
             // 真实按钮：直接执行其 Action 链（不走交互倒计时逻辑，倒计时已经走完一遍了）
+            _logger.LogInformation("自动执行倒计时归零，触发按钮 \"{Name}\" 的 Action 链。", Buttons[idx].Name);
             _ = ExecuteButtonAsync(Buttons[idx]);
         }
         else

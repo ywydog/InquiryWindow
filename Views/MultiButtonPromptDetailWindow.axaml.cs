@@ -12,6 +12,7 @@ using ClassIsland.Core.Controls;
 using ClassIsland.Shared;
 using InquiryWindow.Models;
 using InquiryWindow.Views;
+using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow.Views;
 
@@ -33,6 +34,8 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     /// 因此窗口内的修改会自动反映回原设置的"打开"按钮所在的抽屉中）。
     /// </summary>
     public MultiButtonPromptSettings Settings { get; private set; } = null!;
+
+    private readonly ILogger? _logger;
 
     private MultiButtonPromptButton? _activeButton;
 
@@ -100,6 +103,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     /// </summary>
     public MultiButtonPromptDetailWindow(MultiButtonPromptSettings settings) : this()
     {
+        _logger = IAppHost.GetService<ILoggerFactory>().CreateLogger("InquiryWindow.MultiButtonPromptDetailWindow");
         Settings = settings;
         // 监听 BackgroundImagePath 变化，刷新缩略图
         Settings.PropertyChanged += OnSettingsPropertyChanged;
@@ -140,6 +144,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
+        _logger?.LogInformation("[多按钮详细设置] 显示「多按钮询问行动 · 详细设置」窗口，开始加载按钮列表。");
         // 窗口加载时刷新一次列表 + 背景预览
         Dispatcher.UIThread.Post(() =>
         {
@@ -150,7 +155,13 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
 
     private void RefreshList()
     {
-        if (ButtonList is null) return;
+        _logger?.LogInformation("[多按钮详细设置] 开始刷新按钮列表，Buttons.Count={Count}, ButtonList={ButtonList}, ButtonCountLabel={ButtonCountLabel}",
+            Settings.Buttons.Count, ButtonList is null ? "null" : "ok", ButtonCountLabel is null ? "null" : "ok");
+        if (ButtonList is null)
+        {
+            _logger?.LogWarning("[多按钮详细设置] ButtonList 为 null，无法加载按钮列表（x:Name 字段未被生成/绑定）。");
+            return;
+        }
         // 列表源用 Settings.Buttons（同一个 ObservableCollection）
         ButtonList.ItemsSource = Settings.Buttons;
         if (ButtonCountLabel is not null)
@@ -161,6 +172,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         {
             ButtonList.SelectedIndex = 0;
         }
+        _logger?.LogInformation("[多按钮详细设置] 按钮列表刷新完成，共 {Count} 个按钮。", Settings.Buttons.Count);
     }
 
     private void OnButtonListSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -170,12 +182,14 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
             ActiveButton = btn;
             if (PlaceholderView is not null) PlaceholderView.IsVisible = false;
             if (DetailView is not null) DetailView.IsVisible = true;
+            _logger?.LogInformation("[多按钮详细设置] 选中按钮 \"{Name}\"，已切换到按钮详情视图。", btn.Name);
         }
         else
         {
             ActiveButton = null;
             if (PlaceholderView is not null) PlaceholderView.IsVisible = true;
             if (DetailView is not null) DetailView.IsVisible = false;
+            _logger?.LogDebug("[多按钮详细设置] 未选中任何按钮，显示空状态占位视图。");
         }
     }
 
@@ -192,6 +206,14 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         {
             ButtonCountLabel.Text = $"({Settings.Buttons.Count})";
         }
+        _logger?.LogInformation("[多按钮详细设置] 添加按钮 \"{Name}\"，当前共 {Count} 个按钮，ButtonList={ButtonList}。",
+            btn.Name, Settings.Buttons.Count, ButtonList is null ? "null" : "ok");
+        // ButtonList 为 null 时 SelectedItem 赋值会抛 NullReferenceException，这里防御一下。
+        if (ButtonList is null)
+        {
+            _logger?.LogWarning("[多按钮详细设置] 添加按钮时 ButtonList 为 null，无法选中新按钮。");
+            return;
+        }
         ButtonList.SelectedItem = btn;
     }
 
@@ -199,11 +221,13 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     {
         if (ActiveButton is null) return;
         if (Settings.Buttons.Count <= 1) return;
+        var removedName = ActiveButton.Name;
         Settings.Buttons.Remove(ActiveButton);
         if (ButtonCountLabel is not null)
         {
             ButtonCountLabel.Text = $"({Settings.Buttons.Count})";
         }
+        _logger?.LogInformation("[多按钮详细设置] 删除按钮 \"{Name}\"，剩余 {Count} 个按钮。", removedName, Settings.Buttons.Count);
     }
 
     private void OnSearchTextChanged(object? sender, TextChangedEventArgs e)
