@@ -213,9 +213,4 @@ public partial class InquiryWindowFusionOverlay : Window
         var secs = seconds % 60;
         return $"将{minutes}分{secs}秒后执行......";
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

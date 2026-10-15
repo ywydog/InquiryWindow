@@ -320,11 +320,6 @@ public partial class InquiryWindowWindow : MyWindow
             : $"将{time}后执行「{buttonName}」......";
     }
 
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
-
     public partial class ViewModel : ObservableObject
     {
         [ObservableProperty] private string _dialogTitleSmall = "";

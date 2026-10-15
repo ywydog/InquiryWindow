@@ -377,11 +377,6 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
         if (result != FAContentDialogResult.Primary) return null;
         return listBox.SelectedItem as ButtonPreset;
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }
 
 /// <summary>

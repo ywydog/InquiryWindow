@@ -35,9 +35,4 @@ public partial class InquiryWindowDialogContent : UserControl
     {
         ResultChosen?.Invoke(InquiryWindowResult.Acknowledged);
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

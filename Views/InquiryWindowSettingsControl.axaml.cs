@@ -94,9 +94,4 @@ public partial class InquiryWindowSettingsControl : ActionSettingsControlBase<In
             await CommonTaskDialogs.ShowDialog("选择失败", $"无法打开系统选择器：{ex.Message}");
         }
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

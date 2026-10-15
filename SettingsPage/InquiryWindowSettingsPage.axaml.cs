@@ -78,9 +78,4 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
             // 预览失败（例如主窗口已关闭）静默吞掉，避免设置页崩溃。
         }
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }
