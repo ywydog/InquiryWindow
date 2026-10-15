@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Markup.Xaml.Styling;
 using ClassIsland.Core.Helpers;
 using FluentAvalonia.UI.Controls;
@@ -39,6 +41,11 @@ public static class MarkdownPreviewDialog
         {
             Source = new Uri("avares://ClassIsland.Core/Themes/RichTextStyles.axaml")
         });
+
+        // 与正式询问窗保持一致的正文前景色：统一取主题资源 TextFillColorPrimaryBrush，
+        // 随亮/暗主题切换，避免暗色主题下 Markdown 正文字体渲染成黑色而看不清。
+        viewer.SetValue(TextElement.ForegroundProperty,
+            Application.Current?.FindResource("TextFillColorPrimaryBrush"));
 
         var container = new Border
         {

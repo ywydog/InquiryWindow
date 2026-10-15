@@ -59,6 +59,7 @@
                                               Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
                                               Markdown="{Binding Prompt}"
                                               MaxHeight="160"
+                                              TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                               Margin="0,0,0,14" />
 
                 <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示。
@@ -92,6 +93,7 @@
                                               Markdown="{Binding SubPrompt}"
                                               IsVisible="{Binding SubPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                               MaxHeight="100"
+                                              TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                               Margin="0,0,0,14" />
 
                 <!-- 按钮列表（运行时由 ViewModel 动态填入） -->

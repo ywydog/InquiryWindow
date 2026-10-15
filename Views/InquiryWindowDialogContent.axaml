@@ -39,10 +39,12 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- 正文（Markdown 渲染，仅上下滚动；高度由外层 * 行约束，写法与 SystemTools 一致） -->
+            <!-- 正文（Markdown 渲染，仅上下滚动；高度由外层 * 行约束，写法与 SystemTools 一致）
+                 前景色统一取主题 TextFillColorPrimaryBrush，随主题（亮/暗）自动切换。 -->
             <mdxaml:MarkdownScrollViewer Grid.Row="2"
                                           Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                                          Markdown="{Binding DialogBody}" />
+                                          Markdown="{Binding DialogBody}"
+                                          TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
 
             <!-- 路径预览 -->
             <TextBlock Grid.Row="3"
