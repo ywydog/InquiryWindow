@@ -50,6 +50,8 @@ public class MultiButtonPromptAction(
         }
 
         var vm = new MultiButtonPromptViewModel(Settings, actionService, viewModelLogger);
+        logger.LogInformation("触发「多按钮询问」行动：按钮数={Count}, 交互融合={IsFusion}, 自动执行={AutoExecute}。",
+            Settings.Buttons.Count, Settings.IsInteractiveFusion, Settings.IsAutoExecuteEnabled);
 
         if (Settings.IsInteractiveFusion)
         {

@@ -168,10 +168,13 @@ public partial class InquiryWindowFusionOverlay : Window
     /// </summary>
     public static async Task ShowMultiButtonPromptAsync(MultiButtonPromptViewModel vm, ILogger logger)
     {
+        logger.LogInformation("[交互融合] 显示「多按钮询问」覆盖窗口，按钮数={Count}。", vm.Buttons?.Count ?? 0);
         var overlay = new InquiryWindowFusionOverlay();
         overlay.AttachToHost(GetHostWindow());
 
         var content = new MultiButtonPromptDialogContent { DataContext = vm };
+        logger.LogInformation("[交互融合] 准备注入多按钮询问内容，ContentHost={ContentHost}。",
+            overlay.ContentHost is null ? "null" : "ok");
         overlay.ContentHost.Content = content;
 
         // ViewModel 通过 RequestClose 请求关闭（用户点了某个按钮）。
@@ -188,6 +191,7 @@ public partial class InquiryWindowFusionOverlay : Window
         {
             overlay.Show();
             overlay.Activate();
+            logger.LogInformation("[交互融合] 多按钮询问覆盖窗口已成功显示。");
         }
         catch (Exception ex)
         {

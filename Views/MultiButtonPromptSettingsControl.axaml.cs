@@ -4,12 +4,14 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Controls;
 using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
 using InquiryWindow.Services;
+using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow.Views;
 
@@ -61,6 +63,8 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         }
 
         var win = new MultiButtonPromptDetailWindow(Settings);
+        var logger = IAppHost.GetService<ILoggerFactory>().CreateLogger("InquiryWindow.MultiButtonPromptSettingsControl");
+        logger.LogInformation("打开「多按钮询问行动 · 详细设置」窗口，按钮数={Count}。", Settings.Buttons.Count);
         await win.ShowDialogCompat();
     }
 
