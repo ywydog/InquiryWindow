@@ -2,6 +2,7 @@
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ci="http://classisland.tech/schemas/xaml/core"
+             xmlns:converters="clr-namespace:InquiryWindow.Converters"
              xmlns:vm="clr-namespace:InquiryWindow.Views"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia"
              xmlns:helpers="clr-namespace:ClassIsland.Core.Helpers;assembly=ClassIsland.Core"
@@ -62,21 +63,30 @@
                     IsVisible="{Binding IsAutoExecuteActive}"
                     Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
                     Margin="0,0,0,8">
-                <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <!-- 自动执行倒计时圆环（Ellipse 背景环 + Path 进度弧，样式参照本体 CountDownComponent） -->
+                    <Panel Width="22" Height="22" VerticalAlignment="Center">
+                        <Ellipse Width="21.4" Height="21.4"
+                                 Stroke="{DynamicResource ControlStrongStrokeColorDisabledBrush}"
+                                 StrokeThickness="2.6"
+                                 VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        <Path Width="22" Height="22"
+                              Stroke="{DynamicResource AccentFillColorDefaultBrush}"
+                              StrokeThickness="3.1"
+                              StrokeLineCap="Round"
+                              VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Path.Data>
+                                <MultiBinding Converter="{x:Static converters:RingProgressGeometryConverter.Instance}">
+                                    <Binding Path="AutoExecuteRemainingSeconds" />
+                                    <Binding Path="AutoExecuteMaxSeconds" />
+                                </MultiBinding>
+                            </Path.Data>
+                        </Path>
+                    </Panel>
                     <TextBlock Text="{Binding CountdownText}"
                                FontSize="14"
-                               FontWeight="DemiBold" />
-                    <ProgressBar Height="5"
-                                 Minimum="0"
-                                 Maximum="{Binding AutoExecuteMaxSeconds}"
-                                 Value="{Binding AutoExecuteRemainingSeconds}">
-                        <ProgressBar.Styles>
-                            <Style Selector="ProgressBar">
-                                <Setter Property="Foreground"
-                                        Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                            </Style>
-                        </ProgressBar.Styles>
-                    </ProgressBar>
+                               FontWeight="DemiBold"
+                               VerticalAlignment="Center" />
                 </StackPanel>
             </Border>
 
