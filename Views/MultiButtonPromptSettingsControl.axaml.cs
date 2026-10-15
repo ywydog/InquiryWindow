@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Controls;
+using ClassIsland.Shared;
 using ClassIsland.Shared.Helpers;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
@@ -306,10 +307,5 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         var result = await dialog.ShowAsync(topLevel);
         if (result != FAContentDialogResult.Primary) return null;
         return listBox.SelectedItem as ButtonPreset;
-    }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
     }
 }

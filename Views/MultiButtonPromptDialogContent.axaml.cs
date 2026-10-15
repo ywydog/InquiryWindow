@@ -14,9 +14,4 @@ public partial class MultiButtonPromptDialogContent : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

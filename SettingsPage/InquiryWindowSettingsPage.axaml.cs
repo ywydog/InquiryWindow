@@ -23,9 +23,4 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
         DataContext = ViewModel;
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

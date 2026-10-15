@@ -72,9 +72,4 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
         base.OnDetachedFromVisualTree(e);
         ViewModel.Dispose();
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

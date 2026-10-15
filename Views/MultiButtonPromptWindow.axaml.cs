@@ -107,9 +107,4 @@ public partial class MultiButtonPromptWindow : MyWindow
             await tcs.Task;
         }
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }

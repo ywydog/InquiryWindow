@@ -516,9 +516,4 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
             await tcs.Task;
         }
     }
-
-    private void InitializeComponent()
-    {
-        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
-    }
 }
