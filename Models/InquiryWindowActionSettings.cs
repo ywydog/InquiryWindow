@@ -53,6 +53,13 @@ public partial class InquiryWindowActionSettings : ObservableObject
     private double _autoExecuteSeconds = 5;
 
     /// <summary>
+    /// 自动执行倒计时的进度条样式（0=线性条，1=环形，2=隐藏）。默认 0（线性条）。
+    /// 与设置页进度条样式下拉框的 SelectedIndex 直接绑定。
+    /// </summary>
+    [ObservableProperty]
+    private int _countdownBarStyleIndex;
+
+    /// <summary>
     /// 是否启用「交互融合」显示模式：开启后把询问内容融合到 ClassIsland 主界面
     /// 覆盖层显示（而非打开独立窗口）。默认 false。
     /// </summary>

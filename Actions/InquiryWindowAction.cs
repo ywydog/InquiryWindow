@@ -76,7 +76,7 @@ public class InquiryWindowAction(
             // 4.5 若启用自动执行，则启动倒计时（仅在有目标路径时倒计时才有意义）
             if (Settings.IsAutoExecuteEnabled && hasPath)
             {
-                window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds));
+                window.StartAutoExecuteCountdown((int)Math.Ceiling(Settings.AutoExecuteSeconds), Settings.CountdownBarStyleIndex);
             }
 
             var owner = AppBase.Current.GetRootWindow() as Window;

@@ -80,6 +80,7 @@ public partial class InquiryWindowFusionOverlay : Window
             Icon = null,
             IsIconVisible = false,
             CanExecute = hasPath,
+            CountdownBarStyleIndex = settings.CountdownBarStyleIndex,
         };
 
         var content = new InquiryWindowDialogContent { DataContext = vm };

@@ -91,6 +91,17 @@
                 </ci:Field>
                 <TextBlock Text="内自动执行「执行」" VerticalAlignment="Center" />
             </StackPanel>
+            <StackPanel Spacing="4" Margin="24,0,0,0"
+                        IsEnabled="{Binding #AutoExecuteCheck.IsChecked}">
+                <TextBlock Text="进度条样式" FontSize="11"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <ComboBox MinWidth="180" HorizontalAlignment="Left"
+                          SelectedIndex="{Binding Settings.CountdownBarStyleIndex, Mode=TwoWay}">
+                    <ComboBoxItem Content="线性条" />
+                    <ComboBoxItem Content="环形" />
+                    <ComboBoxItem Content="隐藏" />
+                </ComboBox>
+            </StackPanel>
         </StackPanel>
 
         <Border Padding="10" CornerRadius="6"

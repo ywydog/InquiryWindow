@@ -79,6 +79,19 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         }
     }
 
+    // ===== 自动执行倒计时进度条样式（来自 Settings.CountdownBarStyleIndex） =====
+    /// <summary>进度条样式索引：0=线性条，1=环形，2=隐藏。</summary>
+    public int CountdownBarStyleIndex => _settings.CountdownBarStyleIndex;
+
+    /// <summary>是否使用线性进度条样式。</summary>
+    public bool IsLineProgressStyle => CountdownBarStyleIndex == 0;
+
+    /// <summary>是否使用环形（圆环）进度样式。</summary>
+    public bool IsRingProgressStyle => CountdownBarStyleIndex == 1;
+
+    /// <summary>是否隐藏进度指示（仅显示倒计时文字）。</summary>
+    public bool IsNoneProgressStyle => CountdownBarStyleIndex == 2;
+
     public MultiButtonPromptViewModel(
         MultiButtonPromptSettings settings,
         IActionService actionService,
@@ -114,6 +127,13 @@ public partial class MultiButtonPromptViewModel : ObservableObject
             {
                 BackgroundImageStretch = MapStretch(_settings.BackgroundImageMode);
             });
+        }
+        else if (e.PropertyName == nameof(MultiButtonPromptSettings.CountdownBarStyleIndex))
+        {
+            OnPropertyChanged(nameof(CountdownBarStyleIndex));
+            OnPropertyChanged(nameof(IsLineProgressStyle));
+            OnPropertyChanged(nameof(IsRingProgressStyle));
+            OnPropertyChanged(nameof(IsNoneProgressStyle));
         }
     }
 

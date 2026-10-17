@@ -260,11 +260,13 @@ public partial class InquiryWindowWindow : MyWindow
     /// 必须在 ShowDialog 之前调用。调用后用户点取消/执行会自动停止计时。
     /// </summary>
     /// <param name="seconds">倒计时秒数（&lt;=0 时不会启动）。</param>
-    public void StartAutoExecuteCountdown(int seconds)
+    /// <param name="countdownBarStyleIndex">进度条样式索引（0=线性条，1=环形，2=隐藏）。</param>
+    public void StartAutoExecuteCountdown(int seconds, int countdownBarStyleIndex)
     {
         if (seconds <= 0) return;
         CancelAutoExecuteCountdown();
         _autoExecuteRemaining = seconds;
+        _vm.CountdownBarStyleIndex = countdownBarStyleIndex;
         _vm.AutoExecuteMaxSeconds = seconds;
         _vm.AutoExecuteRemainingSeconds = seconds;
         _vm.IsAutoExecuteActive = true;
@@ -334,6 +336,25 @@ public partial class InquiryWindowWindow : MyWindow
         [ObservableProperty] private string _countdownText = string.Empty;
         [ObservableProperty] private double _autoExecuteMaxSeconds;
         [ObservableProperty] private double _autoExecuteRemainingSeconds;
+
+        /// <summary>进度条样式索引：0=线性条，1=环形，2=隐藏。</summary>
+        [ObservableProperty] private int _countdownBarStyleIndex;
+
+        /// <summary>是否使用线性进度条样式。</summary>
+        public bool IsLineProgressStyle => CountdownBarStyleIndex == 0;
+
+        /// <summary>是否使用环形（圆环）进度样式。</summary>
+        public bool IsRingProgressStyle => CountdownBarStyleIndex == 1;
+
+        /// <summary>是否隐藏进度指示（仅显示倒计时文字）。</summary>
+        public bool IsNoneProgressStyle => CountdownBarStyleIndex == 2;
+
+        partial void OnCountdownBarStyleIndexChanged(int value)
+        {
+            OnPropertyChanged(nameof(IsLineProgressStyle));
+            OnPropertyChanged(nameof(IsRingProgressStyle));
+            OnPropertyChanged(nameof(IsNoneProgressStyle));
+        }
 
         // 亚克力背景：仅用于本窗口内 UI 与初始化时同步；最终值由外部属性驱动。
         [ObservableProperty] private bool _isAcrylicActive;

@@ -102,6 +102,13 @@ public partial class MultiButtonPromptSettings : ObservableObject
     private int _autoExecuteTargetIndex;
 
     /// <summary>
+    /// 自动执行倒计时的进度条样式（0=线性条，1=环形，2=隐藏）。默认 0（线性条）。
+    /// 与「详细设置」中进度条样式下拉框的 SelectedIndex 直接绑定。
+    /// </summary>
+    [ObservableProperty]
+    private int _countdownBarStyleIndex;
+
+    /// <summary>
     /// 窗口背景图片绝对路径；空字符串 / null 表示不使用图片背景（使用纯色背景）。
     /// 支持 PNG / JPG / JPEG / WEBP / BMP。文件不存在或加载失败时降级到纯色背景。
     /// </summary>
