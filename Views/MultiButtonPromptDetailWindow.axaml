@@ -254,7 +254,8 @@
                                             <StackPanel Grid.Column="1" Spacing="4" Margin="4,0,0,0">
                                                 <TextBlock Text="进度条样式" FontSize="11"
                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                                <ComboBox x:Name="CountdownBarStyleBox" HorizontalAlignment="Stretch">
+                                                <ComboBox x:Name="CountdownBarStyleBox" HorizontalAlignment="Stretch"
+                                                          SelectedIndex="{Binding Settings.CountdownBarStyleIndex, Mode=TwoWay}">
                                                     <ComboBoxItem Content="线性条（主提示下方）" Tag="line" />
                                                     <ComboBoxItem Content="环形" Tag="circle" />
                                                     <ComboBoxItem Content="隐藏" Tag="none" />

@@ -79,31 +79,48 @@
                         CornerRadius="6"
                         IsVisible="{Binding IsAutoExecuteActive}"
                         Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <!-- 自动执行倒计时圆环（Ellipse 背景环 + Path 进度弧，样式参照本体 CountDownComponent） -->
-                        <Panel Width="22" Height="22" VerticalAlignment="Center">
-                            <Ellipse Width="21.4" Height="21.4"
-                                     Stroke="{DynamicResource ControlStrongStrokeColorDisabledBrush}"
-                                     StrokeThickness="2.6"
-                                     VerticalAlignment="Center" HorizontalAlignment="Center" />
-                            <Path Width="22" Height="22"
-                                  Stroke="{DynamicResource AccentFillColorDefaultBrush}"
-                                  StrokeThickness="3.1"
-                                  StrokeLineCap="Round"
-                                  VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <Path.Data>
-                                    <MultiBinding Converter="{x:Static converters:RingProgressGeometryConverter.Instance}">
-                                        <Binding Path="AutoExecuteRemainingSeconds" />
-                                        <Binding Path="AutoExecuteMaxSeconds" />
-                                    </MultiBinding>
-                                </Path.Data>
-                            </Path>
-                        </Panel>
+                    <Panel>
+                        <!-- 进度条样式由「进度条样式」设置决定：0=线性条 / 1=环形 / 2=隐藏，倒计时文字始终显示 -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsLineProgressStyle}">
+                            <TextBlock Text="{Binding CountdownText}"
+                                       FontSize="14"
+                                       FontWeight="DemiBold" />
+                            <ProgressBar Height="5"
+                                         Minimum="0"
+                                         Maximum="{Binding AutoExecuteMaxSeconds}"
+                                         Value="{Binding AutoExecuteRemainingSeconds}"
+                                         Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsRingProgressStyle}">
+                            <!-- 环形（Ellipse 背景环 + Path 进度弧，样式参照本体 CountDownComponent） -->
+                            <Panel Width="22" Height="22" VerticalAlignment="Center">
+                                <Ellipse Width="21.4" Height="21.4"
+                                         Stroke="{DynamicResource ControlStrongStrokeColorDisabledBrush}"
+                                         StrokeThickness="2.6"
+                                         VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <Path Width="22" Height="22"
+                                      Stroke="{DynamicResource AccentFillColorDefaultBrush}"
+                                      StrokeThickness="3.1"
+                                      StrokeLineCap="Round"
+                                      VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Path.Data>
+                                        <MultiBinding Converter="{x:Static converters:RingProgressGeometryConverter.Instance}">
+                                            <Binding Path="AutoExecuteRemainingSeconds" />
+                                            <Binding Path="AutoExecuteMaxSeconds" />
+                                        </MultiBinding>
+                                    </Path.Data>
+                                </Path>
+                            </Panel>
+                            <TextBlock Text="{Binding CountdownText}"
+                                       FontSize="14"
+                                       FontWeight="DemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                         <TextBlock Text="{Binding CountdownText}"
                                    FontSize="14"
                                    FontWeight="DemiBold"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
+                                   IsVisible="{Binding IsNoneProgressStyle}" />
+                    </Panel>
                 </Border>
 
                 <!-- 副提示（Markdown 渲染，可见性由是否非空控制） -->
