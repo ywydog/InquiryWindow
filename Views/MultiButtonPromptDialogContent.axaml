@@ -124,7 +124,7 @@
                                     Classes.accent="{Binding IsAccent}"
                                     Classes.customAccent="{Binding IsCustomAccent}"
                                     Background="{Binding ButtonBackground, Converter={x:Static converters:NullToUnsetConverter.Instance}}"
-                                    IsEnabled="{Binding $parent[UserControl].DataContext.PressCountdownButton, Converter={x:Static converters:ButtonIsEnabledConverter.Instance}}"
+                                    IsEnabled="{Binding IsCountdownReady}"
                                     Command="{Binding $parent[UserControl].DataContext.PressButtonCommand}"
                                     CommandParameter="{Binding}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -132,15 +132,8 @@
                                                FontFamily="{DynamicResource FluentIcons}"
                                                FontSize="14"
                                                VerticalAlignment="Center" />
-                                    <TextBlock VerticalAlignment="Center">
-                                        <TextBlock.Text>
-                                            <MultiBinding Converter="{x:Static converters:ButtonCountdownTextConverter.Instance}">
-                                                <Binding />
-                                                <Binding Path="$parent[UserControl].DataContext.PressCountdownButton" />
-                                                <Binding Path="$parent[UserControl].DataContext.PressCountdownRemaining" />
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <!-- 按钮文字：交互倒计时锁定期间显示 "Name (Ns)"，其余显示 Name。 -->
+                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </DataTemplate>

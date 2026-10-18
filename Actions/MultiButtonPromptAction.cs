@@ -70,6 +70,8 @@ public class MultiButtonPromptAction(
         if (window.DataContext is MultiButtonPromptViewModel viewModel)
         {
             viewModel.StartAutoExecuteCountdown();
+            // 弹窗打开即启动交互倒计时：为启用了「交互倒计时」的按钮锁定 N 秒。
+            viewModel.StartInteractionCountdowns();
         }
 
         await window.ShowDialogCompat();

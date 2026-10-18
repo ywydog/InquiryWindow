@@ -495,15 +495,16 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 交互倒计时（学习 SuperAutoIsland 的 YesNo 对话框：
-                             启用后按下按钮不会立刻执行 Action，而是禁用所有按钮 N 秒，
-                             在被按下的按钮上显示剩余秒数（Ns），倒计时结束恢复交互；
-                             不会自动执行 Action。若需到时间自动执行，请用左侧"自动执行"） -->
+                        <!-- 交互倒计时：
+                             启用后弹窗打开时该按钮即被锁定 N 秒（呈暗淡禁用态并显示剩余秒数），
+                             倒计时结束才可点击，点击后才执行其 Action 链；不会自动执行 Action。
+                             仅启用了交互倒计时的按钮受影响，其它按钮弹窗打开即可点击。
+                             若需到时间自动执行，请用左侧"自动执行"） -->
                         <Border Classes="pane-card">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="交互倒计时" Classes="pane-card-title" />
                                 <CheckBox x:Name="ButtonCountdownEnabledCheck"
-                                          Content="启用交互倒计时（按下后禁用所有按钮 N 秒恢复交互）"
+                                          Content="启用交互倒计时（弹窗打开后该按钮禁用 N 秒，倒计时结束才可点击）"
                                           IsChecked="{Binding ActiveButton.IsCountdownEnabled, Mode=TwoWay}" />
                                 <StackPanel Spacing="4" Margin="24,0,0,0"
                                             IsEnabled="{Binding #ButtonCountdownEnabledCheck.IsChecked}">
@@ -516,7 +517,7 @@
                                                                    Value="{Binding ActiveButton.CountdownSeconds, Converter={x:Static ci:NotNaNConverter.Instance}}" />
                                         </StackPanel>
                                     </Grid>
-                                    <TextBlock Text="运行时预览：按下按钮后该按钮文字后追加「(Ns)」显示倒计时（仿 YesNo 对话框），归零恢复交互，不执行 Action。"
+                                    <TextBlock Text="运行时预览：弹窗打开后该按钮文字后追加「(Ns)」显示剩余秒数并呈暗淡禁用态，归零后自动恢复可点击；仅此按钮受影响，不执行 Action。"
                                                FontSize="11"
                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                TextWrapping="Wrap" />

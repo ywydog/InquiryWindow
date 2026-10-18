@@ -35,16 +35,8 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     private DispatcherTimer? _autoExecuteTimer;
     private int _autoExecuteRemaining;
 
-    /// <summary>按下按钮后的交互倒计时计时器。</summary>
-    private DispatcherTimer? _pressCountdownTimer;
-
-    /// <summary>当前正在进行交互倒计时的按钮引用；null 表示无。</summary>
-    [ObservableProperty]
-    private MultiButtonPromptButton? _pressCountdownButton;
-
-    /// <summary>交互倒计时剩余秒数（用于 UI 实时显示）。</summary>
-    [ObservableProperty]
-    private double _pressCountdownRemaining;
+    /// <summary>交互倒计时计时器（弹窗打开后统一递减各按钮的剩余锁定秒数）。</summary>
+    private DispatcherTimer? _interactionCountdownTimer;
 
     // ===== 窗口背景 =====
     private Bitmap? _backgroundImage;
@@ -244,18 +236,68 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 停止按下按钮后的交互倒计时（不触发 Action）。
+    /// 启动交互倒计时：弹窗显示前调用。为已启用「交互倒计时」的按钮设置初始锁定秒数，
+    /// 之后每秒统一递减。锁定期内按钮不可点击（UI 呈暗淡的禁用态）并显示「(Ns)」，
+    /// 归零后自动恢复可点击。未启用交互倒计时的按钮不受影响。
     /// </summary>
-    private void CancelPressCountdown()
+    public void StartInteractionCountdowns()
     {
-        if (_pressCountdownTimer != null)
+        CancelInteractionCountdowns();
+
+        var anyLocked = false;
+        foreach (var button in Buttons)
         {
-            _pressCountdownTimer.Stop();
-            _pressCountdownTimer.Tick -= OnPressCountdownTick;
-            _pressCountdownTimer = null;
+            var seconds = button.IsCountdownEnabled ? (int)Math.Ceiling(button.CountdownSeconds) : 0;
+            button.CountdownRemaining = Math.Max(0, seconds);
+            if (button.CountdownRemaining > 0)
+            {
+                anyLocked = true;
+                _logger.LogInformation("交互倒计时开始：按钮 \"{Name}\" 锁定 {Seconds} 秒。",
+                    button.Name, button.CountdownRemaining);
+            }
         }
-        PressCountdownButton = null;
-        PressCountdownRemaining = 0;
+
+        if (!anyLocked) return;
+        _interactionCountdownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _interactionCountdownTimer.Tick += OnInteractionCountdownTick;
+        _interactionCountdownTimer.Start();
+    }
+
+    /// <summary>停止交互倒计时并解除所有按钮的锁定状态（不执行任何 Action）。</summary>
+    private void CancelInteractionCountdowns()
+    {
+        if (_interactionCountdownTimer != null)
+        {
+            _interactionCountdownTimer.Stop();
+            _interactionCountdownTimer.Tick -= OnInteractionCountdownTick;
+            _interactionCountdownTimer = null;
+        }
+        foreach (var button in Buttons)
+        {
+            button.CountdownRemaining = 0;
+        }
+    }
+
+    private void OnInteractionCountdownTick(object? sender, EventArgs e)
+    {
+        var anyLocked = false;
+        foreach (var button in Buttons)
+        {
+            if (button.CountdownRemaining <= 0) continue;
+            button.CountdownRemaining--;
+            if (button.CountdownRemaining > 0)
+            {
+                anyLocked = true;
+            }
+            else
+            {
+                _logger.LogInformation("交互倒计时结束：按钮恢复可点击，按钮={Name}", button.Name);
+            }
+        }
+        if (!anyLocked)
+        {
+            CancelInteractionCountdowns();
+        }
     }
 
     private void OnAutoExecuteTick(object? sender, EventArgs e)
@@ -300,68 +342,13 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     {
         if (button == null) return;
 
-        // 已在倒计时的按钮：再次点击直接忽略，避免重复触发
-        if (ReferenceEquals(PressCountdownButton, button))
-        {
-            return;
-        }
-
-        // 任意时刻只允许一个交互倒计时在进行：如果之前有别的按钮正在倒计时，先取消
-        if (PressCountdownButton is not null)
-        {
-            CancelPressCountdown();
-        }
+        // 交互倒计时未结束时按钮处于锁定态（UI 已禁用），这里再做一次防御性拦截。
+        if (button.CountdownRemaining > 0) return;
 
         // 用户主动按按钮时，取消自动执行倒计时，避免倒计时归零与用户点击并发触发。
         CancelAutoExecuteCountdown();
 
-        // 启用了交互倒计时：进入"禁用所有按钮 N 秒"模式（仿 YesNo 对话框）。
-        // 注意：交互倒计时归零时只"恢复交互"，不会自动执行该按钮的 Action。
-        // 如需到时间自动执行，请使用左侧的"自动执行"功能（按指定目标触发）。
-        if (button.IsCountdownEnabled)
-        {
-            var seconds = (int)Math.Ceiling(button.CountdownSeconds);
-            if (seconds > 0)
-            {
-                StartPressCountdown(button, seconds);
-                return;
-            }
-        }
-
         await ExecuteButtonAsync(button);
-    }
-
-    /// <summary>
-    /// 启动按下按钮后的交互倒计时。倒计时期间所有按钮被禁用、当前按钮文字后显示剩余秒数
-    /// （仿 YesNo 对话框：<c>defaultButton.Text = $"{defaultText} ({remainingTime:0}s)"</c>）。
-    /// 倒计时归零时**只恢复交互**，不会自动执行该按钮的 Action。
-    /// </summary>
-    private void StartPressCountdown(MultiButtonPromptButton button, int seconds)
-    {
-        PressCountdownButton = button;
-        PressCountdownRemaining = seconds;
-        _pressCountdownTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _pressCountdownTimer.Tick += OnPressCountdownTick;
-        _pressCountdownTimer.Start();
-    }
-
-    private void OnPressCountdownTick(object? sender, EventArgs e)
-    {
-        var btn = PressCountdownButton;
-        if (btn is null || !Buttons.Contains(btn))
-        {
-            CancelPressCountdown();
-            return;
-        }
-        PressCountdownRemaining--;
-        if (PressCountdownRemaining > 0)
-        {
-            return;
-        }
-        // 倒计时归零：只恢复交互，不执行任何按钮的 Action。
-        // 若需要"到时间自动执行"，请使用左侧"自动执行"区块。
-        _logger.LogInformation("交互倒计时结束：恢复交互，按钮={Name}", btn.Name);
-        CancelPressCountdown();
     }
 
     /// <summary>
@@ -442,7 +429,7 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     public void Cleanup()
     {
         CancelAutoExecuteCountdown();
-        CancelPressCountdown();
+        CancelInteractionCountdowns();
         if (_settings is not null)
         {
             _settings.PropertyChanged -= OnSettingsPropertyChanged;

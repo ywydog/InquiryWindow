@@ -21,9 +21,10 @@ public partial class MultiButtonPromptButton : ObservableObject
     private ActionSet _actions = new();
 
     /// <summary>
-    /// 是否启用"交互倒计时"。启用后，按下该按钮会禁用所有按钮 N 秒，
-    /// 倒计时结束才恢复交互，但**不会**自动执行该按钮的 Action。
-    /// UI 表现参考 SuperAutoIsland 的 YesNo 对话框：在默认按钮文字后追加「(Ns)」实时显示剩余秒数。
+    /// 是否启用"交互倒计时"。启用后，弹窗打开时该按钮会被锁定 <see cref="CountdownSeconds"/> 秒：
+    /// 锁定期内该按钮不可点击（UI 呈暗淡的禁用态）并显示剩余秒数「(Ns)」，归零后恢复可点击。
+    /// 锁定期结束后，点击该按钮会立即执行其 Action 链。
+    /// 未启用交互倒计时的按钮不受影响（弹窗打开即可点击，且不会变暗淡）。
     /// 与"自动执行"功能（左侧"自动执行"区块）独立：自动执行到时间会按指定目标触发 Action。
     /// </summary>
     [ObservableProperty]
@@ -34,6 +35,22 @@ public partial class MultiButtonPromptButton : ObservableObject
     /// </summary>
     [ObservableProperty]
     private double _countdownSeconds = 3;
+
+    /// <summary>
+    /// 运行时的交互倒计时剩余秒数（弹窗打开时初始化，每秒递减）。
+    /// &gt;0 表示该按钮仍处于锁定态；0 表示可点击。不参与序列化。
+    /// </summary>
+    [ObservableProperty]
+    [Newtonsoft.Json.JsonIgnore]
+    private int _countdownRemaining;
+
+    /// <summary>该按钮是否已完成交互倒计时、可以点击。</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsCountdownReady => CountdownRemaining <= 0;
+
+    /// <summary>按钮显示文字：锁定期间在名称后追加「(Ns)」实时剩余秒数。</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string DisplayName => CountdownRemaining > 0 ? $"{Name} ({CountdownRemaining}s)" : Name;
 
     /// <summary>
     /// 按钮的强调样式模式。默认 <see cref="ButtonAccentMode.Default"/>（不强调）。
@@ -107,6 +124,18 @@ public partial class MultiButtonPromptButton : ObservableObject
         OnPropertyChanged(nameof(IsAccent));
         OnPropertyChanged(nameof(IsCustomAccent));
         OnPropertyChanged(nameof(ButtonBackground));
+    }
+
+    partial void OnCountdownRemainingChanged(int value)
+    {
+        // 锁定状态与显示文字（含剩余秒数）随之刷新。
+        OnPropertyChanged(nameof(IsCountdownReady));
+        OnPropertyChanged(nameof(DisplayName));
+    }
+
+    partial void OnNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplayName));
     }
 
     partial void OnCustomColorChanged(Color value)

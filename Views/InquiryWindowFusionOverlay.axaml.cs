@@ -187,6 +187,8 @@ public partial class InquiryWindowFusionOverlay : Window
 
         // 自动执行倒计时（与桌面版一致，由 ViewModel 驱动）。
         vm.StartAutoExecuteCountdown();
+        // 弹窗打开即启动交互倒计时：为启用了「交互倒计时」的按钮锁定 N 秒。
+        vm.StartInteractionCountdowns();
 
         try
         {
