@@ -61,6 +61,8 @@ public class MultiButtonPromptAction(
 
             // 启用自动执行时启动倒计时，倒计时归零按指定目标触发（按钮 Action 链或"无事发生"）。
             vm.StartAutoExecuteCountdown();
+            // 弹窗打开即启动交互倒计时：为启用了「交互倒计时」的按钮锁定 N 秒。
+            vm.StartInteractionCountdowns();
 
             await window.ShowDialogCompat();
         }

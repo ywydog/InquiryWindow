@@ -467,6 +467,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         var win = new MultiButtonPromptWindow { DataContext = vm };
         // 预览时按原 MultiButtonPromptWindow 的方式启动倒计时
         vm.StartAutoExecuteCountdown();
+        vm.StartInteractionCountdowns();
         _ = win.ShowDialogCompat();
     }
 
