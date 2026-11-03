@@ -42,19 +42,20 @@ public static class MarkdownPreviewDialog
             Source = new Uri("avares://ClassIsland.Core/Themes/RichTextStyles.axaml")
         });
 
-        // 与正式询问窗保持一致的正文前景色：统一取主题资源 TextFillColorPrimaryBrush，
-        // 随亮/暗主题切换，避免暗色主题下 Markdown 正文字体渲染成黑色而看不清。
-        viewer.SetValue(TextElement.ForegroundProperty,
-            Application.Current?.FindResource("TextFillColorPrimaryBrush"));
+        // 与正式询问窗保持一致的正文前景色：绑定主题资源 TextFillColorPrimaryBrush。
+        // 用资源观察者而不是一次性 FindResource，亮/暗主题切换时颜色会自动跟随；
+        // 以 owner 作为资源宿主，确保弹窗未挂到可视树前也能按当前主题解析。
+        viewer.Bind(TextElement.ForegroundProperty,
+            owner.GetResourceObservable("TextFillColorPrimaryBrush"));
 
         var container = new Border
         {
             Padding = new Avalonia.Thickness(12),
             CornerRadius = new Avalonia.CornerRadius(6),
-            Background = Avalonia.Application.Current?.FindResource("LayerFillColorAltBrush")
-                as Avalonia.Media.IBrush,
             Child = viewer
         };
+        container.Bind(Border.BackgroundProperty,
+            container.GetResourceObservable("LayerFillColorAltBrush"));
 
         var dialog = new FAContentDialog
         {
