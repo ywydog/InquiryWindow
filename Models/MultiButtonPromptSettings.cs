@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FluentAvalonia.UI.Controls;
+using InquiryWindow.Services;
 
 namespace InquiryWindow.Models;
 
@@ -23,11 +25,21 @@ public partial class MultiButtonPromptSettings : ObservableObject
     private string _subPrompt = string.Empty;
 
     /// <summary>
-    /// 窗口图标字符（Fluent Icons 字体），显示在弹窗主标题左侧。
-    /// 与 InquiryWindowActionSettings 的 ShowIcon 无关，MultiButtonPrompt 总显示。
+    /// 窗口图标表达式（宿主协议）：<c>fluent("…")</c> / <c>lucide("…")</c> / <c>img("…")</c>，
+    /// 显示在弹窗主标题左侧。与 InquiryWindowActionSettings 的 ShowIcon 无关，MultiButtonPrompt 总显示。
+    /// 历史数据里的单个字形字符同样可用，由 <see cref="IconExpressionService"/> 兼容解析。
     /// </summary>
     [ObservableProperty]
-    private string _icon = "\uE82D";
+    private string _icon = IconExpressionService.FormatExpression("fluent", "\uE82D");
+
+    /// <summary>由 <see cref="Icon"/> 解析出的图标源，供 XAML 直接绑定渲染。</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
+
+    partial void OnIconChanged(string value)
+    {
+        OnPropertyChanged(nameof(IconSource));
+    }
 
     /// <summary>
     /// 窗口是否可直接关闭（显示 X 关闭按钮）。默认 true。
@@ -141,8 +153,16 @@ public partial class MultiButtonPromptSettings : ObservableObject
     {
         Buttons.CollectionChanged += OnButtonsCollectionChanged;
         PropertyChanged += OnSelfPropertyChanged;
-        Buttons.Add(new MultiButtonPromptButton { Name = "执行", Icon = "\uE73E" });
-        Buttons.Add(new MultiButtonPromptButton { Name = "取消", Icon = "\uE711" });
+        Buttons.Add(new MultiButtonPromptButton
+        {
+            Name = "执行",
+            Icon = IconExpressionService.FormatExpression("fluent", "\uE73E")
+        });
+        Buttons.Add(new MultiButtonPromptButton
+        {
+            Name = "取消",
+            Icon = IconExpressionService.FormatExpression("fluent", "\uE711")
+        });
         RebuildAutoExecuteTargets();
         AutoExecuteTargetIndex = 0;
     }

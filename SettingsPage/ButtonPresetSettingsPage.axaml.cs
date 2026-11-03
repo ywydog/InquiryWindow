@@ -28,19 +28,6 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
     }
 
     /// <summary>
-    /// 「选择图标…」按钮：把当前 TopLevel 透传给 ViewModel，避免在 VM 里直接依赖 UI 类型。
-    /// </summary>
-    private async void OnPickIconClick(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
-
-        // 注：不先调用 CanExecute —— Android AOT 下 IRelayCommand<T>.CanExecute 无法解析，
-        // 命令内部自带 null 保护，直接执行即可。
-        await ViewModel.PickIconCommand.ExecuteAsync(topLevel);
-    }
-
-    /// <summary>
     /// 「编辑 Action 链…」按钮：把右侧详情里点出的弹窗交由 VM 调度。
     /// </summary>
     private async void OnEditActionsClick(object? sender, RoutedEventArgs e)

@@ -11,6 +11,7 @@ using ClassIsland.Core;
 using ClassIsland.Core.Controls;
 using ClassIsland.Shared;
 using InquiryWindow.Models;
+using InquiryWindow.Services;
 using InquiryWindow.Views;
 using Microsoft.Extensions.Logging;
 
@@ -199,7 +200,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         var btn = new MultiButtonPromptButton
         {
             Name = "新按钮 " + id,
-            Icon = "\uE10F"
+            Icon = IconExpressionService.DefaultExpression
         };
         Settings.Buttons.Add(btn);
         if (ButtonCountLabel is not null)
@@ -245,22 +246,6 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         ButtonList.ItemsSource = Settings.Buttons
             .Where(b => b.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
             .ToList();
-    }
-
-    private async void OnPickWindowIconClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Control control) return;
-        var topLevel = TopLevel.GetTopLevel(control);
-        if (topLevel == null) return;
-
-        var picked = await IconPickerDialog.PickAsync(
-            topLevel,
-            title: "选择窗口图标",
-            highlightGlyph: Settings.Icon);
-        if (!string.IsNullOrEmpty(picked))
-        {
-            Settings.Icon = picked;
-        }
     }
 
     // ===== 窗口背景：浏览 / 清除 =====
@@ -438,22 +423,6 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         if (normalized == oldIndex) return;
 
         list.Move(oldIndex, Math.Clamp(normalized, 0, list.Count - 1));
-    }
-
-    private async void OnPickIconClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Control control || ActiveButton is null) return;
-        var topLevel = TopLevel.GetTopLevel(control);
-        if (topLevel == null) return;
-
-        var picked = await IconPickerDialog.PickAsync(
-            topLevel,
-            title: "选择按钮图标",
-            highlightGlyph: ActiveButton.Icon);
-        if (!string.IsNullOrEmpty(picked))
-        {
-            ActiveButton.Icon = picked;
-        }
     }
 
     /// <summary>

@@ -7,6 +7,7 @@
                  xmlns:models="clr-namespace:InquiryWindow.Models"
                  xmlns:converters="clr-namespace:InquiryWindow.Converters"
                  xmlns:local="clr-namespace:InquiryWindow.Views"
+                 xmlns:ui="clr-namespace:InquiryWindow.Controls"
                  x:DataType="local:MultiButtonPromptDetailWindow"
                  Title="多按钮询问行动 · 详细设置"
                  Width="1240" Height="550"
@@ -144,21 +145,21 @@
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="弹窗图标" FontSize="11"
                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Grid ColumnDefinitions="Auto,*">
                                             <Border Grid.Column="0" Width="28" Height="28"
                                                     CornerRadius="4"
                                                     Background="{DynamicResource SubtleFillColorTertiaryBrush}">
-                                                <ci:FluentIcon Glyph="{Binding Settings.Icon}"
-                                                               FontSize="14"
-                                                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center" />
+                                                <controls:FAIconSourceElement IconSource="{Binding Settings.IconSource}"
+                                                                              Width="14" Height="14"
+                                                                              Classes="repair-fontsize"
+                                                                              TextElement.FontSize="14"
+                                                                              HorizontalAlignment="Center"
+                                                                              VerticalAlignment="Center" />
                                             </Border>
-                                            <TextBox Grid.Column="1"
-                                                     Margin="6,0,6,0"
-                                                     Text="{Binding Settings.Icon, Mode=TwoWay}" />
-                                            <Button Grid.Column="2" Content="…"
-                                                    Click="OnPickWindowIconClick" />
+                                            <ui:IconExpressionEditor Grid.Column="1"
+                                                                     Margin="6,0,0,0"
+                                                                     VerticalAlignment="Center"
+                                                                     IconExpression="{Binding Settings.Icon, Mode=TwoWay}" />
                                         </Grid>
                                     </StackPanel>
                                 </StackPanel>
@@ -396,9 +397,12 @@
                                         DragDrop.DragOver="OnButtonItemDragOver"
                                         DragDrop.Drop="OnButtonItemDrop">
                                     <Grid ColumnDefinitions="Auto,Auto,*,Auto">
-                                        <TextBlock Grid.Column="0" Text="{Binding Icon}"
-                                                   FontFamily="{DynamicResource FluentIcons}"
-                                                   FontSize="14" VerticalAlignment="Center" />
+                                        <controls:FAIconSourceElement Grid.Column="0"
+                                                                     IconSource="{Binding IconSource}"
+                                                                     Width="14" Height="14"
+                                                                     Classes="repair-fontsize"
+                                                                     TextElement.FontSize="14"
+                                                                     VerticalAlignment="Center" />
                                         <Border Grid.Column="1" Classes="drag-grip"
                                                 Tag="{Binding}"
                                                 Margin="8,0,8,0"
@@ -457,10 +461,9 @@
                                              Text="{Binding ActiveButton.Name, Mode=TwoWay}" />
                                     <StackPanel Grid.Row="0" Grid.Column="1"
                                                 Orientation="Horizontal" Spacing="4" Margin="6,0,0,0">
-                                        <TextBox Width="64" Watermark="图标"
-                                                 Text="{Binding ActiveButton.Icon, Mode=TwoWay}" />
-                                        <Button Content="…" Click="OnPickIconClick"
-                                                ToolTip.Tip="从 Fluent 图标库选择" />
+                                        <ui:IconExpressionEditor
+                                            VerticalAlignment="Center"
+                                            IconExpression="{Binding ActiveButton.Icon, Mode=TwoWay}" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>

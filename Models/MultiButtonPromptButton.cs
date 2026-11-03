@@ -2,6 +2,8 @@ using System.Collections.Specialized;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ClassIsland.Shared.Models.Automation;
+using FluentAvalonia.UI.Controls;
+using InquiryWindow.Services;
 
 namespace InquiryWindow.Models;
 
@@ -13,9 +15,12 @@ public partial class MultiButtonPromptButton : ObservableObject
     [ObservableProperty]
     private string _name = "按钮";
 
-    /// <summary>Fluent 系统字体图标 glyph（Unicode 字符）。</summary>
+    /// <summary>
+    /// 按钮图标表达式（宿主协议）：<c>fluent("…")</c> / <c>lucide("…")</c> / <c>img("…")</c>。
+    /// 历史数据里的单个字形字符同样可用，由 <see cref="IconExpressionService"/> 兼容解析。
+    /// </summary>
     [ObservableProperty]
-    private string _icon = "\uE10F";
+    private string _icon = IconExpressionService.DefaultExpression;
 
     [ObservableProperty]
     private ActionSet _actions = new();
@@ -117,6 +122,18 @@ public partial class MultiButtonPromptButton : ObservableObject
     public string VerificationStatusText => string.IsNullOrWhiteSpace(CredentialString)
         ? "未配置（将不会验证）"
         : "已配置凭据";
+
+    /// <summary>
+    /// 由 <see cref="Icon"/> 解析出的图标源，供 XAML 的 <c>FAIconSourceElement</c> 直接绑定。
+    /// 解析失败时为 <c>null</c>（控件回退为空白）。
+    /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
+
+    partial void OnIconChanged(string value)
+    {
+        OnPropertyChanged(nameof(IconSource));
+    }
 
     // AccentMode / CustomColor 变化时通知派生 UI 属性一并刷新
     partial void OnAccentModeChanged(ButtonAccentMode value)

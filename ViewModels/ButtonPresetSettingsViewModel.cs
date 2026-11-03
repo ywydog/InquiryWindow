@@ -9,7 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
 using InquiryWindow.Services;
-using InquiryWindow.Views;
 
 namespace InquiryWindow.ViewModels;
 
@@ -66,7 +65,7 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     {
         var name = "新预设 " + _nextPresetNumber;
         _nextPresetNumber++;
-        var preset = PresetsStore.Instance.AddPreset(name, "\uE10F");
+        var preset = PresetsStore.Instance.AddPreset(name, IconExpressionService.DefaultExpression);
         SelectedPreset = preset;
     }
 
@@ -109,7 +108,7 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
         }
         if (string.IsNullOrWhiteSpace(SelectedPreset.Icon))
         {
-            SelectedPreset.Icon = "\uE10F";
+            SelectedPreset.Icon = IconExpressionService.DefaultExpression;
         }
         // Name/Icon 字段均会通过 INPC 触发 PresetsStore 的 debounce save，
         // 显式 SaveNow 兜底，避免用户编辑完立刻关 app 丢数据。
@@ -147,22 +146,6 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
 
         preset.Actions = workingActions;
         PresetsStore.Instance.SaveNow();
-    }
-
-    /// <summary>
-    /// 「选择图标」按钮的弹窗：复刻 InquiryWindowSettingsPage 的行为。
-    /// </summary>
-    [RelayCommand]
-    public async Task PickIconAsync(TopLevel? topLevel)
-    {
-        var preset = SelectedPreset;
-        if (preset is null || topLevel is null) return;
-
-        var picked = await IconPickerDialog.PickAsync(topLevel, title: "选择预设图标", highlightGlyph: preset.Icon);
-        if (!string.IsNullOrEmpty(picked))
-        {
-            preset.Icon = picked;
-        }
     }
 
     private void RefreshNextNumber()

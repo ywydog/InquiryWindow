@@ -34,7 +34,7 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         Settings.Buttons.Add(new MultiButtonPromptButton
         {
             Name = "按钮 " + (Settings.Buttons.Count + 1),
-            Icon = "\uE10F"
+            Icon = IconExpressionService.DefaultExpression
         });
     }
 
@@ -67,20 +67,6 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         var logger = IAppHost.GetService<ILoggerFactory>().CreateLogger("InquiryWindow.MultiButtonPromptSettingsControl");
         logger.LogInformation("打开「多按钮询问行动 · 详细设置」窗口，按钮数={Count}。", Settings.Buttons.Count);
         await win.ShowDialogCompat();
-    }
-
-    private async void OnPickIconClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not Control { Tag: MultiButtonPromptButton target } control) return;
-
-        var topLevel = TopLevel.GetTopLevel(control);
-        if (topLevel == null) return;
-
-        var picked = await IconPickerDialog.PickAsync(topLevel, title: "选择按钮图标", highlightGlyph: target.Icon);
-        if (!string.IsNullOrEmpty(picked))
-        {
-            target.Icon = picked;
-        }
     }
 
     private async void OnInsertPresetClick(object? sender, RoutedEventArgs e)
@@ -288,10 +274,11 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
                     Orientation = Avalonia.Layout.Orientation.Horizontal,
                     Spacing = 10
                 };
-                row.Children.Add(new FluentIcon
+                row.Children.Add(new FAIconSourceElement
                 {
-                    Glyph = p.Icon,
-                    FontSize = 16,
+                    IconSource = IconExpressionService.Resolve(p.Icon),
+                    Width = 16,
+                    Height = 16,
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 });
                 row.Children.Add(new TextBlock

@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ClassIsland.Shared.Models.Automation;
+using FluentAvalonia.UI.Controls;
+using InquiryWindow.Services;
 
 namespace InquiryWindow.Models;
 
@@ -15,9 +17,21 @@ public partial class ButtonPreset : ObservableObject
     [ObservableProperty]
     private string _name = "未命名预设";
 
-    /// <summary>Fluent 系统字体图标 glyph（Unicode 字符）。</summary>
+    /// <summary>
+    /// 预设图标表达式（宿主协议）：<c>fluent("…")</c> / <c>lucide("…")</c> / <c>img("…")</c>。
+    /// 历史数据里的单个字形字符同样可用，由 <see cref="IconExpressionService"/> 兼容解析。
+    /// </summary>
     [ObservableProperty]
-    private string _icon = "\uE10F";
+    private string _icon = IconExpressionService.DefaultExpression;
+
+    /// <summary>由 <see cref="Icon"/> 解析出的图标源，供 XAML 直接绑定渲染。</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
+
+    partial void OnIconChanged(string value)
+    {
+        OnPropertyChanged(nameof(IconSource));
+    }
 
     [ObservableProperty]
     private ActionSet _actions = new();

@@ -336,10 +336,11 @@ public partial class MultiResultSettingsControl : ActionSettingsControlBase<Mult
                     Orientation = Avalonia.Layout.Orientation.Horizontal,
                     Spacing = 10
                 };
-                row.Children.Add(new FluentIcon
+                row.Children.Add(new FAIconSourceElement
                 {
-                    Glyph = p.Icon,
-                    FontSize = 16,
+                    IconSource = IconExpressionService.Resolve(p.Icon),
+                    Width = 16,
+                    Height = 16,
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
                 });
                 row.Children.Add(new TextBlock
