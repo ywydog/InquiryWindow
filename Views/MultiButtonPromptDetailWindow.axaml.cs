@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -104,8 +105,9 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     /// <summary>是否有可用的背景预览图（用于 Image 控件的 IsVisible 绑定）。</summary>
     public bool HasBackgroundPreview => _backgroundPreview is not null;
 
-    // ===== 拖拽状态（参照 SystemTools / SettingsControl 的实现） =====
-    private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptDetailWindow.Button";
+    // ===== 拖拽状态（参照 SystemTools 悬浮窗设置页：把手 + 指针捕获 + 字符串负载） =====
+    private static readonly DataFormat<string> ButtonDragIndexFormat =
+        DataFormat.CreateStringApplicationFormat("InquiryWindow.MultiButtonPromptDetailWindow.ButtonIndex");
     private const double ButtonDragThreshold = 4.0;
 
     private Point? _buttonDragStartPoint;
@@ -335,7 +337,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         }
     }
 
-    // ===== 按钮列表拖拽（参照 SystemTools / SettingsControl 的实现） =====
+    // ===== 按钮列表拖拽（参照 SystemTools 悬浮窗设置页的实现） =====
 
     private void OnButtonDragHandlePressed(object? sender, PointerPressedEventArgs e)
     {
@@ -345,12 +347,17 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         _buttonDragSourceHandle = handle;
         _buttonDragStartPoint = e.GetPosition(handle);
         _buttonDragPressedArgs = e;
-        // 触摸/笔才需要 e.Handled = true，鼠标不需要
+        // 捕获指针，保证拖动期间 PointerMoved/Released 都能回到把手。
+        e.Pointer.Capture(handle);
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
 
     private void OnButtonDragHandleReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (e.Pointer.Captured == sender)
+        {
+            e.Pointer.Capture(null);
+        }
         _buttonDragSourceHandle = null;
         _buttonDragStartPoint = null;
         _buttonDragPressedArgs = null;
@@ -368,83 +375,75 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
             return;
         }
 
-        if (handle.Tag is not MultiButtonPromptButton source) return;
-
-        // 用 Avalonia 12 的 InProcessFormat 跨 ItemsControl 传引用类型
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
+        if (handle.DataContext is not MultiButtonPromptButton source) return;
+        var sourceIndex = Settings.Buttons.IndexOf(source);
+        if (sourceIndex < 0) return;
 
         var pressedArgs = _buttonDragPressedArgs;
+        if (pressedArgs is null) return;
+
+        // 负载只传源索引字符串，避免跨控件传递对象引用。
+        var dataTransfer = new DataTransfer();
+        dataTransfer.Add(DataTransferItem.Create(ButtonDragIndexFormat, sourceIndex.ToString(CultureInfo.InvariantCulture)));
+
         _buttonDragSourceHandle = null;
         _buttonDragStartPoint = null;
+        var isTouchOrPen = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+        await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
         _buttonDragPressedArgs = null;
-        if (pressedArgs != null)
-        {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
-        }
-        e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+        e.Handled = isTouchOrPen;
     }
 
     private void OnButtonListDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = TryGetButtonDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
+        e.DragEffects = TryGetButtonDragIndex(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
         e.Handled = true;
     }
 
     private void OnButtonListDrop(object? sender, DragEventArgs e)
     {
-        if (!TryGetButtonDrag(e, out var source)) return;
+        if (!TryGetButtonDragIndex(e, out var sourceIndex)) return;
         // 拖到列表空白区：移到末尾
-        MoveButton(source, Settings.Buttons.Count);
+        MoveButton(sourceIndex, Settings.Buttons.Count);
         e.Handled = true;
     }
 
     private void OnButtonItemDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = TryGetButtonDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
+        e.DragEffects = TryGetButtonDragIndex(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
         e.Handled = true;
     }
 
     private void OnButtonItemDrop(object? sender, DragEventArgs e)
     {
-        if (!TryGetButtonDrag(e, out var source)) return;
+        if (!TryGetButtonDragIndex(e, out var sourceIndex)) return;
         if (sender is not Control targetControl) return;
         if (targetControl.DataContext is not MultiButtonPromptButton target) return;
 
-        var list = Settings.Buttons;
-        var targetIndex = list.IndexOf(target);
+        var targetIndex = Settings.Buttons.IndexOf(target);
         if (targetIndex < 0) return;
 
-        // 水平方向二等分：右半边插到目标之后
-        var pos = e.GetPosition(targetControl);
-        if (pos.Y > targetControl.Bounds.Height / 2)
+        // 纵向列表：越过目标中线下方则插到目标之后
+        if (e.GetPosition(targetControl).Y > targetControl.Bounds.Height / 2)
         {
             targetIndex += 1;
         }
-        MoveButton(source, targetIndex);
+        MoveButton(sourceIndex, targetIndex);
         e.Handled = true;
     }
 
-    private static bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
+    private static bool TryGetButtonDragIndex(DragEventArgs e, out int sourceIndex)
     {
-        source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
+        var raw = e.DataTransfer.TryGetValue(ButtonDragIndexFormat);
+        return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out sourceIndex);
     }
 
-    private void MoveButton(MultiButtonPromptButton source, int insertIndex)
+    private void MoveButton(int oldIndex, int insertIndex)
     {
         var list = Settings.Buttons;
-        var oldIndex = list.IndexOf(source);
-        if (oldIndex < 0) return;
+        if (oldIndex < 0 || oldIndex >= list.Count) return;
 
-        // 同位置或相邻位置直接忽略
+        // 向后移动时目标索引要减一（先移除再插入）
         var normalized = insertIndex > oldIndex ? insertIndex - 1 : insertIndex;
         if (normalized == oldIndex) return;
 

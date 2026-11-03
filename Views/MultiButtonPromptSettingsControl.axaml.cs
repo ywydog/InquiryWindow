@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
@@ -122,9 +123,10 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             markdown: Settings.SubPrompt ?? "");
     }
 
-    // ---- 按钮排序拖拽（参考 SystemTools 的实现） ----
+    // ---- 按钮排序拖拽（参照 SystemTools 悬浮窗设置页：把手 + 指针捕获 + 字符串负载） ----
 
-    private const string ButtonDragDataKey = "InquiryWindow.MultiButtonPromptButton.Id";
+    private static readonly DataFormat<string> ButtonDragIndexFormat =
+        DataFormat.CreateStringApplicationFormat("InquiryWindow.MultiButtonPromptSettings.ButtonIndex");
     private const double ButtonDragThreshold = 4.0;
 
     private Point? _buttonDragStartPoint;
@@ -139,12 +141,17 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
         _buttonDragSourceHandle = handle;
         _buttonDragStartPoint = e.GetPosition(handle);
         _buttonDragPressedArgs = e;
-        // 触摸/笔才需要 e.Handled = true，鼠标不需要
+        // 捕获指针，保证拖动期间 PointerMoved/Released 都能回到把手。
+        e.Pointer.Capture(handle);
         e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
     }
 
     private void OnButtonDragHandleReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (e.Pointer.Captured == sender)
+        {
+            e.Pointer.Capture(null);
+        }
         _buttonDragSourceHandle = null;
         _buttonDragStartPoint = null;
         _buttonDragPressedArgs = null;
@@ -162,77 +169,76 @@ public partial class MultiButtonPromptSettingsControl : ActionSettingsControlBas
             return;
         }
 
-        if (handle.Tag is not MultiButtonPromptButton source) return;
-
-        // 拖动源就是被拖对象本身；不需要再回查 sender，data 包 buttonId
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        var item = new DataTransferItem();
-        item.Set(format, source);
-        var dataTransfer = new DataTransfer();
-        dataTransfer.Add(item);
+        if (handle.DataContext is not MultiButtonPromptButton source) return;
+        var sourceIndex = Settings.Buttons.IndexOf(source);
+        if (sourceIndex < 0) return;
 
         // Avalonia 12 的 DoDragDropAsync 需要原始的 PointerPressedEventArgs
         var pressedArgs = _buttonDragPressedArgs;
+        if (pressedArgs is null) return;
+
+        // 负载只传源索引字符串，避免跨控件传递对象引用。
+        var dataTransfer = new DataTransfer();
+        dataTransfer.Add(DataTransferItem.Create(ButtonDragIndexFormat, sourceIndex.ToString(CultureInfo.InvariantCulture)));
+
         _buttonDragSourceHandle = null;
         _buttonDragStartPoint = null;
+        var isTouchOrPen = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+        await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
         _buttonDragPressedArgs = null;
-        if (pressedArgs != null)
-        {
-            await DragDrop.DoDragDropAsync(pressedArgs, dataTransfer, DragDropEffects.Move);
-        }
-        e.Handled = e.Pointer.Type is PointerType.Touch or PointerType.Pen;
+        e.Handled = isTouchOrPen;
     }
 
     private void OnButtonListDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = TryGetButtonDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
+        e.DragEffects = TryGetButtonDragIndex(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
         e.Handled = true;
     }
 
     private void OnButtonListDrop(object? sender, DragEventArgs e)
     {
-        if (!TryGetButtonDrag(e, out var source)) return;
+        if (!TryGetButtonDragIndex(e, out var sourceIndex)) return;
         // 拖到列表空白区：移到末尾
-        MoveButton(source, Settings.Buttons.Count);
+        MoveButton(sourceIndex, Settings.Buttons.Count);
+        e.Handled = true;
     }
 
     private void OnButtonItemDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = TryGetButtonDrag(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
+        e.DragEffects = TryGetButtonDragIndex(e, out _) ? DragDropEffects.Move : DragDropEffects.None;
         e.Handled = true;
     }
 
     private void OnButtonItemDrop(object? sender, DragEventArgs e)
     {
-        if (!TryGetButtonDrag(e, out var source)) return;
+        if (!TryGetButtonDragIndex(e, out var sourceIndex)) return;
         if (sender is not Control targetControl) return;
         if (targetControl.DataContext is not MultiButtonPromptButton target) return;
 
-        var pointerY = e.GetPosition(targetControl).Y;
-        var insertIndex = pointerY > targetControl.Bounds.Height / 2
-            ? Settings.Buttons.IndexOf(target) + 1
-            : Settings.Buttons.IndexOf(target);
+        var targetIndex = Settings.Buttons.IndexOf(target);
+        if (targetIndex < 0) return;
 
-        MoveButton(source, insertIndex);
+        // 纵向列表：越过目标中线下方则插到目标之后
+        if (e.GetPosition(targetControl).Y > targetControl.Bounds.Height / 2)
+        {
+            targetIndex += 1;
+        }
+        MoveButton(sourceIndex, targetIndex);
+        e.Handled = true;
     }
 
-    private static bool TryGetButtonDrag(DragEventArgs e, out MultiButtonPromptButton source)
+    private static bool TryGetButtonDragIndex(DragEventArgs e, out int sourceIndex)
     {
-        source = null!;
-        var format = DataFormat.CreateInProcessFormat<MultiButtonPromptButton>(ButtonDragDataKey);
-        if (!e.DataTransfer.Contains(format)) return false;
-        if (e.DataTransfer.TryGetValue(format) is not { } s) return false;
-        source = s;
-        return true;
+        var raw = e.DataTransfer.TryGetValue(ButtonDragIndexFormat);
+        return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out sourceIndex);
     }
 
-    private void MoveButton(MultiButtonPromptButton source, int insertIndex)
+    private void MoveButton(int oldIndex, int insertIndex)
     {
         var list = Settings.Buttons;
-        var oldIndex = list.IndexOf(source);
-        if (oldIndex < 0) return;
+        if (oldIndex < 0 || oldIndex >= list.Count) return;
 
-        // 同位置或相邻位置直接忽略
+        // 向后移动时目标索引要减一（先移除再插入）
         var normalized = insertIndex > oldIndex ? insertIndex - 1 : insertIndex;
         if (normalized == oldIndex) return;
 
