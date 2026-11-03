@@ -25,27 +25,6 @@ public partial class InquiryWindowSettingsPage : SettingsPageBase
     }
 
     /// <summary>
-    /// 亚克力开关被切换后立即落盘，避免设置页关闭时丢改动。
-    /// </summary>
-    private void OnAcrylicIsCheckedChanged(object? sender, RoutedEventArgs e)
-    {
-        PluginSettingsStore.Instance.SaveNow();
-    }
-
-    /// <summary>
-    /// 透明度滑块被拖动时也会持续触发 PropertyChanged。
-    /// 用防抖（去掉极小变化）后再写盘，避免每帧落盘。
-    /// </summary>
-    private void OnAcrylicOpacityChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
-    {
-        if (e.Property != Slider.ValueProperty) return;
-        // 滑块松手时写盘；按下过程不写（防抖由 UI 控件的 IsThumbDragCompleted 决定，
-        // 这里简单一点：每次变化都同步给 in-memory 模型，UI 同步，关闭设置页时再 SaveNow）。
-        // 但为安全起见，每次变化都直接 SaveNow（plugin-settings.json 体积小，可接受）。
-        PluginSettingsStore.Instance.SaveNow();
-    }
-
-    /// <summary>
     /// 「预览弹窗效果」按钮：按当前插件全局设置（亚克力开关 + 透明度）弹出一个示例
     /// InquiryWindowWindow。预览模式下只显示「看完了」按钮，不会触发任何后续动作。
     /// </summary>

@@ -50,18 +50,17 @@
                                        Description="为询问窗启用亚克力模糊背景，并调整色调不透明度。">
                 <StackPanel Spacing="12" Margin="0,4,0,0">
                     <ToggleSwitch x:Name="AcrylicToggle"
-                                  IsChecked="{Binding PluginSettings.UseAcrylicBackground, Mode=TwoWay}"
+                                  IsChecked="{Binding UseAcrylicBackground, Mode=TwoWay}"
                                   OnContent="开"
-                                  OffContent="关"
-                                  IsCheckedChanged="OnAcrylicIsCheckedChanged" />
+                                  OffContent="关" />
                     <StackPanel Spacing="4"
-                                IsEnabled="{Binding PluginSettings.UseAcrylicBackground}">
+                                IsEnabled="{Binding UseAcrylicBackground}">
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                             <TextBlock Grid.Row="0" Grid.Column="0"
                                        Text="色调不透明度"
                                        VerticalAlignment="Center" />
                             <TextBlock Grid.Row="0" Grid.Column="1"
-                                       Text="{Binding PluginSettings.AcrylicTintOpacity, StringFormat={}{0:P0}}"
+                                       Text="{Binding AcrylicTintOpacity, StringFormat={}{0:P0}}"
                                        FontFamily="Consolas, Menlo, monospace"
                                        VerticalAlignment="Center" />
                             <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
@@ -69,8 +68,7 @@
                                     Minimum="0" Maximum="1"
                                     TickFrequency="0.05"
                                     IsSnapToTickEnabled="True"
-                                    Value="{Binding PluginSettings.AcrylicTintOpacity, Mode=TwoWay}"
-                                    PropertyChanged="OnAcrylicOpacityChanged" />
+                                    Value="{Binding AcrylicTintOpacity, Mode=TwoWay}" />
                         </Grid>
                         <TextBlock Text="0 = 完全透到桌面；1 = 接近纯色（遮住桌面内容）。默认 0.5。"
                                    FontSize="11"

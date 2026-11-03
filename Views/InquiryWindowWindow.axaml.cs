@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Platform;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -13,6 +15,7 @@ public partial class InquiryWindowWindow : MyWindow
 {
     private readonly ViewModel _vm = new();
     private bool _allowClose;
+    private bool _acrylicApplied;
     private DispatcherTimer? _autoExecuteTimer;
     private int _autoExecuteRemaining;
 
@@ -180,6 +183,8 @@ public partial class InquiryWindowWindow : MyWindow
     /// </summary>
     private void ApplyAcrylicState()
     {
+        var border = this.FindControl<Border>("ContentRoot");
+
         if (_vm.IsAcrylicActive)
         {
             // 打开亚克力：窗口透到桌面 + AcrylicBlur 模糊，
@@ -187,23 +192,23 @@ public partial class InquiryWindowWindow : MyWindow
             TransparencyLevelHint = new[] { WindowTransparencyLevel.AcrylicBlur };
             Background = Brushes.Transparent;
 
-            if (this.FindControl<Border>("ContentRoot") is { } border)
-            {
-                border.Background = new SolidColorBrush(GetAcrylicTintColor(_vm.AcrylicTintOpacity));
-                border.Opacity = 1.0;
-            }
+            border?.SetValue(Border.BackgroundProperty,
+                new SolidColorBrush(GetAcrylicTintColor(_vm.AcrylicTintOpacity)));
+            _acrylicApplied = true;
         }
-        else
+        else if (_acrylicApplied)
         {
-            // 关闭亚克力：还原成纯色 LayerFillColorAltBrush（与原版视觉一致）。
+            // 只调整透明度而亚克力本就未开启时，不能动背景，
+            // 否则会把 XAML 里 DynamicResource 的常态底色清掉，弹窗变成透明/黑底。
             TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
-            Background = null;     // 让窗口回到默认主题背景
+            ClearValue(BackgroundProperty);
 
-            if (this.FindControl<Border>("ContentRoot") is { } border)
+            if (border != null)
             {
-                border.Background = null;     // 还原成 XAML 里 DynamicResource 绑定的 LayerFillColorAltBrush
-                border.Opacity = 1.0;
+                border.Bind(Border.BackgroundProperty,
+                    border.GetResourceObservable("LayerFillColorAltBrush"));
             }
+            _acrylicApplied = false;
         }
     }
 
@@ -214,9 +219,21 @@ public partial class InquiryWindowWindow : MyWindow
     /// </summary>
     private static Color GetAcrylicTintColor(double opacity)
     {
+        // RequestedThemeVariant 在「跟随系统」模式下恒为 Default，不能直接用来判断亮/暗；
+        // 为 Default 时改用平台实际主题（FluentAvalonia 的 PreferSystemTheme 也走这里）。
+        var requested = Application.Current?.RequestedThemeVariant ?? ThemeVariant.Light;
+        bool isDark;
+        if (requested == ThemeVariant.Default)
+        {
+            isDark = Application.Current?.PlatformSettings?.GetColorValues().ThemeVariant
+                     == PlatformThemeVariant.Dark;
+        }
+        else
+        {
+            isDark = requested == ThemeVariant.Dark;
+        }
+
         // 参考 ConvenientText 的视觉：深色模式用 #2D2D2D 半透、浅色模式用 #F3F3F3 半透。
-        // FluentAvalonia 的请求主题：深色用偏黑、浅色用偏白。
-        var isDark = Application.Current?.RequestedThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
         var baseColor = isDark
             ? Color.FromRgb(0x2D, 0x2D, 0x2D)
             : Color.FromRgb(0xF3, 0xF3, 0xF3);
