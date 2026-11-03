@@ -1,9 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Avalonia.Controls;
-using ClassIsland.Core.Controls.Automation;
-using ClassIsland.Shared.Helpers;
-using ClassIsland.Shared.Models.Automation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -95,8 +92,8 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 「编辑名称/图标」：右侧就地编辑。Action 链通过独立的 <see cref="BeginEditActionsAsync"/>
-    /// 弹窗维护，避免 ActionControl 长期嵌入设置页导致首屏卡顿。
+    /// 「编辑名称/图标」：右侧就地编辑。Action 链由设置页内嵌的 ActionControl 直接维护，
+    /// 其增删会经 <see cref="ButtonPreset"/> 冒泡到 <see cref="PresetsStore"/> 自动落盘。
     /// </summary>
     [RelayCommand]
     public void CommitMetaEdit()
@@ -112,39 +109,6 @@ public partial class ButtonPresetSettingsViewModel : ObservableObject
         }
         // Name/Icon 字段均会通过 INPC 触发 PresetsStore 的 debounce save，
         // 显式 SaveNow 兜底，避免用户编辑完立刻关 app 丢数据。
-        PresetsStore.Instance.SaveNow();
-    }
-
-    /// <summary>
-    /// 「编辑 Action 链…」：弹出 FAContentDialog，承载 ActionControl 让用户调整链内容。
-    /// 关键：克隆一份 ActionSet 给 ActionControl 编辑，「取消」时改动随 workingActions
-    /// 一起被丢弃，preset.Actions 不被污染。
-    /// </summary>
-    [RelayCommand]
-    public async Task BeginEditActionsAsync(TopLevel? topLevel)
-    {
-        var preset = SelectedPreset;
-        if (preset is null || topLevel is null) return;
-
-        var workingActions = ConfigureFileHelper.CopyObject(preset.Actions);
-        var actionControl = new ActionControl
-        {
-            ActionSet = workingActions
-        };
-
-        var dialog = new FAContentDialog
-        {
-            Title = $"编辑「{preset.Name}」的 Action 链",
-            Content = actionControl,
-            PrimaryButtonText = "保存",
-            CloseButtonText = "取消",
-            DefaultButton = FAContentDialogButton.Primary
-        };
-
-        var result = await dialog.ShowAsync(topLevel);
-        if (result != FAContentDialogResult.Primary) return;
-
-        preset.Actions = workingActions;
         PresetsStore.Instance.SaveNow();
     }
 

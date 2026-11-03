@@ -2,6 +2,7 @@
                      xmlns="https://github.com/avaloniaui"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                     xmlns:automation="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
                      xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                      xmlns:vm="clr-namespace:InquiryWindow.ViewModels"
                      xmlns:models="clr-namespace:InquiryWindow.Models"
@@ -127,7 +128,7 @@
                                         IconExpression="{Binding Icon, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
-                                <!-- Action 链 -->
+                                <!-- Action 链：直接内嵌编辑（增删行动就在下方就地完成，不再弹窗） -->
                                 <Expander Header="Action 链"
                                           IsExpanded="True">
                                     <StackPanel Spacing="8">
@@ -135,9 +136,7 @@
                                                    TextWrapping="Wrap"
                                                    FontSize="12"
                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                        <Button Content="编辑 Action 链…"
-                                                Click="OnEditActionsClick"
-                                                HorizontalAlignment="Right" />
+                                        <automation:ActionControl ActionSet="{Binding Actions}" />
                                     </StackPanel>
                                 </Expander>
 

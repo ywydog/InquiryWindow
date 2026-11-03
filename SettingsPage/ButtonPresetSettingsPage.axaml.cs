@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Attributes;
+using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 
 namespace InquiryWindow.SettingsPage;
@@ -28,19 +29,6 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
     }
 
     /// <summary>
-    /// 「编辑 Action 链…」按钮：把右侧详情里点出的弹窗交由 VM 调度。
-    /// </summary>
-    private async void OnEditActionsClick(object? sender, RoutedEventArgs e)
-    {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
-
-        // 注：不先调用 CanExecute —— Android AOT 下 IRelayCommand<T>.CanExecute 无法解析，
-        // 命令内部自带 null 保护，直接执行即可。
-        await ViewModel.BeginEditActionsCommand.ExecuteAsync(topLevel);
-    }
-
-    /// <summary>
     /// 「删除」按钮：把当前 TopLevel 透传给 ViewModel，避免在 VM 里直接依赖 UI 类型。
     /// </summary>
     private async void OnRemovePresetClick(object? sender, RoutedEventArgs e)
@@ -55,10 +43,12 @@ public partial class ButtonPresetSettingsPage : SettingsPageBase
 
     /// <summary>
     /// 页面从可视树卸载时释放 ViewModel 对静态 PresetsStore 的订阅，避免泄漏。
+    /// 同时立即落盘一次：Action 链是就地编辑的，没有「保存」按钮兜底。
     /// </summary>
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
         ViewModel.Dispose();
+        PresetsStore.Instance.SaveNow();
     }
 }
