@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using ClassIsland.Core;
 using ClassIsland.Core.Controls;
 using ClassIsland.Shared;
+using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
 using InquiryWindow.Services;
 using InquiryWindow.Views;
@@ -63,6 +64,24 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    // ===== 弹窗图标：转发到 Settings.Icon，供本页 XAML 双向绑定 =====
+    /// <summary>
+    /// 弹窗图标表达式。直接转发 <see cref="Settings"/> 的 <c>Icon</c>，
+    /// 避免 XAML 里对 <c>Settings.Icon</c> 的深层路径双向绑定失效。
+    /// </summary>
+    public string WindowIcon
+    {
+        get => Settings?.Icon ?? string.Empty;
+        set
+        {
+            if (Settings is null || Settings.Icon == value) return;
+            Settings.Icon = value;
+        }
+    }
+
+    /// <summary>由 <see cref="IconExpressionService"/> 解析出的图标，供预览渲染。</summary>
+    public FAIconSource? WindowIconSource => IconExpressionService.Resolve(WindowIcon);
+
     // ===== 窗口背景：缩略图预览 =====
     private Bitmap? _backgroundPreview;
 
@@ -113,9 +132,16 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
 
     private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MultiButtonPromptSettings.BackgroundImagePath))
+        switch (e.PropertyName)
         {
-            ReloadBackgroundPreview();
+            case nameof(MultiButtonPromptSettings.BackgroundImagePath):
+                ReloadBackgroundPreview();
+                break;
+            case nameof(MultiButtonPromptSettings.Icon):
+                // 图标表达式变化 → 刷新本页预览（选择器自身预览由控件内部维护）。
+                OnPropertyChanged(nameof(WindowIcon));
+                OnPropertyChanged(nameof(WindowIconSource));
+                break;
         }
     }
 

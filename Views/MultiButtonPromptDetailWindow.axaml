@@ -149,7 +149,7 @@
                                             <Border Grid.Column="0" Width="28" Height="28"
                                                     CornerRadius="4"
                                                     Background="{DynamicResource SubtleFillColorTertiaryBrush}">
-                                                <controls:FAIconSourceElement IconSource="{Binding Settings.IconSource}"
+                                                <controls:FAIconSourceElement IconSource="{Binding WindowIconSource}"
                                                                               Width="14" Height="14"
                                                                               Classes="repair-fontsize"
                                                                               TextElement.FontSize="14"
@@ -159,7 +159,7 @@
                                             <ui:IconExpressionEditor Grid.Column="1"
                                                                      Margin="6,0,0,0"
                                                                      VerticalAlignment="Center"
-                                                                     IconExpression="{Binding Settings.Icon, Mode=TwoWay}" />
+                                                                     IconExpression="{Binding WindowIcon, Mode=TwoWay}" />
                                         </Grid>
                                     </StackPanel>
                                 </StackPanel>

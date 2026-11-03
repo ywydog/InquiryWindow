@@ -56,12 +56,22 @@
             <Grid RowDefinitions="Auto,Auto,Auto,Auto">
 
                 <!-- 主提示（Markdown 渲染；MaxHeight 为 Auto 行的护栏，防止长内容撑破弹窗，写法与 SystemTools 一致） -->
-                <mdxaml:MarkdownScrollViewer Grid.Row="0"
-                                              Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                                              Markdown="{Binding Prompt}"
-                                              MaxHeight="160"
-                                              TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                              Margin="0,0,0,14" />
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,14">
+                    <!-- 弹窗图标：来自「详细设置 → 弹窗图标」，为空时整列隐藏。 -->
+                    <controls:FAIconSourceElement Grid.Column="0"
+                                                  IconSource="{Binding IconSource}"
+                                                  IsVisible="{Binding IconSource, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                  Width="28" Height="28"
+                                                  Margin="0,2,12,0"
+                                                  VerticalAlignment="Top"
+                                                  Classes="repair-fontsize"
+                                                  TextElement.FontSize="28" />
+                    <mdxaml:MarkdownScrollViewer Grid.Column="1"
+                                                  Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                                  Markdown="{Binding Prompt}"
+                                                  MaxHeight="160"
+                                                  TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                </Grid>
 
                 <!-- 倒计时（文本 + 进度条），仅在自动执行启用时显示。
                      位置：主提示下方、副提示上方（仿 AdvancedShutdownDialog.axaml 的 Row 0/1/2 顺序）。 -->

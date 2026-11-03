@@ -9,7 +9,9 @@ using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Shared;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using InquiryWindow.Models;
+using InquiryWindow.Services;
 using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow.ViewModels;
@@ -27,6 +29,12 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     public string Prompt { get; }
 
     public string SubPrompt { get; }
+
+    /// <summary>
+    /// 弹窗图标（由 <see cref="MultiButtonPromptSettings.Icon"/> 表达式经
+    /// <see cref="IconExpressionService"/> 解析），为空时弹窗不显示图标。
+    /// </summary>
+    public FAIconSource? IconSource => IconExpressionService.Resolve(_settings.Icon);
 
     private readonly IActionService _actionService;
     private readonly ILogger<MultiButtonPromptViewModel> _logger;
@@ -119,6 +127,10 @@ public partial class MultiButtonPromptViewModel : ObservableObject
             {
                 BackgroundImageStretch = MapStretch(_settings.BackgroundImageMode);
             });
+        }
+        else if (e.PropertyName == nameof(MultiButtonPromptSettings.Icon))
+        {
+            OnPropertyChanged(nameof(IconSource));
         }
         else if (e.PropertyName == nameof(MultiButtonPromptSettings.CountdownBarStyleIndex))
         {
