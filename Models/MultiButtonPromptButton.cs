@@ -46,15 +46,15 @@ public partial class MultiButtonPromptButton : ObservableObject
     /// &gt;0 表示该按钮仍处于锁定态；0 表示可点击。不参与序列化。
     /// </summary>
     [ObservableProperty]
-    [Newtonsoft.Json.JsonIgnore]
+    [property: System.Text.Json.Serialization.JsonIgnore]
     private int _countdownRemaining;
 
     /// <summary>该按钮是否已完成交互倒计时、可以点击。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsCountdownReady => CountdownRemaining <= 0;
 
     /// <summary>按钮显示文字：锁定期间在名称后追加「(Ns)」实时剩余秒数。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string DisplayName => CountdownRemaining > 0 ? $"{Name} ({CountdownRemaining}s)" : Name;
 
     /// <summary>
@@ -96,11 +96,11 @@ public partial class MultiButtonPromptButton : ObservableObject
     // ===== 派生属性（不持久化，运行时用） =====
 
     /// <summary>是否使用系统主题强调色（"高亮"模式）。用于 XAML 的 <c>Classes.accent</c> 绑定。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsAccent => AccentMode == ButtonAccentMode.Highlighted;
 
     /// <summary>是否使用自定义颜色（"自定义"模式）。用于 XAML 的 <c>Classes.customAccent</c> 绑定。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsCustomAccent => AccentMode == ButtonAccentMode.Custom;
 
     /// <summary>
@@ -113,12 +113,12 @@ public partial class MultiButtonPromptButton : ObservableObject
     /// </list>
     /// （Avalonia 12 运行时不再把 Color 自动转换为 IBrush，直接绑 Color 会失败。）
     /// </summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public IBrush? ButtonBackground =>
         AccentMode == ButtonAccentMode.Custom ? new SolidColorBrush(CustomColor) : null;
 
     /// <summary>操作验证的凭据配置状态描述，用于按钮详情的状态展示。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string VerificationStatusText => string.IsNullOrWhiteSpace(CredentialString)
         ? "未配置（将不会验证）"
         : "已配置凭据";
@@ -127,7 +127,7 @@ public partial class MultiButtonPromptButton : ObservableObject
     /// 由 <see cref="Icon"/> 解析出的图标源，供 XAML 的 <c>FAIconSourceElement</c> 直接绑定。
     /// 解析失败时为 <c>null</c>（控件回退为空白）。
     /// </summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
 
     partial void OnIconChanged(string value)

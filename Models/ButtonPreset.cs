@@ -25,7 +25,7 @@ public partial class ButtonPreset : ObservableObject
     private string _icon = IconExpressionService.DefaultExpression;
 
     /// <summary>由 <see cref="Icon"/> 解析出的图标源，供 XAML 直接绑定渲染。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
 
     partial void OnIconChanged(string value)

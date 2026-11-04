@@ -59,14 +59,14 @@ public partial class MultiResultSettings : ObservableObject
     /// 设计取舍：每次进程启动都重新洗一次，避免磁盘上的旧队列引用已被删的 Group 索引；
     /// 同时"随机"在用户感知上也更自然。
     /// </summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public List<int> RemainingOrder { get; set; } = new();
 
     /// <summary>
     /// 「随机不重复」模式在 <see cref="RemainingOrder"/> 中的当前位置。
     /// 同样为运行时状态，不持久化。
     /// </summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public int Cursor { get; set; }
 
     public MultiResultSettings()

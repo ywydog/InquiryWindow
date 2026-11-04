@@ -33,7 +33,7 @@ public partial class MultiButtonPromptSettings : ObservableObject
     private string _icon = IconExpressionService.FormatExpression("fluent", "\uE82D");
 
     /// <summary>由 <see cref="Icon"/> 解析出的图标源，供 XAML 直接绑定渲染。</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
 
     partial void OnIconChanged(string value)
@@ -139,7 +139,7 @@ public partial class MultiButtonPromptSettings : ObservableObject
     /// 运行时派生数据，不参与 JSON 持久化；反序列化后由 <see cref="Buttons"/> 的 setter 重建，
     /// 若序列化/反序列化会追加导致下拉重复错位，故标记 [JsonIgnore]。
     /// </summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public ObservableCollection<AutoExecuteTarget> AutoExecuteTargets { get; } = new();
 
     /// <summary>
