@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using ClassIsland.Core;
 using InquiryWindow.Actions;
 using InquiryWindow.Models;
@@ -22,6 +24,8 @@ namespace InquiryWindow.Views;
 /// </summary>
 public partial class InquiryWindowFusionOverlay : Window
 {
+    private Window? _host;
+
     public InquiryWindowFusionOverlay()
     {
         InitializeComponent();
@@ -32,28 +36,142 @@ public partial class InquiryWindowFusionOverlay : Window
 
     /// <summary>
     /// 取得 ClassIsland 主界面宿主窗口（用于覆盖定位）。
+    /// 不能用 <see cref="AppBase.GetRootWindow"/>：它会优先返回当前激活的窗口
+    /// （例如 ClassIsland 设置窗口），导致覆盖层贴合到错误的窗口上。
     /// </summary>
     private static Window? GetHostWindow()
     {
-        return AppBase.Current.GetRootWindow() as Window;
+        return AppBase.Current.MainWindow is { IsVisible: true } mainWindow &&
+               mainWindow.WindowState != WindowState.Minimized
+            ? mainWindow
+            : null;
     }
 
     /// <summary>
     /// 把覆盖窗口贴合到宿主窗口的位置与尺寸，使询问内容"融合"在主界面上。
-    /// 宿主不可用时回退到屏幕居中。
+    /// 与 SystemTools 覆盖层一致：优先取主界面实际可见区域（PART_GridWrapper 的并集），
+    /// 并考虑 DPI 缩放；宿主不可用时回退到屏幕居中。
     /// </summary>
     private void AttachToHost(Window? host)
     {
         if (host is null)
         {
+            // 没有可用的主界面：退化为居中的独立弹窗尺寸（高度随内容自适应）。
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            Width = 500;
+            Height = double.NaN;
+            SizeToContent = SizeToContent.Height;
+            MaxHeight = 800;
             return;
         }
 
+        _host = host;
         Owner = host;
-        Position = host.Position;
-        Width = host.Bounds.Width;
-        Height = host.Bounds.Height;
+        UpdateHostBounds();
+
+        // 主界面被拖动 / 缩放 / 跨屏 DPI 变化时，覆盖层跟随移动，避免弹窗脱节。
+        host.PositionChanged += OnHostPositionChanged;
+        host.SizeChanged += OnHostSizeChanged;
+        host.ScalingChanged += OnHostScalingChanged;
+    }
+
+    private void DetachHost()
+    {
+        if (_host is not { } host)
+        {
+            return;
+        }
+
+        host.PositionChanged -= OnHostPositionChanged;
+        host.SizeChanged -= OnHostSizeChanged;
+        host.ScalingChanged -= OnHostScalingChanged;
+        _host = null;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        DetachHost();
+        base.OnClosed(e);
+    }
+
+    private void OnHostPositionChanged(object? sender, PixelPointEventArgs e) => UpdateHostBounds();
+
+    private void OnHostSizeChanged(object? sender, SizeChangedEventArgs e) => UpdateHostBounds();
+
+    private void OnHostScalingChanged(object? sender, EventArgs e) => UpdateHostBounds();
+
+    private void UpdateHostBounds()
+    {
+        if (_host is not { } host)
+        {
+            return;
+        }
+
+        try
+        {
+            var scaling = host.RenderScaling > 0 ? host.RenderScaling : 1.0;
+            if (GetIslandScreenRect(host) is { } island)
+            {
+                Position = island.Position;
+                Width = Math.Max(1, island.Width / scaling);
+                Height = Math.Max(1, island.Height / scaling);
+                return;
+            }
+
+            Position = host.Position;
+            Width = Math.Max(1, host.Bounds.Width);
+            Height = Math.Max(1, host.Bounds.Height);
+        }
+        catch (Exception)
+        {
+            // 宿主正在关闭等情况下忽略定位失败，等待窗口自然关闭。
+        }
+    }
+
+    /// <summary>
+    /// 计算主界面可见区域（PART_GridWrapper 各实例的屏幕矩形的并集，单位为物理像素）。
+    /// ClassIsland 主窗口本身可能是带透明边距的容器，直接用 Window.Bounds 会让弹窗
+    /// 居中到透明区域，而不是用户看到的主界面卡片上。
+    /// </summary>
+    private static (PixelPoint Position, double Width, double Height)? GetIslandScreenRect(Window host)
+    {
+        try
+        {
+            var rects = host.GetVisualDescendants()
+                .OfType<Grid>()
+                .Where(grid => grid.Name == "PART_GridWrapper" &&
+                               grid.IsEffectivelyVisible &&
+                               grid.Bounds.Width > 0 && grid.Bounds.Height > 0)
+                .Select(GetScreenRect)
+                .Where(rect => rect.Width > 0 && rect.Height > 0)
+                .ToList();
+
+            if (rects.Count == 0)
+            {
+                return null;
+            }
+
+            var left = rects.Min(rect => rect.X);
+            var top = rects.Min(rect => rect.Y);
+            var right = rects.Max(rect => rect.Right);
+            var bottom = rects.Max(rect => rect.Bottom);
+            return (new PixelPoint(left, top), right - left, bottom - top);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private static PixelRect GetScreenRect(Control control)
+    {
+        var topLeft = control.PointToScreen(new Point(0, 0));
+        var bottomRight = control.PointToScreen(new Point(control.Bounds.Width, control.Bounds.Height));
+        var left = Math.Min(topLeft.X, bottomRight.X);
+        var top = Math.Min(topLeft.Y, bottomRight.Y);
+        var right = Math.Max(topLeft.X, bottomRight.X);
+        var bottom = Math.Max(topLeft.Y, bottomRight.Y);
+        return new PixelRect(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
     }
 
     /// <summary>
@@ -90,6 +208,19 @@ public partial class InquiryWindowFusionOverlay : Window
         DispatcherTimer? timer = null;
         EventHandler? onTick = null;
 
+        // 覆盖窗口可能尚未显示就失败，Close() 需要容忍这种情况。
+        void CloseOverlay()
+        {
+            try
+            {
+                overlay.Close();
+            }
+            catch (InvalidOperationException)
+            {
+                // 窗口未显示 / 已关闭。
+            }
+        }
+
         void Complete(InquiryWindowResult result)
         {
             if (!tcs.Task.IsCompleted)
@@ -105,7 +236,7 @@ public partial class InquiryWindowFusionOverlay : Window
                 }
                 vm.IsAutoExecuteActive = false;
                 tcs.TrySetResult(result);
-                overlay.Close();
+                CloseOverlay();
             }
         }
 
@@ -199,7 +330,16 @@ public partial class InquiryWindowFusionOverlay : Window
         catch (Exception ex)
         {
             logger.LogError(ex, "交互融合模式下显示「多按钮询问」弹窗失败。");
-            overlay.Close();
+            // 显示失败时窗口不会触发 Closed，必须主动结束等待，否则行动会永久挂起。
+            tcs.TrySetResult();
+            try
+            {
+                overlay.Close();
+            }
+            catch (InvalidOperationException)
+            {
+                // 窗口未显示 / 已关闭。
+            }
         }
 
         await tcs.Task;

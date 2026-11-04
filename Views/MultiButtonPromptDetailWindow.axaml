@@ -248,7 +248,9 @@
                                             <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,4,0">
                                                 <TextBlock Text="时长（秒）" FontSize="11"
                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                                <controls:FANumberBox Minimum="0" Maximum="3600"
+                                                <controls:FANumberBox MinWidth="120"
+                                                                       SpinButtonPlacementMode="Inline"
+                                                                       Minimum="0" Maximum="3600"
                                                                        SmallChange="1" LargeChange="5"
                                                                        Value="{Binding Settings.AutoExecuteSeconds, Converter={x:Static ci:NotNaNConverter.Instance}}" />
                                             </StackPanel>
@@ -443,7 +445,7 @@
                         <TextBlock Text="从中间选择一个按钮" FontSize="13"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="或在中间顶部「+ 新建按钮」" FontSize="11"
+                        <TextBlock Text="或在中间顶部「新建按钮」" FontSize="11"
                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                    HorizontalAlignment="Center" />
                     </StackPanel>
@@ -515,7 +517,9 @@
                                         <StackPanel Grid.Column="0" Spacing="4">
                                             <TextBlock Text="禁用时长（秒）" FontSize="11"
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                            <controls:FANumberBox Minimum="0" Maximum="60"
+                                            <controls:FANumberBox MinWidth="120"
+                                                                   SpinButtonPlacementMode="Inline"
+                                                                   Minimum="0" Maximum="60"
                                                                    SmallChange="1" LargeChange="5"
                                                                    Value="{Binding ActiveButton.CountdownSeconds, Converter={x:Static ci:NotNaNConverter.Instance}}" />
                                         </StackPanel>

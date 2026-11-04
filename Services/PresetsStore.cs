@@ -114,6 +114,17 @@ public class PresetsStore
     }
 
     /// <summary>
+    /// 兜底落盘：取消尚未触发的防抖保存并立即写盘。
+    /// 应用退出时调用，避免最后一次改动还在等待防抖就被关闭流程丢弃。
+    /// </summary>
+    public void FlushPendingSaves()
+    {
+        _saveDebounce?.Cancel();
+        _saveDebounce = null;
+        SaveNow();
+    }
+
+    /// <summary>
     /// 防抖落盘：把 N ms 内的多次写盘请求合并为一次，避免每键写盘。
     /// 注：显式引用 TaskScheduler.Default 在 AOT/裁剪环境可能触发 TypeLoadException，
     /// 因此这里改用 async/await（不显式引用 TaskScheduler）。

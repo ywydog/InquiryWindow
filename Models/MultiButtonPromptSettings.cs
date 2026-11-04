@@ -36,9 +36,10 @@ public partial class MultiButtonPromptSettings : ObservableObject
     [System.Text.Json.Serialization.JsonIgnore]
     public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
 
-    partial void OnIconChanged(string value)
+    partial void OnIconChanged(string? oldValue, string newValue)
     {
         OnPropertyChanged(nameof(IconSource));
+        IconExpressionService.LogIconChange("多按钮询问·弹窗图标", oldValue, newValue);
     }
 
     /// <summary>

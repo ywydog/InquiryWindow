@@ -28,9 +28,10 @@ public partial class ButtonPreset : ObservableObject
     [System.Text.Json.Serialization.JsonIgnore]
     public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
 
-    partial void OnIconChanged(string value)
+    partial void OnIconChanged(string? oldValue, string newValue)
     {
         OnPropertyChanged(nameof(IconSource));
+        IconExpressionService.LogIconChange($"按钮预设「{Name}」", oldValue, newValue);
     }
 
     [ObservableProperty]

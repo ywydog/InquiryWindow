@@ -5,6 +5,7 @@ using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Extensions.Registry;
 using ClassIsland.Core.Models.Automation;
 using ClassIsland.Core.Services.Registry;
+using ClassIsland.Shared;
 using InquiryWindow.Actions;
 using InquiryWindow.Services;
 using InquiryWindow.SettingsPage;
@@ -12,6 +13,7 @@ using InquiryWindow.Shared;
 using InquiryWindow.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace InquiryWindow;
 
@@ -79,6 +81,10 @@ public partial class Plugin : PluginBase
         // 初始化插件全局设置（落盘到 PluginConfigFolder/plugin-settings.json）
         PluginSettingsStore.PluginConfigFolder = PluginConfigFolder;
         PluginSettingsStore.Instance.Load();
+
+        // 兜底：应用退出时立即落盘，避免防抖保存未触发导致最后一次改动丢失。
+        // 参照 SystemTools 在 AppStopping 中保存配置的做法。
+        AppBase.Current.AppStopping += OnAppStopping;
 
         // 把所有设置页面归入 InquiryWindow 设置分组。
         // 必须在 AppStarted 后再执行：此时 SettingsWindowRegistryService.Registered 已经被填充，
@@ -153,6 +159,21 @@ public partial class Plugin : PluginBase
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 应用停止兜底：取消防抖保存并立即写盘，避免退出前最后一次改动还在等待防抖时丢失。
+    /// 参照 SystemTools 在 <c>AppStopping</c> 中保存配置的做法。
+    /// </summary>
+    private void OnAppStopping(object? sender, EventArgs e)
+    {
+        var logger = IAppHost.TryGetService<ILogger<Plugin>>();
+        logger?.LogInformation("[InquiryWindow]检测到 ClassIsland 停止，兜底保存插件配置...");
+
+        PresetsStore.Instance.FlushPendingSaves();
+        PluginSettingsStore.Instance.SaveNow();
+
+        logger?.LogInformation("[InquiryWindow]插件配置兜底保存完成。");
     }
 }
 

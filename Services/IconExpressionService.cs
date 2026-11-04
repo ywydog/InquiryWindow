@@ -1,8 +1,13 @@
 using System;
 using System.Globalization;
+using System.Text;
 using ClassIsland.Core.Controls.IconSources;
 using ClassIsland.Core.Helpers.UI;
+using ClassIsland.Shared;
 using FluentAvalonia.UI.Controls;
+using InquiryWindow.Helpers.SimpleExpression;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace InquiryWindow.Services;
 
@@ -93,6 +98,106 @@ public static class IconExpressionService
         }
 
         return IconExpressionHelper.TryParseOrNull(value);
+    }
+
+    /// <summary>
+    /// 记录一次图标变更日志（含码点），用于排查图标改动是否生效。
+    /// 图片图标没有码点，日志中改为输出图片路径。
+    /// </summary>
+    public static void LogIconChange(string source, string? oldExpression, string? newExpression)
+    {
+        var logger = GetLogger();
+        logger.LogInformation(
+            "[图标变更] {Source}：{OldExpression}（{OldCodePoints}） → {NewExpression}（{NewCodePoints}）",
+            source,
+            string.IsNullOrWhiteSpace(oldExpression) ? "空" : oldExpression,
+            DescribeCodePoints(oldExpression),
+            string.IsNullOrWhiteSpace(newExpression) ? "空" : newExpression,
+            DescribeCodePoints(newExpression));
+    }
+
+    /// <summary>
+    /// 把图标表达式解析为便于阅读的码点描述，如 <c>U+E710</c>；
+    /// 图片图标返回路径并标注无码点，无法解析时返回「未知」。
+    /// </summary>
+    public static string DescribeCodePoints(string? expression)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return "无码点";
+        }
+
+        var value = expression.Trim();
+        if (TryGetLegacyGlyph(value, out var legacyGlyph))
+        {
+            return FormatGlyphCodePoints(legacyGlyph);
+        }
+
+        try
+        {
+            var parsed = SimpleExpressionParser.Parse(value);
+            if (parsed.FunctionName.Equals("img", StringComparison.OrdinalIgnoreCase))
+            {
+                var path = parsed.Arguments.FirstOrDefault();
+                return $"图片（{path ?? "未指定路径"}，无码点）";
+            }
+
+            if (parsed.FunctionName.Equals("fluent", StringComparison.OrdinalIgnoreCase) ||
+                parsed.FunctionName.Equals("lucide", StringComparison.OrdinalIgnoreCase))
+            {
+                return FormatGlyphCodePoints(parsed.Arguments.FirstOrDefault() ?? "");
+            }
+        }
+        catch (FormatException)
+        {
+            // 非法表达式按下面的字形字符兜底处理。
+        }
+
+        // 历史数据里的单个字形字符。
+        return FormatGlyphCodePoints(value);
+    }
+
+    private static string FormatGlyphCodePoints(string glyph)
+    {
+        if (string.IsNullOrEmpty(glyph))
+        {
+            return "无码点";
+        }
+
+        var builder = new StringBuilder();
+        foreach (var rune in glyph.EnumerateRunes())
+        {
+            if (builder.Length > 0)
+            {
+                builder.Append(' ');
+            }
+
+            builder.Append(CultureInfo.InvariantCulture, $"U+{rune.Value:X4}");
+        }
+
+        return builder.ToString();
+    }
+
+    private static ILogger? _logger;
+
+    private static ILogger GetLogger()
+    {
+        if (_logger is not null)
+        {
+            return _logger;
+        }
+
+        try
+        {
+            _logger = IAppHost.GetService<ILoggerFactory>().CreateLogger("InquiryWindow.Icon");
+            return _logger;
+        }
+        catch (Exception)
+        {
+            // 宿主尚未初始化完成（或运行在无日志服务的环境）时退回静默日志。
+            // 不缓存回退实例，等宿主就绪后再解析真实 Logger。
+            return NullLogger.Instance;
+        }
     }
 
     /// <summary>

@@ -130,9 +130,10 @@ public partial class MultiButtonPromptButton : ObservableObject
     [System.Text.Json.Serialization.JsonIgnore]
     public FAIconSource? IconSource => IconExpressionService.Resolve(Icon);
 
-    partial void OnIconChanged(string value)
+    partial void OnIconChanged(string? oldValue, string newValue)
     {
         OnPropertyChanged(nameof(IconSource));
+        IconExpressionService.LogIconChange($"多按钮询问·按钮「{Name}」", oldValue, newValue);
     }
 
     // AccentMode / CustomColor 变化时通知派生 UI 属性一并刷新
