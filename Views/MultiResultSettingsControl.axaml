@@ -98,7 +98,7 @@
             <Button Click="OnAddGroupClick"
                     HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <ci:FluentIcon Glyph="&#xE710;" FontSize="14" />
+                    <ci:FluentIcon Glyph="&#xE00C;" FontSize="14" />
                     <TextBlock Text="添加结果组" />
                 </StackPanel>
             </Button>

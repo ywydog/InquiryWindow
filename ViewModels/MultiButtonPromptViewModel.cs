@@ -40,8 +40,7 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     private readonly ILogger<MultiButtonPromptViewModel> _logger;
     private readonly MultiButtonPromptSettings _settings;
 
-    private DispatcherTimer? _autoExecuteTimer;
-    private int _autoExecuteRemaining;
+    private SmoothCountdown? _autoExecuteCountdown;
 
     /// <summary>交互倒计时计时器（弹窗打开后统一递减各按钮的剩余锁定秒数）。</summary>
     private DispatcherTimer? _interactionCountdownTimer;
@@ -176,6 +175,56 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     /// </summary>
     public event Action? RequestClose;
 
+    /// <summary>窗口是否允许用户直接关闭（对应「详细设置 → 窗口关闭」开关）。</summary>
+    public bool IsClosable => _settings.IsClosable;
+
+    /// <summary>标题栏 X 触发的关闭流程是否正在执行，避免连点重复执行 Action 链。</summary>
+    private bool _isUserClosing;
+
+    /// <summary>
+    /// 用户点击标题栏 X 关闭窗口（仅在 <see cref="IsClosable"/> 为真时由窗口调用）。
+    /// 按「关闭时执行的按钮」触发目标 Action 链后关闭；目标为「无事发生」时仅关闭。
+    /// </summary>
+    public async Task CloseByUserAsync()
+    {
+        if (!_settings.IsClosable || _isUserClosing) return;
+        _isUserClosing = true;
+        try
+        {
+            // 用户已主动关闭，自动执行倒计时不应再触发。
+            CancelAutoExecuteCountdown();
+
+            var idx = _settings.AutoExecuteTargetIndex;
+            if (idx >= 0 && idx < Buttons.Count)
+            {
+                var target = Buttons[idx];
+                if (target.CountdownRemaining > 0)
+                {
+                    // 交互倒计时仍锁定该按钮：关闭可以放行，但不应借 X 绕过锁定执行 Action。
+                    _logger.LogInformation(
+                        "用户关闭窗口：目标按钮 \"{Name}\" 仍在交互倒计时锁定中（剩余 {Seconds} 秒），仅关闭弹窗。",
+                        target.Name, target.CountdownRemaining);
+                    RequestClose?.Invoke();
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "用户关闭窗口：按「关闭时执行的按钮」触发 \"{Name}\" 的 Action 链。", target.Name);
+                    await ExecuteButtonAsync(target);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("用户关闭窗口：关闭目标为「无事发生」，仅关闭弹窗。");
+                RequestClose?.Invoke();
+            }
+        }
+        finally
+        {
+            _isUserClosing = false;
+        }
+    }
+
     [ObservableProperty]
     private bool _isAutoExecuteActive;
 
@@ -218,15 +267,35 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         }
 
         CancelAutoExecuteCountdown();
-        _autoExecuteRemaining = seconds;
         AutoExecuteHighlightIndex = idx < Buttons.Count ? idx : -1;
         AutoExecuteMaxSeconds = seconds;
         AutoExecuteRemainingSeconds = seconds;
         IsAutoExecuteActive = true;
-        UpdateCountdownText();
-        _autoExecuteTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _autoExecuteTimer.Tick += OnAutoExecuteTick;
-        _autoExecuteTimer.Start();
+        UpdateCountdownText(seconds);
+
+        var countdown = new SmoothCountdown(seconds);
+        countdown.FrameChanged += remaining => AutoExecuteRemainingSeconds = remaining;
+        countdown.SecondChanged += UpdateCountdownText;
+        countdown.Completed += () =>
+        {
+            // 倒计时归零：触发目标
+            var targetIndex = _settings.AutoExecuteTargetIndex;
+            CancelAutoExecuteCountdown();
+            if (targetIndex >= 0 && targetIndex < Buttons.Count)
+            {
+                // 真实按钮：直接执行其 Action 链（不走交互倒计时逻辑，倒计时已经走完一遍了）
+                _logger.LogInformation("自动执行倒计时归零，触发按钮 \"{Name}\" 的 Action 链。", Buttons[targetIndex].Name);
+                _ = ExecuteButtonAsync(Buttons[targetIndex]);
+            }
+            else
+            {
+                // idx == Buttons.Count 表示 "无事发生"：不执行任何 Action，仅关闭弹窗
+                _logger.LogInformation("自动执行触发「无事发生」：不执行任何 Action 链。");
+                RequestClose?.Invoke();
+            }
+        };
+        _autoExecuteCountdown = countdown;
+        countdown.Start();
     }
 
     /// <summary>
@@ -234,13 +303,9 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     /// </summary>
     public void CancelAutoExecuteCountdown()
     {
-        if (_autoExecuteTimer != null)
-        {
-            _autoExecuteTimer.Stop();
-            _autoExecuteTimer.Tick -= OnAutoExecuteTick;
-            _autoExecuteTimer = null;
-        }
-        _autoExecuteRemaining = 0;
+        var countdown = _autoExecuteCountdown;
+        _autoExecuteCountdown = null;
+        countdown?.Stop();
         IsAutoExecuteActive = false;
         AutoExecuteHighlightIndex = -1;
         AutoExecuteRemainingSeconds = 0;
@@ -312,39 +377,13 @@ public partial class MultiButtonPromptViewModel : ObservableObject
         }
     }
 
-    private void OnAutoExecuteTick(object? sender, EventArgs e)
-    {
-        _autoExecuteRemaining--;
-        if (_autoExecuteRemaining > 0)
-        {
-            AutoExecuteRemainingSeconds = _autoExecuteRemaining;
-            UpdateCountdownText();
-            return;
-        }
-        // 倒计时归零：触发目标
-        var idx = _settings.AutoExecuteTargetIndex;
-        CancelAutoExecuteCountdown();
-        if (idx >= 0 && idx < Buttons.Count)
-        {
-            // 真实按钮：直接执行其 Action 链（不走交互倒计时逻辑，倒计时已经走完一遍了）
-            _logger.LogInformation("自动执行倒计时归零，触发按钮 \"{Name}\" 的 Action 链。", Buttons[idx].Name);
-            _ = ExecuteButtonAsync(Buttons[idx]);
-        }
-        else
-        {
-            // idx == Buttons.Count 表示 "无事发生"：不执行任何 Action，仅关闭弹窗
-            _logger.LogInformation("自动执行触发「无事发生」：不执行任何 Action 链。");
-            RequestClose?.Invoke();
-        }
-    }
-
-    private void UpdateCountdownText()
+    private void UpdateCountdownText(int remainingSeconds)
     {
         var idx = _settings.AutoExecuteTargetIndex;
         // 索引 == Buttons.Count 即指向末尾的"无事发生"占位；越界也按"无事发生"展示更安全。
         var name = (idx >= 0 && idx < Buttons.Count) ? Buttons[idx].Name : "无事发生";
-        var minutes = _autoExecuteRemaining / 60;
-        var secs = _autoExecuteRemaining % 60;
+        var minutes = remainingSeconds / 60;
+        var secs = remainingSeconds % 60;
         var time = $"{minutes}分{secs}秒";
         CountdownText = $"将{time}后执行「{name}」......";
     }

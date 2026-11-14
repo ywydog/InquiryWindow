@@ -291,11 +291,11 @@
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="窗口关闭" Classes="pane-card-title" />
                                     <CheckBox x:Name="ClosableCheck"
-                                              Content="窗口可直接关闭（显示 X 按钮）"
+                                              Content="窗口可直接关闭（标题栏 X 按钮可用）"
                                               IsChecked="{Binding Settings.IsClosable, Mode=TwoWay}" />
                                     <StackPanel Spacing="4" Margin="24,0,0,0"
                                                 IsEnabled="{Binding #ClosableCheck.IsChecked}">
-                                        <TextBlock Text="关闭时执行的按钮（与倒计时共用 AutoExecuteTargetIndex）"
+                                        <TextBlock Text="关闭时执行的按钮（与「自动执行」共用同一目标）"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                    TextWrapping="Wrap" />
@@ -369,7 +369,7 @@
                             <Button Classes="toolbar-btn"
                                     Click="OnAddButtonClick" HorizontalAlignment="Stretch">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <ci:FluentIcon Glyph="&#xE710;" FontSize="13" />
+                                    <ci:FluentIcon Glyph="&#xE00C;" FontSize="13" />
                                     <TextBlock Text="新建按钮" />
                                 </StackPanel>
                             </Button>

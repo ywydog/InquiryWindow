@@ -43,7 +43,8 @@ public partial class MultiButtonPromptSettings : ObservableObject
     }
 
     /// <summary>
-    /// 窗口是否可直接关闭（显示 X 关闭按钮）。默认 true。
+    /// 窗口是否可直接关闭（标题栏 X 按钮可用）。默认 true。
+    /// 关闭时按 <see cref="AutoExecuteTargetIndex"/> 指向的目标触发 Action 链或仅关闭弹窗。
     /// </summary>
     [ObservableProperty]
     private bool _isClosable = true;

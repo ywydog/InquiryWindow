@@ -8,6 +8,7 @@ using Avalonia.Media.Imaging;
 using ClassIsland.Core.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using InquiryWindow.Actions;
+using InquiryWindow.Services;
 
 namespace InquiryWindow.Views;
 
@@ -16,8 +17,7 @@ public partial class InquiryWindowWindow : MyWindow
     private readonly ViewModel _vm = new();
     private bool _allowClose;
     private bool _acrylicApplied;
-    private DispatcherTimer? _autoExecuteTimer;
-    private int _autoExecuteRemaining;
+    private SmoothCountdown? _autoExecuteCountdown;
 
     public InquiryWindowWindow()
     {
@@ -282,15 +282,24 @@ public partial class InquiryWindowWindow : MyWindow
     {
         if (seconds <= 0) return;
         CancelAutoExecuteCountdown();
-        _autoExecuteRemaining = seconds;
         _vm.CountdownBarStyleIndex = countdownBarStyleIndex;
         _vm.AutoExecuteMaxSeconds = seconds;
         _vm.AutoExecuteRemainingSeconds = seconds;
         _vm.IsAutoExecuteActive = true;
         _vm.CountdownText = FormatCountdownText(seconds, buttonName: null);
-        _autoExecuteTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _autoExecuteTimer.Tick += OnAutoExecuteTick;
-        _autoExecuteTimer.Start();
+
+        var countdown = new SmoothCountdown(seconds);
+        countdown.FrameChanged += remaining => _vm.AutoExecuteRemainingSeconds = remaining;
+        countdown.SecondChanged += remaining => _vm.CountdownText = FormatCountdownText(remaining, buttonName: null);
+        countdown.Completed += () =>
+        {
+            // 倒计时归零：等同于按"执行"
+            CancelAutoExecuteCountdown();
+            Result = InquiryWindowResult.Execute;
+            CloseProgrammatically();
+        };
+        _autoExecuteCountdown = countdown;
+        countdown.Start();
     }
 
     /// <summary>
@@ -298,31 +307,12 @@ public partial class InquiryWindowWindow : MyWindow
     /// </summary>
     public void CancelAutoExecuteCountdown()
     {
-        if (_autoExecuteTimer != null)
-        {
-            _autoExecuteTimer.Stop();
-            _autoExecuteTimer.Tick -= OnAutoExecuteTick;
-            _autoExecuteTimer = null;
-        }
-        _autoExecuteRemaining = 0;
+        var countdown = _autoExecuteCountdown;
+        _autoExecuteCountdown = null;
+        countdown?.Stop();
         _vm.IsAutoExecuteActive = false;
         _vm.AutoExecuteRemainingSeconds = 0;
         _vm.CountdownText = string.Empty;
-    }
-
-    private void OnAutoExecuteTick(object? sender, EventArgs e)
-    {
-        _autoExecuteRemaining--;
-        if (_autoExecuteRemaining > 0)
-        {
-            _vm.AutoExecuteRemainingSeconds = _autoExecuteRemaining;
-            _vm.CountdownText = FormatCountdownText(_autoExecuteRemaining, buttonName: null);
-            return;
-        }
-        // 倒计时归零：等同于按"执行"
-        CancelAutoExecuteCountdown();
-        Result = InquiryWindowResult.Execute;
-        CloseProgrammatically();
     }
 
     /// <summary>

@@ -3,11 +3,11 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ClassIsland.Core;
 using InquiryWindow.Actions;
 using InquiryWindow.Models;
+using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 using Microsoft.Extensions.Logging;
 
@@ -205,8 +205,7 @@ public partial class InquiryWindowFusionOverlay : Window
         overlay.ContentHost.Content = content;
 
         var tcs = new TaskCompletionSource<InquiryWindowResult>();
-        DispatcherTimer? timer = null;
-        EventHandler? onTick = null;
+        SmoothCountdown? countdown = null;
 
         // 覆盖窗口可能尚未显示就失败，Close() 需要容忍这种情况。
         void CloseOverlay()
@@ -225,15 +224,8 @@ public partial class InquiryWindowFusionOverlay : Window
         {
             if (!tcs.Task.IsCompleted)
             {
-                if (timer != null)
-                {
-                    timer.Stop();
-                    if (onTick != null)
-                    {
-                        timer.Tick -= onTick;
-                    }
-                    timer = null;
-                }
+                countdown?.Stop();
+                countdown = null;
                 vm.IsAutoExecuteActive = false;
                 tcs.TrySetResult(result);
                 CloseOverlay();
@@ -255,27 +247,16 @@ public partial class InquiryWindowFusionOverlay : Window
         if (settings.IsAutoExecuteEnabled && hasPath)
         {
             var seconds = Math.Max(1, (int)Math.Ceiling(settings.AutoExecuteSeconds));
-            var remaining = seconds;
             vm.IsAutoExecuteActive = true;
             vm.AutoExecuteMaxSeconds = seconds;
-            vm.AutoExecuteRemainingSeconds = remaining;
-            vm.CountdownText = FormatCountdown(remaining);
-            timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            onTick = (_, _) =>
-            {
-                remaining--;
-                if (remaining > 0)
-                {
-                    vm.AutoExecuteRemainingSeconds = remaining;
-                    vm.CountdownText = FormatCountdown(remaining);
-                }
-                else
-                {
-                    Complete(InquiryWindowResult.Execute);
-                }
-            };
-            timer.Tick += onTick;
-            timer.Start();
+            vm.AutoExecuteRemainingSeconds = seconds;
+            vm.CountdownText = FormatCountdown(seconds);
+
+            countdown = new SmoothCountdown(seconds);
+            countdown.FrameChanged += remaining => vm.AutoExecuteRemainingSeconds = remaining;
+            countdown.SecondChanged += remaining => vm.CountdownText = FormatCountdown(remaining);
+            countdown.Completed += () => Complete(InquiryWindowResult.Execute);
+            countdown.Start();
         }
 
         try

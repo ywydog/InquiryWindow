@@ -17,12 +17,20 @@ public partial class MultiButtonPromptWindow : MyWindow
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
 
-        // 拦截关闭：必须通过按钮才能关闭（与 v1 InquiryWindowWindow 一致）
+        // 拦截关闭：默认必须通过按钮才能关闭（与 v1 InquiryWindowWindow 一致）。
+        // 「详细设置 → 窗口关闭」开启时，标题栏 X 也允许关闭，并按「关闭时执行的按钮」处理。
         Closing += (_, e) =>
         {
-            if (!_allowClose)
+            if (_allowClose)
             {
-                e.Cancel = true;
+                return;
+            }
+
+            e.Cancel = true;
+            if (DataContext is MultiButtonPromptViewModel { IsClosable: true } vm)
+            {
+                // 在 Closing 内同步 Close() 会重入，交给 UI 队列等本次关闭请求结束再处理。
+                Dispatcher.UIThread.Post(() => { _ = vm.CloseByUserAsync(); });
             }
         };
 
