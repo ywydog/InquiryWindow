@@ -20,96 +20,108 @@
 
     <Border Padding="16" CornerRadius="8"
             Background="{DynamicResource LayerFillColorAltBrush}">
-        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+        <Grid RowDefinitions="*,Auto">
 
-            <!-- 弹窗标题小字 -->
-            <TextBlock Grid.Row="0"
-                       Text="{Binding DialogTitleSmall}"
-                       FontSize="14"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Margin="0,0,0,8" />
+            <!-- 上半部分（标题 / 正文 / 路径 / 倒计时）在高度不足时整体滚动，按钮行固定底部，
+                 避免内容把按钮挤出可视区 -->
+            <ScrollViewer Grid.Row="0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
 
-            <!-- 主标题 + 图标 -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
-                <Image Source="{Binding Icon}"
-                       Width="32" Height="32"
-                       IsVisible="{Binding IsIconVisible}" />
-                <TextBlock Text="{Binding DialogTitle}"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center" />
-            </StackPanel>
-
-            <!-- 正文（Markdown 渲染，仅上下滚动；高度由外层 * 行约束，写法与 SystemTools 一致）
-                 前景色统一取主题 TextFillColorPrimaryBrush，随主题（亮/暗）自动切换。 -->
-            <mdxaml:MarkdownScrollViewer Grid.Row="2"
-                                          Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
-                                          Markdown="{Binding DialogBody}"
-                                          TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-
-            <!-- 路径预览 -->
-            <TextBlock Grid.Row="3"
-                       Text="{Binding PathText}"
-                       FontFamily="Consolas, Menlo, monospace"
-                       FontSize="11"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       TextWrapping="Wrap"
-                       IsVisible="{Binding IsPathVisible}"
-                       Margin="0,8,0,8" />
-
-            <!-- 倒计时（文本 + 进度条） -->
-            <Border Grid.Row="4"
-                    Padding="12"
-                    CornerRadius="6"
-                    IsVisible="{Binding IsAutoExecuteActive}"
-                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
-                    Margin="0,0,0,8">
-                <Panel>
-                    <!-- 进度条样式由「进度条样式」设置决定：0=线性条 / 1=环形 / 2=隐藏，倒计时文字始终显示 -->
-                    <StackPanel Spacing="8" IsVisible="{Binding IsLineProgressStyle}">
-                        <TextBlock Text="{Binding CountdownText}"
-                                   FontSize="14"
-                                   FontWeight="DemiBold" />
-                        <ProgressBar Height="5"
-                                     Minimum="0"
-                                     Maximum="{Binding AutoExecuteMaxSeconds}"
-                                     Value="{Binding AutoExecuteRemainingSeconds}"
-                                     Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsRingProgressStyle}">
-                        <!-- 环形（Ellipse 背景环 + Path 进度弧，样式参照本体 CountDownComponent） -->
-                        <Panel Width="22" Height="22" VerticalAlignment="Center">
-                            <Ellipse Width="21.4" Height="21.4"
-                                     Stroke="{DynamicResource ControlStrongStrokeColorDisabledBrush}"
-                                     StrokeThickness="2.6"
-                                     VerticalAlignment="Center" HorizontalAlignment="Center" />
-                            <Path Width="22" Height="22"
-                                  Stroke="{DynamicResource AccentFillColorDefaultBrush}"
-                                  StrokeThickness="3.1"
-                                  StrokeLineCap="Round"
-                                  VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <Path.Data>
-                                    <MultiBinding Converter="{x:Static converters:RingProgressGeometryConverter.Instance}">
-                                        <Binding Path="AutoExecuteRemainingSeconds" />
-                                        <Binding Path="AutoExecuteMaxSeconds" />
-                                    </MultiBinding>
-                                </Path.Data>
-                            </Path>
-                        </Panel>
-                        <TextBlock Text="{Binding CountdownText}"
-                                   FontSize="14"
-                                   FontWeight="DemiBold"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                    <TextBlock Text="{Binding CountdownText}"
+                    <!-- 弹窗标题小字（过长时换行） -->
+                    <TextBlock Text="{Binding DialogTitleSmall}"
                                FontSize="14"
-                               FontWeight="DemiBold"
-                               IsVisible="{Binding IsNoneProgressStyle}" />
-                </Panel>
-            </Border>
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Margin="0,0,0,8" />
+
+                    <!-- 主标题 + 图标（标题过长时换行而不是被裁切） -->
+                    <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,8">
+                        <Image Grid.Column="0"
+                               Source="{Binding Icon}"
+                               Width="32" Height="32"
+                               Margin="0,0,12,0"
+                               IsVisible="{Binding IsIconVisible}"
+                               VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding DialogTitle}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- 正文（Markdown 渲染，随外层整体滚动）
+                         前景色统一取主题 TextFillColorPrimaryBrush，随主题（亮/暗）自动切换。 -->
+                    <mdxaml:MarkdownScrollViewer Engine="{x:Static helpers:MarkdownConvertHelper.Engine}"
+                                                  Markdown="{Binding DialogBody}"
+                                                  TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+
+                    <!-- 路径预览 -->
+                    <TextBlock Text="{Binding PathText}"
+                               FontFamily="Consolas, Menlo, monospace"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding IsPathVisible}"
+                               Margin="0,8,0,8" />
+
+                    <!-- 倒计时（文本 + 进度条） -->
+                    <Border Padding="12"
+                            CornerRadius="6"
+                            IsVisible="{Binding IsAutoExecuteActive}"
+                            Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
+                            Margin="0,0,0,8">
+                        <Panel>
+                            <!-- 进度条样式由「进度条样式」设置决定：0=线性条 / 1=环形 / 2=隐藏，倒计时文字始终显示 -->
+                            <StackPanel Spacing="8" IsVisible="{Binding IsLineProgressStyle}">
+                                <TextBlock Text="{Binding CountdownText}"
+                                           FontSize="14"
+                                           FontWeight="DemiBold" />
+                                <ProgressBar Height="5"
+                                             Minimum="0"
+                                             Maximum="{Binding AutoExecuteMaxSeconds}"
+                                             Value="{Binding AutoExecuteRemainingSeconds}"
+                                             Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsRingProgressStyle}">
+                                <!-- 环形（Ellipse 背景环 + Path 进度弧，样式参照本体 CountDownComponent） -->
+                                <Panel Width="22" Height="22" VerticalAlignment="Center">
+                                    <Ellipse Width="21.4" Height="21.4"
+                                             Stroke="{DynamicResource ControlStrongStrokeColorDisabledBrush}"
+                                             StrokeThickness="2.6"
+                                             VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    <Path Width="22" Height="22"
+                                          Stroke="{DynamicResource AccentFillColorDefaultBrush}"
+                                          StrokeThickness="3.1"
+                                          StrokeLineCap="Round"
+                                          VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Path.Data>
+                                            <MultiBinding Converter="{x:Static converters:RingProgressGeometryConverter.Instance}">
+                                                <Binding Path="AutoExecuteRemainingSeconds" />
+                                                <Binding Path="AutoExecuteMaxSeconds" />
+                                            </MultiBinding>
+                                        </Path.Data>
+                                    </Path>
+                                </Panel>
+                                <TextBlock Text="{Binding CountdownText}"
+                                           FontSize="14"
+                                           FontWeight="DemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding CountdownText}"
+                                       FontSize="14"
+                                       FontWeight="DemiBold"
+                                       IsVisible="{Binding IsNoneProgressStyle}" />
+                        </Panel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
 
             <!-- 按钮区：实际模式「取消」+「执行」；预览模式「看完了」 -->
-            <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto,Auto">
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto">
                 <Button Grid.Column="1"
                         Content="取消"
                         MinWidth="84"
