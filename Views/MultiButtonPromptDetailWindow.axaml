@@ -11,7 +11,7 @@
                  x:DataType="local:MultiButtonPromptDetailWindow"
                  Title="多按钮询问行动 · 详细设置"
                  Width="1240" Height="550"
-                 MinWidth="720" MinHeight="420"
+                 MinWidth="1024" MinHeight="420"
                  WindowStartupLocation="CenterOwner"
                  CanResize="True"
                  ShowAsDialog="True">
@@ -62,7 +62,7 @@
         </Style>
     </ci:MyWindow.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
 
         <!-- ============ 标题栏（OS 风格）============ -->
         <Border Grid.Row="0"
@@ -100,7 +100,7 @@
         </Border>
 
         <!-- ============ 主体：三栏布局 ============ -->
-        <Grid Grid.Row="2" ColumnDefinitions="320,280,*">
+        <Grid Grid.Row="1" ColumnDefinitions="320,280,*">
 
             <!-- ======== 左侧：窗口设置 ======== -->
             <Border Grid.Column="0"
@@ -174,9 +174,6 @@
                                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                                        VerticalAlignment="Center" />
                                         <TextBlock Text="窗口背景" FontWeight="SemiBold" />
-                                        <TextBlock Text="（默认折叠）" FontSize="11"
-                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                   VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Expander.Header>
                                 <Border Classes="pane-card" Margin="0,8,0,0">
@@ -227,7 +224,7 @@
                                             </ComboBox>
                                         </StackPanel>
 
-                                        <TextBlock Text="支持 PNG / JPG / JPEG / WEBP / BMP。文件不存在或加载失败时自动降级为纯色背景。"
+                                        <TextBlock Text="文件不存在或加载失败时自动降级为纯色背景。"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                    TextWrapping="Wrap" />
@@ -265,23 +262,24 @@
                                                 </ComboBox>
                                             </StackPanel>
                                         </Grid>
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="自动执行的按钮" FontSize="11"
-                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                            <ComboBox HorizontalAlignment="Stretch"
-                                                      ItemsSource="{Binding Settings.AutoExecuteTargets}"
-                                                      SelectedIndex="{Binding Settings.AutoExecuteTargetIndex, Mode=TwoWay}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate x:DataType="models:AutoExecuteTarget">
-                                                        <TextBlock Text="{Binding Name}" />
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
-                                            <TextBlock Text="末尾「无事发生」表示到时间仅关闭弹窗、不执行任何 Action。"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                       TextWrapping="Wrap" />
-                                        </StackPanel>
+                                    </StackPanel>
+                                    <!-- 自动执行与「窗口关闭」共用同一目标按钮，只保留这一个选择器 -->
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="自动执行 / 关闭时执行的按钮" FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                        <ComboBox HorizontalAlignment="Stretch"
+                                                  ItemsSource="{Binding Settings.AutoExecuteTargets}"
+                                                  SelectedIndex="{Binding Settings.AutoExecuteTargetIndex, Mode=TwoWay}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate x:DataType="models:AutoExecuteTarget">
+                                                    <TextBlock Text="{Binding Name}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBlock Text="到时自动执行，或点标题栏 X 关闭时，都按此按钮处理；选择「无事发生」则仅关闭弹窗。"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                   TextWrapping="Wrap" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -293,26 +291,10 @@
                                     <CheckBox x:Name="ClosableCheck"
                                               Content="窗口可直接关闭（标题栏 X 按钮可用）"
                                               IsChecked="{Binding Settings.IsClosable, Mode=TwoWay}" />
-                                    <StackPanel Spacing="4" Margin="24,0,0,0"
-                                                IsEnabled="{Binding #ClosableCheck.IsChecked}">
-                                        <TextBlock Text="关闭时执行的按钮（与「自动执行」共用同一目标）"
-                                                   FontSize="11"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                   TextWrapping="Wrap" />
-                                        <ComboBox HorizontalAlignment="Stretch"
-                                                  ItemsSource="{Binding Settings.AutoExecuteTargets}"
-                                                  SelectedIndex="{Binding Settings.AutoExecuteTargetIndex, Mode=TwoWay}">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate x:DataType="models:AutoExecuteTarget">
-                                                    <TextBlock Text="{Binding Name}" />
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        <TextBlock Text="点 X 关闭时按此按钮触发 Action 链。选择「无事发生」则仅关闭弹窗。"
-                                                   FontSize="11"
-                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                   TextWrapping="Wrap" />
-                                    </StackPanel>
+                                    <TextBlock Margin="24,0,0,0" FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               TextWrapping="Wrap"
+                                               Text="关闭时按上方「自动执行 / 关闭时执行的按钮」处理；选择「无事发生」则仅关闭弹窗。" />
                                 </StackPanel>
                             </Border>
 
@@ -326,10 +308,6 @@
                                               IsChecked="{Binding Settings.IsMarkdownRendered, Mode=TwoWay}" />
                                     <CheckBox Content="交互融合（贴合主界面覆盖层显示，而非独立窗口）"
                                               IsChecked="{Binding Settings.IsInteractiveFusion, Mode=TwoWay}" />
-                                    <TextBlock Margin="24,0,0,0" FontSize="11"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                               TextWrapping="Wrap"
-                                               Text="开启后，多按钮询问内容将融合到 ClassIsland 主界面覆盖层显示（无边框、贴合主界面），而不是打开独立窗口。默认关闭。" />
                                 </StackPanel>
                             </Border>
 
@@ -363,7 +341,7 @@
                                     <TextBlock Margin="24,0,0,0" FontSize="11"
                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                TextWrapping="Wrap"
-                                               Text="关闭时沿用默认 500×280 并可自由缩放；开启后弹窗（含「预览」）按指定宽高显示，交互融合模式下仍贴合主界面。" />
+                                               Text="关闭时沿用默认 500×280 并可自由缩放；交互融合模式始终贴合主界面。" />
                                 </StackPanel>
                             </Border>
 
@@ -399,19 +377,19 @@
                     <Border DockPanel.Dock="Top" Padding="10,8"
                             BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
+                        <StackPanel Spacing="6">
                             <Button Classes="toolbar-btn"
-                                    Click="OnAddButtonClick" HorizontalAlignment="Stretch">
+                                    Click="OnAddButtonClick"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <ci:FluentIcon Glyph="&#xE00C;" FontSize="13" />
                                     <TextBlock Text="新建按钮" />
                                 </StackPanel>
                             </Button>
+                            <TextBox x:Name="SearchBox" Watermark="搜索按钮名..."
+                                     TextChanged="OnSearchTextChanged" />
                         </StackPanel>
-                    </Border>
-                    <Border DockPanel.Dock="Top" Padding="10,8">
-                        <TextBox x:Name="SearchBox" Watermark="搜索按钮名..."
-                                 TextChanged="OnSearchTextChanged" />
                     </Border>
                     <ListBox x:Name="ButtonList"
                              Background="Transparent"
@@ -467,10 +445,9 @@
             </Border>
 
             <!-- ======== 右侧：按钮详情面板 ======== -->
-            <DockPanel Grid.Column="2">
-                <!-- 空状态 -->
+            <Grid Grid.Column="2">
+                <!-- 空状态：覆盖整个右侧区域居中显示，选中按钮后隐藏 -->
                 <Grid x:Name="PlaceholderView"
-                      DockPanel.Dock="Top"
                       HorizontalAlignment="Center" VerticalAlignment="Center">
                     <StackPanel Spacing="12" HorizontalAlignment="Center">
                         <ci:FluentIcon Glyph="&#xE8A1;" FontSize="42"
@@ -526,10 +503,6 @@
                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                     <ColorPicker Color="{Binding ActiveButton.CustomColor, Mode=TwoWay}"
                                                   IsAlphaEnabled="False" />
-                                    <TextBlock Text="提示：仅在「自定义颜色」模式下生效。「高亮」使用系统蓝色。"
-                                               FontSize="11"
-                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                               TextWrapping="Wrap" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -543,7 +516,7 @@
                             <StackPanel Spacing="8">
                                 <TextBlock Text="交互倒计时" Classes="pane-card-title" />
                                 <CheckBox x:Name="ButtonCountdownEnabledCheck"
-                                          Content="启用交互倒计时（弹窗打开后该按钮禁用 N 秒，倒计时结束才可点击）"
+                                          Content="启用交互倒计时（该按钮禁用 N 秒后才可点击）"
                                           IsChecked="{Binding ActiveButton.IsCountdownEnabled, Mode=TwoWay}" />
                                 <StackPanel Spacing="4" Margin="24,0,0,0"
                                             IsEnabled="{Binding #ButtonCountdownEnabledCheck.IsChecked}">
@@ -558,7 +531,7 @@
                                                                    Value="{Binding ActiveButton.CountdownSeconds, Converter={x:Static ci:NotNaNConverter.Instance}}" />
                                         </StackPanel>
                                     </Grid>
-                                    <TextBlock Text="运行时预览：弹窗打开后该按钮文字后追加「(Ns)」显示剩余秒数并呈暗淡禁用态，归零后自动恢复可点击；仅此按钮受影响，不执行 Action。"
+                                    <TextBlock Text="仅锁定本按钮，倒计时期间按钮呈禁用态并显示剩余秒数，不会自动执行 Action。"
                                                FontSize="11"
                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                TextWrapping="Wrap" />
@@ -576,12 +549,9 @@
                                           IsChecked="{Binding ActiveButton.IsOperationVerification, Mode=TwoWay}" />
                                 <StackPanel Spacing="6" Margin="24,0,0,0"
                                             IsEnabled="{Binding ActiveButton.IsOperationVerification}">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Grid.Column="0"
-                                                   Text="凭据状态" FontSize="11"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                   VerticalAlignment="Center" />
-                                    </Grid>
+                                    <TextBlock Text="凭据状态" FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               VerticalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="{Binding ActiveButton.VerificationStatusText}"
                                                    FontSize="12"
@@ -594,9 +564,9 @@
                                     <TextBlock FontSize="11"
                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                TextWrapping="Wrap"
-                                               Text="需要先在 ClassIsland 中配置认证方式（如密码），再在这里创建/修改凭据。
-验证失败时："
-                                               IsVisible="{Binding ActiveButton.IsOperationVerification}" />
+                                               Text="需先在 ClassIsland 中配置认证方式（如密码），再在这里创建或修改凭据。" />
+                                    <TextBlock Text="验证失败时" FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                     <ComboBox HorizontalAlignment="Stretch"
                                               SelectedIndex="{Binding ActiveButton.VerificationFailureBehavior, Mode=TwoWay}">
                                         <ComboBoxItem Content="不执行，弹窗保持打开" />
@@ -624,22 +594,8 @@
                         </Button>
                     </StackPanel>
                 </ScrollViewer>
-            </DockPanel>
+            </Grid>
 
         </Grid>
-
-        <!-- ============ 状态栏 ============ -->
-        <Border Grid.Row="3"
-                Background="{DynamicResource LayerFillColorDefaultBrush}"
-                BorderThickness="0,1,0,0"
-                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                Padding="12,6">
-            <StackPanel Orientation="Horizontal" Spacing="16">
-                <TextBlock Text="InquiryWindow · v0.x.x"
-                           FontSize="11"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                           VerticalAlignment="Center" />
-            </StackPanel>
-        </Border>
     </Grid>
 </ci:MyWindow>
