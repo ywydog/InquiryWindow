@@ -333,6 +333,40 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- 窗口大小 -->
+                            <Border Classes="pane-card">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="窗口大小" Classes="pane-card-title" />
+                                    <CheckBox x:Name="CustomSizeCheck"
+                                              Content="强制使用自定义窗口大小"
+                                              IsChecked="{Binding Settings.UseCustomWindowSize, Mode=TwoWay}" />
+                                    <Grid ColumnDefinitions="*,*" IsEnabled="{Binding #CustomSizeCheck.IsChecked}">
+                                        <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,4,0">
+                                            <TextBlock Text="宽度（DIP）" FontSize="11"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <controls:FANumberBox MinWidth="120"
+                                                                  SpinButtonPlacementMode="Inline"
+                                                                  Minimum="360" Maximum="7680"
+                                                                  SmallChange="10" LargeChange="100"
+                                                                  Value="{Binding Settings.CustomWindowWidth, Converter={x:Static ci:NotNaNConverter.Instance}}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="4" Margin="4,0,0,0">
+                                            <TextBlock Text="高度（DIP）" FontSize="11"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                            <controls:FANumberBox MinWidth="120"
+                                                                  SpinButtonPlacementMode="Inline"
+                                                                  Minimum="220" Maximum="4320"
+                                                                  SmallChange="10" LargeChange="100"
+                                                                  Value="{Binding Settings.CustomWindowHeight, Converter={x:Static ci:NotNaNConverter.Instance}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Margin="24,0,0,0" FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                               TextWrapping="Wrap"
+                                               Text="关闭时沿用默认 500×280 并可自由缩放；开启后弹窗（含「预览」）按指定宽高显示，交互融合模式下仍贴合主界面。" />
+                                </StackPanel>
+                            </Border>
+
                         </StackPanel>
                     </ScrollViewer>
                 </DockPanel>

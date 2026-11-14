@@ -71,7 +71,23 @@ public partial class MultiButtonPromptWindow : MyWindow
         {
             vm.RequestClose += CloseWindow;
             _subscribedVm = vm;
+            ApplyCustomSize(vm);
         }
+    }
+
+    /// <summary>
+    /// 「详细设置 → 窗口大小」开启时，用配置的宽高覆盖 XAML 默认的 500×280。
+    /// 宽高下限仍受窗口的 MinWidth / MinHeight 约束。
+    /// </summary>
+    private void ApplyCustomSize(MultiButtonPromptViewModel vm)
+    {
+        if (!vm.UseCustomWindowSize)
+        {
+            return;
+        }
+
+        Width = Math.Max(MinWidth, vm.CustomWindowWidth);
+        Height = Math.Max(MinHeight, vm.CustomWindowHeight);
     }
 
     private void CloseWindow()

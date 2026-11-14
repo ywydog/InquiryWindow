@@ -178,6 +178,15 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     /// <summary>窗口是否允许用户直接关闭（对应「详细设置 → 窗口关闭」开关）。</summary>
     public bool IsClosable => _settings.IsClosable;
 
+    /// <summary>是否按「详细设置 → 窗口大小」强制使用自定义宽高。</summary>
+    public bool UseCustomWindowSize => _settings.UseCustomWindowSize;
+
+    /// <summary>自定义窗口宽度（DIP）。</summary>
+    public double CustomWindowWidth => _settings.CustomWindowWidth;
+
+    /// <summary>自定义窗口高度（DIP）。</summary>
+    public double CustomWindowHeight => _settings.CustomWindowHeight;
+
     /// <summary>标题栏 X 触发的关闭流程是否正在执行，避免连点重复执行 Action 链。</summary>
     private bool _isUserClosing;
 

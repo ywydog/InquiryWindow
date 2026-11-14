@@ -50,6 +50,21 @@ public partial class MultiButtonPromptSettings : ObservableObject
     private bool _isClosable = true;
 
     /// <summary>
+    /// 是否强制使用自定义窗口大小。默认 false（沿用默认 500×280）。
+    /// 开启后 <see cref="CustomWindowWidth"/> / <see cref="CustomWindowHeight"/> 生效。
+    /// </summary>
+    [ObservableProperty]
+    private bool _useCustomWindowSize;
+
+    /// <summary>自定义窗口宽度（DIP）。仅在 <see cref="UseCustomWindowSize"/> 为 true 时生效。</summary>
+    [ObservableProperty]
+    private double _customWindowWidth = 500;
+
+    /// <summary>自定义窗口高度（DIP）。仅在 <see cref="UseCustomWindowSize"/> 为 true 时生效。</summary>
+    [ObservableProperty]
+    private double _customWindowHeight = 280;
+
+    /// <summary>
     /// 窗口是否置顶（始终位于最上层）。默认 true。
     /// </summary>
     [ObservableProperty]
