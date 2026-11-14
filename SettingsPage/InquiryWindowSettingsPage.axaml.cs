@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Attributes;
+using ClassIsland.Core.Icons;
 using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 using InquiryWindow.Views;
@@ -12,7 +13,8 @@ namespace InquiryWindow.SettingsPage;
 /// InquiryWindow 主设置页：只管插件级全局设置（弹窗外观 / 预览）。
 /// 按钮预设库已拆为独立页面 <see cref="ButtonPresetSettingsPage"/>。
 /// </summary>
-[SettingsPageInfo("inquiryWindow.settings.main", "InquiryWindow 设置", "\uE82D", "\uE713")]
+[SettingsPageInfo("inquiryWindow.settings.main", "InquiryWindow 设置",
+    FluentIcons.ChatMultipleRegular, FluentIcons.ChatMultipleFilled)]
 public partial class InquiryWindowSettingsPage : SettingsPageBase
 {
     public InquiryWindowSettingsViewModel ViewModel { get; }

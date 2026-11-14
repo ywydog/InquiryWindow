@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using ClassIsland.Core.Icons;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using InquiryWindow.Services;
@@ -30,7 +31,7 @@ public partial class MultiButtonPromptSettings : ObservableObject
     /// 历史数据里的单个字形字符同样可用，由 <see cref="IconExpressionService"/> 兼容解析。
     /// </summary>
     [ObservableProperty]
-    private string _icon = IconExpressionService.FormatExpression("fluent", "\uE82D");
+    private string _icon = IconExpressionService.FormatExpression("fluent", FluentIcons.ChatMultipleRegular);
 
     /// <summary>由 <see cref="Icon"/> 解析出的图标源，供 XAML 直接绑定渲染。</summary>
     [System.Text.Json.Serialization.JsonIgnore]
@@ -173,12 +174,12 @@ public partial class MultiButtonPromptSettings : ObservableObject
         Buttons.Add(new MultiButtonPromptButton
         {
             Name = "执行",
-            Icon = IconExpressionService.FormatExpression("fluent", "\uE73E")
+            Icon = IconExpressionService.FormatExpression("fluent", FluentIcons.CheckmarkRegular)
         });
         Buttons.Add(new MultiButtonPromptButton
         {
             Name = "取消",
-            Icon = IconExpressionService.FormatExpression("fluent", "\uE711")
+            Icon = IconExpressionService.FormatExpression("fluent", FluentIcons.DismissRegular)
         });
         RebuildAutoExecuteTargets();
         AutoExecuteTargetIndex = 0;

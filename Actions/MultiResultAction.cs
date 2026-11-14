@@ -2,6 +2,7 @@ using System.Linq;
 using ClassIsland.Core.Abstractions.Automation;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
+using ClassIsland.Core.Icons;
 using InquiryWindow.Models;
 using Microsoft.Extensions.Logging;
 
@@ -17,7 +18,7 @@ namespace InquiryWindow.Actions;
 /// </summary>
 // addDefaultToMenu: false —— 关闭系统自动加默认菜单，改由 Plugin.BuildActionMenuTree
 // 统一注册到「InquiryWindow 行动」集下。
-[ActionInfo("InquiryWindow.MultiResult", "多结果行动", "\uE8B5", addDefaultToMenu: false)]
+[ActionInfo("InquiryWindow.MultiResult", "多结果行动", FluentIcons.BranchRegular, addDefaultToMenu: false)]
 public class MultiResultAction(
     IActionService actionService,
     ILogger<MultiResultAction> logger)

@@ -5,6 +5,7 @@
                  xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                  xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
                  xmlns:models="clr-namespace:InquiryWindow.Models"
+                 xmlns:icons="clr-namespace:ClassIsland.Core.Icons;assembly=ClassIsland.Core"
                  xmlns:converters="clr-namespace:InquiryWindow.Converters"
                  xmlns:local="clr-namespace:InquiryWindow.Views"
                  xmlns:ui="clr-namespace:InquiryWindow.Controls"
@@ -72,7 +73,7 @@
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                    <ci:FluentIcon Glyph="&#xE82D;"
+                    <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.ChatMultipleRegular}"
                                    FontSize="18"
                                    Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                    VerticalAlignment="Center" />
@@ -83,7 +84,7 @@
 
                 <Button Grid.Column="2" Classes="toolbar-btn" Click="OnPreviewClick" Margin="0,0,6,0">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <ci:FluentIcon Glyph="&#xE890;" FontSize="13" />
+                        <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.EyeRegular}" FontSize="13" />
                         <TextBlock Text="预览弹窗" />
                     </StackPanel>
                 </Button>
@@ -92,7 +93,7 @@
                 </Button>
                 <Button Grid.Column="4" Classes="toolbar-btn accent" Click="OnSaveClick">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <ci:FluentIcon Glyph="&#xE74E;" FontSize="13" />
+                        <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.SaveRegular}" FontSize="13" />
                         <TextBlock Text="保存" />
                     </StackPanel>
                 </Button>
@@ -112,7 +113,7 @@
                             BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ci:FluentIcon Glyph="&#xE8A7;" FontSize="14"
+                            <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.WindowRegular}" FontSize="14"
                                            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                            VerticalAlignment="Center" />
                             <TextBlock Text="窗口设置"
@@ -170,7 +171,7 @@
                                       HorizontalContentAlignment="Stretch">
                                 <Expander.Header>
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <ci:FluentIcon Glyph="&#xE8B9;" FontSize="14"
+                                        <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.ColorBackgroundRegular}" FontSize="14"
                                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                                        VerticalAlignment="Center" />
                                         <TextBlock Text="窗口背景" FontWeight="SemiBold" />
@@ -361,7 +362,7 @@
                             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                <ci:FluentIcon Glyph="&#xE8C8;" FontSize="14"
+                                <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.TextBulletListRegular}" FontSize="14"
                                                Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                                VerticalAlignment="Center" />
                                 <TextBlock Text="按钮列表"
@@ -383,7 +384,7 @@
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <ci:FluentIcon Glyph="&#xE00C;" FontSize="13" />
+                                    <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.AddFilled}" FontSize="13" />
                                     <TextBlock Text="新建按钮" />
                                 </StackPanel>
                             </Button>
@@ -450,7 +451,7 @@
                 <Grid x:Name="PlaceholderView"
                       HorizontalAlignment="Center" VerticalAlignment="Center">
                     <StackPanel Spacing="12" HorizontalAlignment="Center">
-                        <ci:FluentIcon Glyph="&#xE8A1;" FontSize="42"
+                        <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.CursorClickRegular}" FontSize="42"
                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                        HorizontalAlignment="Center" />
                         <TextBlock Text="从中间选择一个按钮" FontSize="13"
@@ -588,7 +589,7 @@
                                 HorizontalAlignment="Right"
                                 Click="OnDeleteButtonClick">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <ci:FluentIcon Glyph="&#xE74D;" FontSize="13" />
+                                <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.DeleteRegular}" FontSize="13" />
                                 <TextBlock Text="删除该按钮" />
                             </StackPanel>
                         </Button>

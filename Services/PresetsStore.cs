@@ -152,7 +152,7 @@ public class PresetsStore
     /// <summary>兼容旧调用，立即落盘。</summary>
     public void Save() => SaveNow();
 
-    public ButtonPreset AddPreset(string name = "新预设", string icon = "\uE10F")
+    public ButtonPreset AddPreset(string name = "新预设", string icon = IconExpressionService.DefaultFluentGlyph)
     {
         Load();
         var preset = new ButtonPreset { Name = name, Icon = icon };

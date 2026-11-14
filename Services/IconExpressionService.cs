@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Text;
 using ClassIsland.Core.Controls.IconSources;
+using ClassIsland.Core.Icons;
 using ClassIsland.Core.Helpers.UI;
 using ClassIsland.Shared;
 using FluentAvalonia.UI.Controls;
@@ -21,7 +22,7 @@ public static class IconExpressionService
     /// <summary>
     /// 新按钮 / 新预设使用的默认 Fluent 字形（与原单字形默认值保持一致）。
     /// </summary>
-    public const string DefaultFluentGlyph = "\uE10F";
+    public const string DefaultFluentGlyph = FluentIcons.QuestionCircleRegular;
 
     /// <summary>
     /// 新按钮 / 新预设使用的默认图标表达式。

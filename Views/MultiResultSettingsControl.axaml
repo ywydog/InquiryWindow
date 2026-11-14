@@ -4,6 +4,7 @@
                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                               xmlns:ci="http://classisland.tech/schemas/xaml/core"
                               xmlns:core="clr-namespace:ClassIsland.Core.Controls.Automation;assembly=ClassIsland.Core"
+                              xmlns:icons="clr-namespace:ClassIsland.Core.Icons;assembly=ClassIsland.Core"
                               xmlns:models="clr-namespace:InquiryWindow.Models"
                               xmlns:local="clr-namespace:InquiryWindow.Views">
 
@@ -98,7 +99,7 @@
             <Button Click="OnAddGroupClick"
                     HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <ci:FluentIcon Glyph="&#xE00C;" FontSize="14" />
+                    <ci:FluentIcon Glyph="{x:Static icons:FluentIcons.AddFilled}" FontSize="14" />
                     <TextBlock Text="添加结果组" />
                 </StackPanel>
             </Button>

@@ -1,6 +1,7 @@
 using ClassIsland.Core.Abstractions.Automation;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
+using ClassIsland.Core.Icons;
 using InquiryWindow.Models;
 using InquiryWindow.ViewModels;
 using InquiryWindow.Views;
@@ -13,7 +14,7 @@ namespace InquiryWindow.Actions;
 /// </summary>
 // addDefaultToMenu: false —— 关闭系统自动加默认菜单，改由 Plugin.BuildActionMenuTree
 // 统一注册到「InquiryWindow 行动」集下，与 InquiryWindowAction 一起集中管理。
-[ActionInfo("InquiryWindow.MultiButtonPrompt", "多按钮询问", "\uE82D", addDefaultToMenu: false)]
+[ActionInfo("InquiryWindow.MultiButtonPrompt", "多按钮询问", FluentIcons.ChatMultipleRegular, addDefaultToMenu: false)]
 public class MultiButtonPromptAction(
     IActionService actionService,
     ILogger<MultiButtonPromptViewModel> viewModelLogger,

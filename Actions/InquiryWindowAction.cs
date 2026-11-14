@@ -7,6 +7,7 @@ using ClassIsland.Core.Abstractions.Automation;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Controls;
+using ClassIsland.Core.Icons;
 using InquiryWindow.Models;
 using InquiryWindow.Services;
 using InquiryWindow.Views;
@@ -16,7 +17,7 @@ namespace InquiryWindow.Actions;
 
 // addDefaultToMenu: false —— 关闭系统自动加默认菜单，改由 Plugin.BuildActionMenuTree
 // 统一注册到「InquiryWindow 行动」集下，与 MultiButtonPromptAction 一起集中管理。
-[ActionInfo("action.inquiryWindow", "询问窗", "\uE4C4", addDefaultToMenu: false)]
+[ActionInfo("action.inquiryWindow", "询问窗", FluentIcons.QuestionCircleRegular, addDefaultToMenu: false)]
 [SupportedOSPlatform("windows")]   // 调 IconExtractorService（仅 Windows）
 public class InquiryWindowAction(
     ILessonsService lessonsService,

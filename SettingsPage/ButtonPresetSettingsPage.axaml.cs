@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Attributes;
+using ClassIsland.Core.Icons;
 using InquiryWindow.Services;
 using InquiryWindow.ViewModels;
 
@@ -15,8 +16,8 @@ namespace InquiryWindow.SettingsPage;
 /// </summary>
 [SettingsPageInfo("inquiryWindow.settings.presets",
     "InquiryWindow - 按钮预设库",
-    "\uE82D",
-    "\uE82D")]
+    FluentIcons.BookmarkRegular,
+    FluentIcons.BookmarkFilled)]
 public partial class ButtonPresetSettingsPage : SettingsPageBase
 {
     public ButtonPresetSettingsViewModel ViewModel { get; }

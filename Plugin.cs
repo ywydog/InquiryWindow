@@ -3,6 +3,7 @@ using ClassIsland.Core.Abstractions;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
 using ClassIsland.Core.Extensions.Registry;
+using ClassIsland.Core.Icons;
 using ClassIsland.Core.Models.Automation;
 using ClassIsland.Core.Services.Registry;
 using ClassIsland.Shared;
@@ -27,7 +28,7 @@ public partial class Plugin : PluginBase
     private const string ActionGroupName = "InquiryWindow 行动";
 
     /// <summary>根菜单组图标：与 InquiryWindowSettingsPage 上使用的图标保持一致。</summary>
-    private const string ActionGroupIcon = "\uE82D";
+    private const string ActionGroupIcon = FluentIcons.ChatMultipleRegular;
 
     /// <summary>
     /// 设置页面分组 ID：所有 InquiryWindow 设置页面都归属到这个分组。
@@ -36,7 +37,7 @@ public partial class Plugin : PluginBase
     private const string SettingsGroupId = "inquirywindow.settings";
 
     /// <summary>设置页面分组图标（与主菜单图标一致，方便辨识）。</summary>
-    private const string SettingsGroupIcon = "\uE82D";
+    private const string SettingsGroupIcon = FluentIcons.SettingsRegular;
 
     /// <summary>设置页面分组的显示名（回退方案中也会作为名称前缀使用）。</summary>
     private const string SettingsGroupName = "InquiryWindow 设置";
@@ -48,9 +49,9 @@ public partial class Plugin : PluginBase
     /// </summary>
     private static readonly IReadOnlyList<ActionRegistration> ActionRegistrations = new ActionRegistration[]
     {
-        new("action.inquiryWindow",            "询问窗",       "\uE4C4"),
-        new("InquiryWindow.MultiButtonPrompt", "多按钮询问",   "\uE82D"),
-        new("InquiryWindow.MultiResult",       "多结果行动",   "\uE8B5"),
+        new("action.inquiryWindow",            "询问窗",       FluentIcons.QuestionCircleRegular),
+        new("InquiryWindow.MultiButtonPrompt", "多按钮询问",   FluentIcons.ChatMultipleRegular),
+        new("InquiryWindow.MultiResult",       "多结果行动",   FluentIcons.BranchRegular),
     };
 
     public override void Initialize(HostBuilderContext context, IServiceCollection services)
