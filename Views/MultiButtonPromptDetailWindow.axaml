@@ -304,7 +304,7 @@
                                     <TextBlock Text="弹窗行为" Classes="pane-card-title" />
                                     <CheckBox Content="置顶（弹窗始终位于最上层）"
                                               IsChecked="{Binding Settings.IsTopmost, Mode=TwoWay}" />
-                                    <CheckBox Content="所有 Markdown 渲染"
+                                    <CheckBox Content="提示文本按 Markdown 渲染（关闭后以纯文本显示）"
                                               IsChecked="{Binding Settings.IsMarkdownRendered, Mode=TwoWay}" />
                                     <CheckBox Content="交互融合（贴合主界面覆盖层显示，而非独立窗口）"
                                               IsChecked="{Binding Settings.IsInteractiveFusion, Mode=TwoWay}" />

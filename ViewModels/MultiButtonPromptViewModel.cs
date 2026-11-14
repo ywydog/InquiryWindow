@@ -138,6 +138,10 @@ public partial class MultiButtonPromptViewModel : ObservableObject
             OnPropertyChanged(nameof(IsRingProgressStyle));
             OnPropertyChanged(nameof(IsNoneProgressStyle));
         }
+        else if (e.PropertyName == nameof(MultiButtonPromptSettings.IsMarkdownRendered))
+        {
+            OnPropertyChanged(nameof(IsMarkdownRendered));
+        }
     }
 
     /// <summary>从绝对路径加载背景图片。失败 / 路径为空时返回 null（弹窗降级为纯色背景）。</summary>
@@ -189,6 +193,12 @@ public partial class MultiButtonPromptViewModel : ObservableObject
 
     /// <summary>窗口是否置顶显示（对应「详细设置 → 弹窗行为 → 置顶显示」）。</summary>
     public bool IsTopmost => _settings.IsTopmost;
+
+    /// <summary>
+    /// 提示文本是否按 Markdown 渲染（对应「详细设置 → 弹窗行为 → 所有 Markdown 渲染」）。
+    /// 关闭时主提示 / 副提示以纯文本显示。
+    /// </summary>
+    public bool IsMarkdownRendered => _settings.IsMarkdownRendered;
 
     /// <summary>标题栏 X 触发的关闭流程是否正在执行，避免连点重复执行 Action 链。</summary>
     private bool _isUserClosing;
