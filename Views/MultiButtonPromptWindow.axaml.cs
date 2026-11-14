@@ -90,6 +90,44 @@ public partial class MultiButtonPromptWindow : MyWindow
         Height = Math.Max(MinHeight, vm.CustomWindowHeight);
     }
 
+    /// <summary>
+    /// 自定义尺寸可能大于屏幕工作区（例如四块大屏拼起来的配置换到笔记本上），
+    /// 显示后按工作区收缩，避免弹窗超出屏幕、按钮看不到。
+    /// </summary>
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        ClampToWorkingArea();
+    }
+
+    private void ClampToWorkingArea()
+    {
+        try
+        {
+            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            if (screen is null)
+            {
+                return;
+            }
+
+            var scaling = RenderScaling > 0 ? RenderScaling : 1.0;
+            var maxWidth = screen.WorkingArea.Width / scaling;
+            var maxHeight = screen.WorkingArea.Height / scaling;
+            if (Width > maxWidth)
+            {
+                Width = maxWidth;
+            }
+            if (Height > maxHeight)
+            {
+                Height = maxHeight;
+            }
+        }
+        catch (Exception)
+        {
+            // 屏幕信息不可用时保持原尺寸。
+        }
+    }
+
     private void CloseWindow()
     {
         _allowClose = true;

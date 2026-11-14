@@ -532,6 +532,7 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
     public async Task ShowDialogCompat()
     {
         var owner = AppBase.Current.GetRootWindow();
+        ClampToWorkingArea(owner as Window);
         if (owner is Window windowOwner)
         {
             await ShowDialog<object?>(windowOwner);
@@ -547,6 +548,41 @@ public partial class MultiButtonPromptDetailWindow : MyWindow, INotifyPropertyCh
             Closed += OnClosed;
             Show();
             await tcs.Task;
+        }
+    }
+
+    /// <summary>
+    /// 初始宽高（1240×550）在 1080p 高缩放或小屏幕上可能超出工作区，
+    /// 打开前按屏幕工作区收缩，避免窗口一出现就有一部分在屏幕外。
+    /// </summary>
+    private void ClampToWorkingArea(Window? reference)
+    {
+        try
+        {
+            var screen = (reference is not null ? Screens.ScreenFromWindow(reference) : null) ?? Screens.Primary;
+            if (screen is null)
+            {
+                return;
+            }
+
+            var scaling = reference?.RenderScaling ?? RenderScaling;
+            if (scaling <= 0)
+            {
+                scaling = 1.0;
+            }
+
+            var maxWidth = screen.WorkingArea.Width / scaling;
+            var maxHeight = screen.WorkingArea.Height / scaling;
+
+            // 最小尺寸也不能超过工作区，否则窗口无法完整显示。
+            MinWidth = Math.Min(MinWidth, maxWidth);
+            MinHeight = Math.Min(MinHeight, maxHeight);
+            Width = Math.Min(Width, maxWidth);
+            Height = Math.Min(Height, maxHeight);
+        }
+        catch (Exception)
+        {
+            // 取屏幕信息失败时保持 XAML 默认尺寸。
         }
     }
 }

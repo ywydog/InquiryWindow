@@ -13,7 +13,7 @@
              MinHeight="220" MinWidth="360"
              WindowStartupLocation="CenterScreen"
              CanResize="True"
-             Topmost="True"
+             Topmost="{Binding IsTopmost}"
              ShowAsDialog="True">
 
     <ci:MyWindow.Styles>

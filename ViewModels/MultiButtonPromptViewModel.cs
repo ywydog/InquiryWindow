@@ -187,6 +187,9 @@ public partial class MultiButtonPromptViewModel : ObservableObject
     /// <summary>自定义窗口高度（DIP）。</summary>
     public double CustomWindowHeight => _settings.CustomWindowHeight;
 
+    /// <summary>窗口是否置顶显示（对应「详细设置 → 弹窗行为 → 置顶显示」）。</summary>
+    public bool IsTopmost => _settings.IsTopmost;
+
     /// <summary>标题栏 X 触发的关闭流程是否正在执行，避免连点重复执行 Action 链。</summary>
     private bool _isUserClosing;
 
