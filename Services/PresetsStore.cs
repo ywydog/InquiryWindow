@@ -85,12 +85,29 @@ public class PresetsStore
                 Data = new PresetsData();
             }
 
+            // 旧版本预设里保存的是 Segoe 码点，加载后一次性迁移为 Fluent 图标。
+            var migrated = false;
+            foreach (var preset in Data.Presets)
+            {
+                if (IconMigration.TryMigrate(preset.Icon, out var icon))
+                {
+                    preset.Icon = icon;
+                    migrated = true;
+                }
+            }
+
             Data.Presets.CollectionChanged += OnPresetsChanged;
             foreach (var p in Data.Presets)
             {
                 Track(p);
             }
             _loaded = true;
+
+            if (migrated)
+            {
+                // 迁移结果立即落盘，避免下次启动重复迁移，也防止用户在迁移后直接退出导致改动丢失。
+                SaveNow();
+            }
         }
     }
 

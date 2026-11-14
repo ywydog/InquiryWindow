@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using ClassIsland.Core.Icons;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
@@ -11,7 +12,7 @@ namespace InquiryWindow.Models;
 /// <summary>
 /// 多按钮询问 Action 的设置。
 /// </summary>
-public partial class MultiButtonPromptSettings : ObservableObject
+public partial class MultiButtonPromptSettings : ObservableObject, IJsonOnDeserialized
 {
     /// <summary>OS 窗口标题栏文字。</summary>
     [ObservableProperty]
@@ -41,6 +42,27 @@ public partial class MultiButtonPromptSettings : ObservableObject
     {
         OnPropertyChanged(nameof(IconSource));
         IconExpressionService.LogIconChange("多按钮询问·弹窗图标", oldValue, newValue);
+    }
+
+    /// <summary>
+    /// JSON 反序列化完成后迁移旧版本写入的 Segoe 码点（窗口图标与各按钮图标）。
+    /// 按钮自身的 <see cref="MultiButtonPromptButton.OnDeserialized"/> 已处理过一次，
+    /// 这里再走一遍是为了兼容旧数据里按钮集合被整体赋值、未触发回调的情况。
+    /// </summary>
+    public void OnDeserialized()
+    {
+        if (IconMigration.TryMigrate(Icon, out var migratedIcon))
+        {
+            Icon = migratedIcon;
+        }
+
+        foreach (var button in Buttons)
+        {
+            if (IconMigration.TryMigrate(button.Icon, out var migratedButtonIcon))
+            {
+                button.Icon = migratedButtonIcon;
+            }
+        }
     }
 
     /// <summary>

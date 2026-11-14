@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.Text.Json.Serialization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ClassIsland.Shared.Models.Automation;
@@ -10,7 +11,7 @@ namespace InquiryWindow.Models;
 /// <summary>
 /// 单个按钮：显示名 + 图标 + 触发时执行的 Action 链。
 /// </summary>
-public partial class MultiButtonPromptButton : ObservableObject
+public partial class MultiButtonPromptButton : ObservableObject, IJsonOnDeserialized
 {
     [ObservableProperty]
     private string _name = "按钮";
@@ -134,6 +135,17 @@ public partial class MultiButtonPromptButton : ObservableObject
     {
         OnPropertyChanged(nameof(IconSource));
         IconExpressionService.LogIconChange($"多按钮询问·按钮「{Name}」", oldValue, newValue);
+    }
+
+    /// <summary>
+    /// JSON 反序列化完成后迁移旧版本写入的 Segoe 码点，避免配置里的图标显示成无关字形。
+    /// </summary>
+    public void OnDeserialized()
+    {
+        if (IconMigration.TryMigrate(Icon, out var migrated))
+        {
+            Icon = migrated;
+        }
     }
 
     // AccentMode / CustomColor 变化时通知派生 UI 属性一并刷新
